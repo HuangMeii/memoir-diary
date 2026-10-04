@@ -26,6 +26,13 @@ build/
 .flutter-plugins-dependencies
 *.iml
 .idea/
+coverage/
+pubspec.lock
+
+# Local build / analysis logs
+analyze.txt
+test.txt
+build.log
 
 # --- OS / IDE ---
 .vscode/*
