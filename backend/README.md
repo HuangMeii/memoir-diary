@@ -41,3 +41,30 @@ alembic/            # migrations
 - Mọi endpoint nghiệp vụ yêu cầu `Authorization: Bearer <token>` (trừ `/health`, `/moods`, `/weathers`).
 - Ảnh lưu trên **Neon Object Storage** (path-style + SigV4, dùng `endpoint_url`); DB chỉ lưu metadata.
 - `AUTO_CREATE_TABLES=true` chỉ dùng khi dev nhanh với SQLite; production dùng Alembic.
+
+## Seed dữ liệu tham chiếu
+
+Bảng `moods`, `weathers`, `quotes` cần dữ liệu trước khi tạo nhật ký.
+
+```powershell
+alembic upgrade head          # tạo bảng (chỉ 1 lần)
+python -m app.seed.seed       # nạp dữ liệu (idempotent, chạy lại cũng an toàn)
+python -m app.seed.seed --reset   # xoá dữ liệu seed cũ rồi nạp lại
+```
+
+| Bảng | Số bản ghi | Nội dung |
+|------|-----------|----------|
+| `moods` | 5 | Vui, Buồn, Chán, Bình thường, Giận |
+| `weathers` | 5 | Nắng, Râm, Mưa, Bão, Khác |
+| `quotes` | 100 | Kho câu động viên/giáo dục (`app/seed/quotes_100.json`) |
+
+- Câu trong `quotes` có `user_id = NULL` → **dùng chung cho mọi người dùng**. Thêm câu riêng qua `POST /api/v1/quotes` (bản ghi có `user_id` riêng).
+- Nếu quên chạy migration, script báo rõ: `Database schema is missing tables: ... Run migrations first: alembic upgrade head`.
+
+## Test
+
+```powershell
+pytest -q
+```
+
+Test dùng SQLite riêng (`memoir_test.db`), không đụng database dev.
