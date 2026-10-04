@@ -12,6 +12,7 @@ from app.core.database import Base, engine
 from app import models  # noqa: F401  (register all ORM models on Base.metadata)
 from app.routers import (
     auth,
+    daily_quotes,
     entries,
     events,
     health,
@@ -66,6 +67,7 @@ api.include_router(lookups.router)
 api.include_router(entries.router)
 api.include_router(images.router)
 api.include_router(quotes.router)
+api.include_router(daily_quotes.router)
 api.include_router(self_messages.router)
 api.include_router(reflections.router)
 api.include_router(notes.router)

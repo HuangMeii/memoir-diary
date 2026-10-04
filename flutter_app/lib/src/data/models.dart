@@ -95,6 +95,48 @@ class Quote {
       );
 }
 
+/// The quote pair stored for one day, as returned by `/daily-quotes`.
+///
+/// Both sides are optional: a brand new account has no self message yet, and a
+/// quote deleted from the library leaves a row with `quote == null` rather than
+/// dropping the day from the history.
+class DailyQuotePair {
+  const DailyQuotePair({
+    required this.id,
+    required this.date,
+    this.quoteId,
+    this.selfMessageId,
+    this.quoteText,
+    this.quoteAuthor,
+    this.selfMessageContent,
+  });
+
+  final String id;
+  final DateTime date;
+  final String? quoteId;
+  final String? selfMessageId;
+  final String? quoteText;
+  final String? quoteAuthor;
+  final String? selfMessageContent;
+
+  bool get hasQuote => (quoteText ?? '').isNotEmpty;
+  bool get hasSelfMessage => (selfMessageContent ?? '').isNotEmpty;
+
+  factory DailyQuotePair.fromJson(Map<String, dynamic> json) {
+    final quote = json['quote'] as Map<String, dynamic>?;
+    final mine = json['self_message'] as Map<String, dynamic>?;
+    return DailyQuotePair(
+      id: json['id'] as String,
+      date: DateTime.parse(json['quote_date'] as String),
+      quoteId: json['quote_id'] as String?,
+      selfMessageId: json['self_message_id'] as String?,
+      quoteText: quote?['text'] as String?,
+      quoteAuthor: quote?['author'] as String?,
+      selfMessageContent: mine?['content'] as String?,
+    );
+  }
+}
+
 /// An image attached to a diary entry.
 ///
 /// The API returns `url: null` on purpose: the bucket is private, so reads go

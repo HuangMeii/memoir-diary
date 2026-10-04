@@ -47,9 +47,11 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 ## 7. Kho câu + Câu ngẫu nhiên + Phản tư
 
 - **Kho câu**: 100 câu động viên/giáo dục thu thập từ mạng xã hội (xem [08-quotes-seed.md](08-quotes-seed.md)); **CRUD được** (`features/quotes/quote_manager_screen.dart`).
-- **Hiển thị hằng ngày**: `GET /random-pair` trả **1 câu từ kho** + **1 câu từ lời nhắn nhủ của bản thân**.
+- **Hiển thị hằng ngày**: `GET /daily-quotes/today` trả **1 câu từ kho** + **1 câu từ lời nhắn nhủ của bản thân**.
+- **Lưu theo ngày**: cặp câu được ghi vào `daily_quotes` (1 dòng / ngày / user) nên mở app nhiều lần trong ngày vẫn thấy cùng câu. Nút 🔄 xoá dòng hôm nay để quay câu khác.
+- **Lịch sử**: màn hình "Lịch sử câu nói" xem lại theo tháng, gồm cả `quote_id` để tra ngược câu gốc.
 - **Phản tư**: ô "Suy nghĩ như thế nào về 2 câu trên?" → lưu `reflections.thought`.
-- **UI**: `features/quotes/daily_quote_card.dart` (2 thẻ + ô phản tư).
+- **UI**: `QuotePairCard` trong `home_screen.dart` + `quote_history_screen.dart`.
 
 ## 8. Hôm nay bạn đã tự chăm sóc mình như thế nào?
 

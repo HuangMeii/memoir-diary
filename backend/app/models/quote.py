@@ -1,9 +1,9 @@
 """Quotes library, self messages and daily reflections."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
@@ -58,6 +58,45 @@ class SelfMessage(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False
     )
+
+
+class DailyQuote(Base):
+    """The quote pair that was shown on a given day.
+
+    One row per user per day: the pair is picked once and then read back, so
+    reopening the app on the same day shows the same quote instead of a new
+    random one. `ON DELETE SET NULL` keeps the row (and its date) when a quote
+    is removed from the library, so the history stays intact.
+    """
+
+    __tablename__ = "daily_quotes"
+    __table_args__ = (
+        UniqueConstraint("user_id", "quote_date", name="uq_daily_quotes_user_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    quote_date: Mapped[date] = mapped_column(Date, index=True)
+    quote_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("quotes.id", ondelete="SET NULL"), nullable=True
+    )
+    self_message_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("self_messages.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False
+    )
+
+    # Loaded eagerly by the history endpoint: without these, SQLAlchemy would
+    # emit one extra query per row while the response is being built.
+    quote = relationship("Quote")
+    self_message = relationship("SelfMessage")
 
 
 class Reflection(Base):

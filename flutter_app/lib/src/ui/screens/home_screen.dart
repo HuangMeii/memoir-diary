@@ -9,6 +9,7 @@ import 'health_screen.dart';
 import 'month_grids_screen.dart';
 import 'notes_screen.dart';
 import 'planner_screen.dart';
+import 'quote_history_screen.dart';
 import '../widgets/icon_picker_row.dart';
 
 /// Home = today's overview: quick mood/weather pick, the daily quote pair,
@@ -160,13 +161,17 @@ class HomeScreen extends ConsumerWidget {
 }
 
 /// Shows one quote from the library + one of the user's own messages.
+///
+/// The pair comes from `/daily-quotes/today`, so it is stored rather than
+/// redrawn: reopening the app later the same day shows the same quote, and the
+/// history screen can show what was actually displayed.
 class QuotePairCard extends ConsumerWidget {
   const QuotePairCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final pair = ref.watch(randomPairProvider);
+    final pair = ref.watch(todayQuoteProvider);
 
     return Card(
       child: Padding(
@@ -179,9 +184,28 @@ class QuotePairCard extends ConsumerWidget {
                 Text('💬 Câu hôm nay', style: theme.textTheme.titleSmall),
                 const Spacer(),
                 IconButton(
-                  tooltip: 'Câu khác',
+                  tooltip: 'Xem lịch sử',
+                  icon: const Icon(Icons.history, size: 20),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const QuoteHistoryScreen(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Đổi câu khác',
                   icon: const Icon(Icons.refresh, size: 20),
-                  onPressed: () => ref.invalidate(randomPairProvider),
+                  onPressed: () async {
+                    try {
+                      await reshuffleTodayQuote(ref);
+                    } on ApiException catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$e')),
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
             ),
@@ -190,12 +214,10 @@ class QuotePairCard extends ConsumerWidget {
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => ErrorText('$e'),
               data: (data) {
-                final quote = data?['quote'];
-                final mine = data?['self_message'];
                 // An empty body means the user has not written any self message
                 // yet, which is normal for a new account. Only the library quote
                 // is guaranteed, so render each side independently.
-                if (quote == null && mine == null) {
+                if (!data.hasQuote && !data.hasSelfMessage) {
                   return Text(
                     'Chưa có câu nào. Bấm nút làm mới hoặc kiểm tra kết nối.',
                     style: theme.textTheme.bodySmall,
@@ -204,19 +226,20 @@ class QuotePairCard extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (quote != null) ...[
-                      Text('“${quote['text']}”',
+                    if (data.hasQuote) ...[
+                      Text('“${data.quoteText}”',
                           style: theme.textTheme.bodyMedium),
                       Text(
-                        '— ${quote['author'] ?? 'Thư viện'}',
+                        '— ${data.quoteAuthor ?? 'Thư viện'}',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
-                    if (quote != null && mine != null) const Divider(height: 24),
-                    if (mine != null)
-                      Text('💌 Của bạn: “${mine['content']}”',
+                    if (data.hasQuote && data.hasSelfMessage)
+                      const Divider(height: 24),
+                    if (data.hasSelfMessage)
+                      Text('💌 Của bạn: “${data.selfMessageContent}”',
                           style: theme.textTheme.bodyMedium)
                     else
                       Text(

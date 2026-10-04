@@ -127,7 +127,32 @@ username=a@example.com&password=secret123
 }
 ```
 
-## 8. Reflections — `/reflections`
+## 8. Daily quotes — `/daily-quotes`
+
+Cặp câu được **lưu theo ngày**, nên mở app nhiều lần trong ngày vẫn thấy cùng một câu.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/daily-quotes/today` | Cặp câu hôm nay — tạo mới nếu hôm nay chưa có |
+| GET | `/daily-quotes?month=YYYY-MM` | Lịch sử trong tháng, mới nhất trước |
+| DELETE | `/daily-quotes/{id}` | Xoá dòng (dùng để đổi câu của hôm nay) |
+
+**Response `/daily-quotes/today`**
+```json
+{
+  "id": "uuid",
+  "quote_date": "2026-10-05",
+  "quote_id": "uuid",
+  "self_message_id": "uuid",
+  "created_at": "2026-10-05T02:16:00Z",
+  "quote": { "id": "uuid", "text": "...", "author": "..." },
+  "self_message": { "id": "uuid", "content": "..." }
+}
+```
+
+`quote` và `self_message` có thể `null`: tài khoản mới chưa có lời nhắn, hoặc câu đã bị xoá khỏi kho.
+
+## 9. Reflections — `/reflections`
 
 | Method | Path | Mô tả |
 |---|---|---|

@@ -1,7 +1,7 @@
 """Quote, self message, reflection and random-pair schemas."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -80,5 +80,19 @@ class ReflectionOut(BaseModel):
 
 
 class RandomPairOut(BaseModel):
+    quote: QuoteOut | None = None
+    self_message: SelfMessageOut | None = None
+
+
+class DailyQuoteOut(BaseModel):
+    """A stored daily pair: the ids plus the rows they point at, if still there."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    quote_date: date
+    quote_id: uuid.UUID | None = None
+    self_message_id: uuid.UUID | None = None
+    created_at: datetime
     quote: QuoteOut | None = None
     self_message: SelfMessageOut | None = None

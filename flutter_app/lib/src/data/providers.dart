@@ -100,17 +100,43 @@ final entryByDateProvider =
   }
 });
 
-/// A random quote pair: one library quote + one of the user's own messages.
+/// The pair shown today, stored server-side so it stays the same for the day.
 ///
-/// Errors propagate instead of being swallowed, so the UI can tell "the request
-/// failed" apart from "the user has no self message yet". Returning null on any
-/// failure made a network error look like an empty library.
-final randomPairProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+/// `/daily-quotes/today` draws a pair only when the day has no row yet; every
+/// later call reads it back. That is what makes the history screen meaningful:
+/// the card shown on the 3rd is the row stored on the 3rd.
+final todayQuoteProvider = FutureProvider<DailyQuotePair>((ref) async {
   await ref.watch(authReadyProvider.future);
-  return await ref
+  final data = await ref
       .read(apiClientProvider)
-      .get('/random-pair') as Map<String, dynamic>;
+      .get('/daily-quotes/today') as Map<String, dynamic>;
+  return DailyQuotePair.fromJson(data);
 });
+
+/// Stored pairs for one month (`YYYY-MM`), newest first.
+final quoteHistoryProvider =
+    FutureProvider.family<List<DailyQuotePair>, String>((ref, month) async {
+  await ref.watch(authReadyProvider.future);
+  final data = await ref
+      .read(apiClientProvider)
+      .get('/daily-quotes', query: {'month': month});
+  return (data as List)
+      .map((e) => DailyQuotePair.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
+/// Draws a fresh pair for today by dropping today's row.
+///
+/// The server stores exactly one pair per day, so changing the quote means
+/// deleting the row and letting the next read draw again.
+Future<void> reshuffleTodayQuote(WidgetRef ref) async {
+  final current = ref.read(todayQuoteProvider).valueOrNull;
+  if (current != null) {
+    await ref.read(apiClientProvider).delete('/daily-quotes/${current.id}');
+  }
+  ref.invalidate(todayQuoteProvider);
+  ref.invalidate(quoteHistoryProvider);
+}
 
 /// Images of one entry, each paired with a short-lived presigned read URL.
 ///
@@ -164,6 +190,6 @@ void refreshEntryData(WidgetRef ref) {
   ref.invalidate(weatherGridProvider);
   ref.invalidate(monthSummaryProvider);
   ref.invalidate(entryByDateProvider);
-  ref.invalidate(randomPairProvider);
+  ref.invalidate(todayQuoteProvider);
   ref.invalidate(entryImagesProvider);
 }
