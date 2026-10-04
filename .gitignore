@@ -34,6 +34,11 @@ analyze.txt
 test.txt
 build.log
 
+# Server runtime logs (uvicorn stdout/stderr, không commit)
+server.log
+server.err
+*.err
+
 # --- OS / IDE ---
 .vscode/*
 !.vscode/extensions.json
