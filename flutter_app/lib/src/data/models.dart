@@ -141,6 +141,54 @@ class EntryImageView {
   String get id => image.id;
 }
 
+/// A daily health record: steps, workout, water, sleep, weight.
+///
+/// One row per user per day (`uq_health_user_date`), so the API upserts on
+/// `log_date` rather than inserting duplicates.
+class HealthLog {
+  const HealthLog({
+    required this.id,
+    required this.logDate,
+    this.steps,
+    this.workoutMinutes,
+    this.waterMl,
+    this.sleepHours,
+    this.weightKg,
+    this.note,
+  });
+
+  final String id;
+  final DateTime logDate;
+  final int? steps;
+  final int? workoutMinutes;
+  final int? waterMl;
+  final double? sleepHours;
+  final double? weightKg;
+  final String? note;
+
+  factory HealthLog.fromJson(Map<String, dynamic> json) => HealthLog(
+        id: json['id'] as String,
+        logDate: DateTime.parse(json['log_date'] as String),
+        steps: json['steps'] as int?,
+        workoutMinutes: json['workout_minutes'] as int?,
+        waterMl: json['water_ml'] as int?,
+        sleepHours: (json['sleep_hours'] as num?)?.toDouble(),
+        weightKg: (json['weight_kg'] as num?)?.toDouble(),
+        note: json['note'] as String?,
+      );
+
+  /// Only send fields the user actually filled in, so a blank field in the
+  /// form does not overwrite a stored value with null.
+  Map<String, dynamic> toPayload() => {
+        if (steps != null) 'steps': steps,
+        if (workoutMinutes != null) 'workout_minutes': workoutMinutes,
+        if (waterMl != null) 'water_ml': waterMl,
+        if (sleepHours != null) 'sleep_hours': sleepHours,
+        if (weightKg != null) 'weight_kg': weightKg,
+        if (note != null && note!.isNotEmpty) 'note': note,
+      };
+}
+
 /// A diary entry for one day.
 class DiaryEntry {
   const DiaryEntry({

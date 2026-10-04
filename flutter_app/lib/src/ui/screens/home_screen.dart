@@ -5,6 +5,7 @@ import '../../core/api_client.dart';
 import '../../core/auth_provider.dart';
 import '../../data/providers.dart';
 import 'entry_editor.dart';
+import 'health_screen.dart';
 import 'month_grids_screen.dart';
 import 'notes_screen.dart';
 import 'planner_screen.dart';
@@ -250,6 +251,7 @@ class ShortcutGrid extends StatelessWidget {
       (Icons.calendar_month, 'Lưới tháng', const MonthGridsScreen()),
       (Icons.sticky_note_2_outlined, 'Ghi chú', const NotesScreen()),
       (Icons.checklist, 'Todo & Sự kiện', const PlannerScreen()),
+      (Icons.monitor_heart_outlined, 'Sức khoẻ', const HealthScreen()),
     ];
 
     return Wrap(

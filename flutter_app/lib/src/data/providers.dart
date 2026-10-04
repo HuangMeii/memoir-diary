@@ -111,6 +111,21 @@ final entryImagesProvider =
   return views;
 });
 
+/// Health logs within a date range, newest first.
+///
+/// [dateFrom] and [dateTo] are inclusive `YYYY-MM-DD` strings.
+final healthLogsProvider =
+    FutureProvider.family<List<HealthLog>, ({String from, String to})>(
+        (ref, range) async {
+  final data = await ref.read(apiClientProvider).get(
+        '/health-logs',
+        query: {'from': range.from, 'to': range.to},
+      );
+  return (data as List)
+      .map((e) => HealthLog.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
 /// Invalidates everything that depends on entries so screens refresh.
 void refreshEntryData(WidgetRef ref) {
   ref.invalidate(moodGridProvider);
