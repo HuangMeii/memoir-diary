@@ -20,10 +20,23 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final today = DateTime.now();
+    final auth = ref.watch(authProvider);
+    // Watched before the data providers below so a guarded provider never runs
+    // while the stored token is still being read.
+    ref.watch(authReadyProvider);
+
+    // Nothing can be loaded correctly before the session is known: rendering
+    // early fires unauthenticated requests that come back 401 and paint an
+    // error flash before the token arrives. Returning here, before the watches
+    // below, is what keeps those providers from running in the first place.
+    if (auth.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final moods = ref.watch(moodsProvider);
     final weathers = ref.watch(weathersProvider);
     final entry = ref.watch(entryByDateProvider(dayKey(today)));
-    final user = ref.watch(authProvider).user;
+    final user = auth.user;
 
     return Scaffold(
       appBar: AppBar(
@@ -108,17 +121,30 @@ class HomeScreen extends ConsumerWidget {
   }
 
   /// Saves the quick mood/weather pick straight away.
+  ///
+  /// There is no `PUT /entries/by-date/...` route: the API only exposes
+  /// `GET /entries/by-date/{date}`, `POST /entries` and
+  /// `PUT /entries/{entry_id}`. So create the day first when it is missing.
   Future<void> _pick(
     BuildContext context,
     WidgetRef ref, {
     int? mood,
     int? weather,
   }) async {
+    final today = DateTime.now();
+    final iso = dayKey(today);
+    final patch = <String, dynamic>{
+      if (mood != null) 'mood_id': mood,
+      if (weather != null) 'weather_id': weather,
+    };
     try {
-      await ref.read(apiClientProvider).put('/entries/by-date/today', data: {
-        if (mood != null) 'mood_id': mood,
-        if (weather != null) 'weather_id': weather,
-      });
+      final client = ref.read(apiClientProvider);
+      final existing = await ref.read(entryByDateProvider(iso).future);
+      if (existing == null) {
+        await client.post('/entries', data: {'entry_date': iso, ...patch});
+      } else {
+        await client.put('/entries/${existing.id}', data: patch);
+      }
       refreshEntryData(ref);
       if (context.mounted) {
         ScaffoldMessenger.of(context)

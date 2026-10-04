@@ -18,25 +18,44 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// Holds the token that outgoing requests should send.
+///
+/// Kept separately from [AuthState] so a token obtained by `/auth/login` is
+/// available to the `/auth/me` call that runs before the auth state is updated.
+final tokenHolderProvider = Provider<TokenHolder>((ref) => TokenHolder());
+
+class TokenHolder {
+  String? _token;
+
+  String? get value => _token;
+
+  void set(String? token) => _token = token;
+}
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient();
-  // Attach the bearer token to every request while authenticated.
-  ref.listen<String?>(authTokenProvider, (_, token) {
-    client.token = token;
-  });
-  client.token = ref.read(authTokenProvider);
-  return client;
+  final holder = ref.watch(tokenHolderProvider);
+  return ApiClient(tokenResolver: () => holder.value);
 });
 
+/// Supplies the bearer token for outgoing requests.
+///
+/// The client never caches the token itself: it asks for the current value on
+/// every request. Caching it meant a token received by `/auth/login` was not
+/// attached to the `/auth/me` call that immediately followed, because the auth
+/// state was only updated after that call returned.
+typedef TokenResolver = String? Function();
+
 class ApiClient {
-  ApiClient() : _dio = Dio() {
+  ApiClient({TokenResolver? tokenResolver})
+      : _dio = Dio(),
+        _tokenResolver = tokenResolver ?? (() => null) {
     // Every request must carry the bearer token, otherwise FastAPI answers 401
     // for the whole protected API. Doing it in an interceptor covers GET, POST,
     // PUT, DELETE and the multipart upload with one place to keep correct.
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          final current = token;
+          final current = _tokenResolver();
           if (current != null && current.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $current';
           }
@@ -47,7 +66,7 @@ class ApiClient {
   }
 
   final Dio _dio;
-  String? token;
+  final TokenResolver _tokenResolver;
 
   String get baseUrl => AppConfig.apiBaseUrl;
 

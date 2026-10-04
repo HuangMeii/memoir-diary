@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../theme.dart';
 
-/// A compact month calendar where each day cell is filled with the mood
-/// (or weather) colour. Empty days stay neutral grey.
+/// A month calendar whose day cells are filled with the mood (or weather)
+/// colour and carry no day number. Empty days stay neutral grey; the tooltip
+/// reveals the date and the value.
 class MonthGrid extends StatelessWidget {
   const MonthGrid({
     super.key,
@@ -12,6 +13,12 @@ class MonthGrid extends StatelessWidget {
     required this.onDayTap,
     required this.selectedDate,
   });
+
+  /// Height of a day cell, the same as when the calendar still showed numbers.
+  static const _cellHeight = 40.0;
+
+  /// Gap applied to every side of every cell.
+  static const _gap = 5.0;
 
   /// Grid cells returned by the API (one per logged day).
   final List<GridCell> cells;
@@ -24,16 +31,25 @@ class MonthGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorByDay = {
-      for (final cell in cells)
-        _keyOf(cell.date): (color: colorFromHex(cell.color), cell: cell),
-    };
+    final emptyColor =
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75);
+
+    final colorByDay = <String, Color>{};
+    final labelByDay = <String, String>{};
+    for (final cell in cells) {
+      if (!cell.hasData) continue;
+      final key = _keyOf(cell.date);
+      colorByDay[key] = colorFromHex(cell.color);
+      labelByDay[key] = cell.label ?? '';
+    }
 
     final month = selectedDate ?? DateTime.now();
     final firstDay = DateTime(month.year, month.month, 1);
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-    // Monday-first offset.
+    // Monday-first offset for the opening week.
     final leadingBlanks = firstDay.weekday - DateTime.monday;
+    // Only as many weeks as the month actually spans, instead of always six.
+    final weeks = (leadingBlanks + daysInMonth + 6) ~/ 7;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,51 +71,44 @@ class MonthGrid extends StatelessWidget {
               .toList(),
         ),
         const SizedBox(height: 6),
-        for (var week = 0; week < 6; week++) ...[
+        for (var week = 0; week < weeks; week++) ...[
           Row(
-            children: List.generate(7, (column) {
-              final dayNumber = week * 7 + column - leadingBlanks + 1;
+            // No stretch here: a Column hands its child an unbounded height,
+            // and stretching to an infinite height throws away the whole row.
+            children: List.generate(7, (weekday) {
+              final dayNumber = week * 7 + weekday - leadingBlanks + 1;
               if (dayNumber < 1 || dayNumber > daysInMonth) {
-                return const Expanded(child: SizedBox(height: 40));
+                // Outside the month: keep the slot so the row stays level.
+                return const Expanded(
+                  child: SizedBox(height: _cellHeight),
+                );
               }
               final date = DateTime(month.year, month.month, dayNumber);
-              final entry = colorByDay[_keyOf(date)];
-
+              final key = _keyOf(date);
+              final color = colorByDay[key];
               final isToday = _isSameDay(date, DateTime.now());
+
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: entry == null
-                        ? null
-                        : () => onDayTap(date),
-                    child: Tooltip(
-                      message: entry == null
-                          ? '$dayNumber'
-                          : '${entry.cell.label ?? ''} · $dayNumber',
+                  // Every side gets a gap. Padding one side only leaves the
+                  // cells touching horizontally, so the grid reads as stripes.
+                  padding: const EdgeInsets.all(_gap / 2),
+                  child: Tooltip(
+                    message: color == null
+                        ? '$dayNumber · chưa ghi'
+                        : '$dayNumber · ${labelByDay[key]}',
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: color == null ? null : () => onDayTap(date),
                       child: Container(
-                        height: 40,
-                        alignment: Alignment.center,
+                        height: _cellHeight,
                         decoration: BoxDecoration(
-                          color: entry?.color ??
-                              theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(8),
+                          color: color ?? emptyColor,
+                          borderRadius: BorderRadius.circular(6),
                           border: isToday
                               ? Border.all(
                                   color: theme.colorScheme.primary, width: 2)
                               : null,
-                        ),
-                        child: Text(
-                          '$dayNumber',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: entry == null
-                                ? theme.colorScheme.onSurfaceVariant
-                                : _onColor(entry.color),
-                            fontWeight:
-                                entry == null ? FontWeight.normal : FontWeight.bold,
-                          ),
                         ),
                       ),
                     ),
@@ -113,17 +122,12 @@ class MonthGrid extends StatelessWidget {
     );
   }
 
-  /// Picks readable text for the filled cell background.
-  Color _onColor(Color color) =>
-      color.computeLuminance() > 0.55 ? Colors.black87 : Colors.white;
-
   static String _keyOf(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   static bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 }
-
 /// Legend showing icon + label + colour for each option.
 class GridLegend extends StatelessWidget {
   const GridLegend({super.key, required this.items});

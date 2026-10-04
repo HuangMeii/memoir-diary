@@ -1,7 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
+import '../core/auth_provider.dart';
 import 'models.dart';
+
+/// Resolves once the stored token has been read (and validated, when present).
+///
+/// Every authenticated provider awaits this before issuing its first request.
+/// Without it they race `_restore()`: the request goes out with no
+/// `Authorization` header, FastAPI answers 401, and Riverpod caches that error
+/// for the rest of the session because nothing ever invalidates the provider.
+final authReadyProvider = FutureProvider<void>((ref) async {
+  // Watching keeps this provider alive alongside the auth state, so the
+  // `isLoading` flip below re-runs it after a login or logout.
+  final auth = ref.watch(authProvider);
+  if (auth.isLoading) return;
+  return;
+});
 
 /// Moods and weathers are public reference data -> fetched once and cached.
 final moodsProvider = FutureProvider<List<LookupItem>>(
@@ -37,6 +52,7 @@ String dayKey(DateTime day) =>
 
 final moodGridProvider =
     FutureProvider.family<List<GridCell>, String>((ref, month) async {
+  await ref.watch(authReadyProvider.future);
   final data = await ref
       .read(apiClientProvider)
       .get('/stats/mood-grid', query: {'month': month});
@@ -47,6 +63,7 @@ final moodGridProvider =
 
 final weatherGridProvider =
     FutureProvider.family<List<GridCell>, String>((ref, month) async {
+  await ref.watch(authReadyProvider.future);
   final data = await ref
       .read(apiClientProvider)
       .get('/stats/weather-grid', query: {'month': month});
@@ -57,6 +74,7 @@ final weatherGridProvider =
 
 final monthSummaryProvider =
     FutureProvider.family<MonthSummary, String>((ref, month) async {
+  await ref.watch(authReadyProvider.future);
   final data = await ref
       .read(apiClientProvider)
       .get('/stats/summary', query: {'month': month});
@@ -71,6 +89,7 @@ final monthSummaryProvider =
 /// request) on every rebuild, looping forever. A normalised string is stable.
 final entryByDateProvider =
     FutureProvider.family<DiaryEntry?, String>((ref, isoDate) async {
+  await ref.watch(authReadyProvider.future);
   try {
     final data = await ref.read(apiClientProvider).get('/entries/by-date/$isoDate');
     return DiaryEntry.fromJson(data as Map<String, dynamic>);
@@ -87,6 +106,7 @@ final entryByDateProvider =
 /// failed" apart from "the user has no self message yet". Returning null on any
 /// failure made a network error look like an empty library.
 final randomPairProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  await ref.watch(authReadyProvider.future);
   return await ref
       .read(apiClientProvider)
       .get('/random-pair') as Map<String, dynamic>;
@@ -99,6 +119,7 @@ final randomPairProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 /// whole grid: a 503 (storage not configured) must not blank the section.
 final entryImagesProvider =
     FutureProvider.family<List<EntryImageView>, String>((ref, entryId) async {
+  await ref.watch(authReadyProvider.future);
   final client = ref.read(apiClientProvider);
   final data = await client.get('/entries/$entryId/images');
   final images = (data as List)
@@ -127,6 +148,7 @@ final entryImagesProvider =
 final healthLogsProvider =
     FutureProvider.family<List<HealthLog>, ({String from, String to})>(
         (ref, range) async {
+  await ref.watch(authReadyProvider.future);
   final data = await ref.read(apiClientProvider).get(
         '/health-logs',
         query: {'from': range.from, 'to': range.to},

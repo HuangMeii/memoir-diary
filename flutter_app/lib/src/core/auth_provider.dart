@@ -60,6 +60,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   TokenStorage get _tokenStorage => _ref.read(tokenStorageProvider);
 
+TokenHolder get _tokenHolder => _ref.read(tokenHolderProvider);
+
   /// On startup: read a stored token and validate it via `/auth/me`.
   Future<void> _restore() async {
     final token = await _tokenStorage.read();
@@ -68,10 +70,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
     try {
+      // Publish the token before validating: /auth/me is a protected route,
+      // so the request itself needs the Authorization header.
+      _tokenHolder.set(token);
       final user = await _ref.read(apiClientProvider).get('/auth/me');
       state = AuthState(token: token, user: user);
     } catch (_) {
       // Token expired or invalid -> clear it and show the login screen.
+      _tokenHolder.set(null);
       await _tokenStorage.clear();
       state = const AuthState();
     }
@@ -87,9 +93,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final token = response['access_token'] as String;
       await _tokenStorage.write(token);
+      // Publish before /auth/me, which runs before state is updated below.
+      _tokenHolder.set(token);
       final user = await _ref.read(apiClientProvider).get('/auth/me');
       state = AuthState(token: token, user: user);
     } catch (_) {
+      _tokenHolder.set(null);
       state = const AuthState();
       rethrow;
     }
@@ -108,6 +117,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final token = response['access_token'] as String;
       await _tokenStorage.write(token);
+      // Register builds the state inline, but the holder must know the token too
+      // so later authenticated requests carry it.
+      _tokenHolder.set(token);
       state = AuthState(
         token: token,
         user: {
@@ -118,21 +130,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
     } catch (_) {
+      _tokenHolder.set(null);
       state = const AuthState();
       rethrow;
     }
   }
 
   Future<void> logout() async {
+    _tokenHolder.set(null);
     await _tokenStorage.clear();
     state = const AuthState();
   }
 }
-
-/// Reads the current bearer token for the Dio interceptor.
-final authTokenProvider = Provider<String?>(
-  (ref) => ref.watch(authProvider).token,
-);
 
 /// Debug helper so screens can show which backend they target.
 final apiBaseUrlProvider = Provider<String>((ref) => AppConfig.apiBaseUrl);

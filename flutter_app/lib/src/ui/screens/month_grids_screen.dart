@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../widgets/month_grid.dart';
 import 'entry_editor.dart';
@@ -56,6 +57,8 @@ class MonthGridsScreen extends ConsumerWidget {
           // ---- CẢM XÚC ----
           _GridSection(
             title: 'CẢM XÚC',
+            month: month,
+            cells: moodCells.valueOrNull ?? const [],
             child: moodCells.when(
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => Text('$e'),
@@ -71,6 +74,8 @@ class MonthGridsScreen extends ConsumerWidget {
           // ---- THỜI TIẾT ----
           _GridSection(
             title: 'THỜI TIẾT',
+            month: month,
+            cells: weatherCells.valueOrNull ?? const [],
             child: weatherCells.when(
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => Text('$e'),
@@ -141,26 +146,54 @@ class MonthGridsScreen extends ConsumerWidget {
 }
 
 class _GridSection extends StatelessWidget {
-  const _GridSection({required this.title, required this.child});
+  const _GridSection({
+    required this.title,
+    required this.child,
+    this.cells = const [],
+    required this.month,
+  });
 
   final String title;
   final Widget child;
 
+  /// Used to show "n / total ngày" next to the title.
+  final List<GridCell> cells;
+
+  /// The month being displayed, so the total matches the browsed month rather
+  /// than always the current one.
+  final DateTime month;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final logged = cells.where((c) => c.hasData).length;
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: theme.textTheme.labelLarge?.copyWith(
-                letterSpacing: 1.1,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      letterSpacing: 1.1,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                if (logged > 0)
+                  Text(
+                    '$logged / $daysInMonth ngày',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 10),
             child,
