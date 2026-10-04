@@ -53,8 +53,8 @@ Flutter Web (build web)   ─┘                                      │
 
 | Tầng | Công nghệ |
 |---|---|
-| Frontend | Flutter (Material 3), Riverpod, go_router, dio, image_picker/file_picker, flutter_secure_storage, table_calendar, fl_chart |
-| Backend | Python 3.12, FastAPI, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic v2, boto3, psycopg |
+| Frontend | Flutter 3.47 (Material 3), Riverpod, go_router, dio, image_picker, flutter_secure_storage, fl_chart |
+| Backend | Python 3.14 (Miniconda), FastAPI, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic v2, boto3, psycopg 3 |
 | Auth | JWT (HS256) + bcrypt (passlib), OAuth2 password flow |
 | Database | PostgreSQL (Neon serverless) |
 | Object Storage | Neon Object Storage (S3-compatible) |
@@ -81,7 +81,7 @@ Memoir/
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **tài liệu/thiết kế** đã hoàn thành. Code backend và Flutter nằm ở các Phase tiếp theo (xem `PLAN.md`).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -127,13 +127,13 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 
 ## 7. Roadmap
 
-- [x] Phase 0 — Tài liệu & thiết kế (tài liệu này)
-- [ ] Phase 1 — Backend FastAPI + DB + Auth
-- [ ] Phase 2 — Seed dữ liệu (moods, weathers, 100 quotes)
-- [ ] Phase 3 — Flutter scaffold
-- [ ] Phase 4 — Flutter features
-- [ ] Phase 5 — Upload ảnh end-to-end
-- [ ] Phase 6 — Build web + app
+- [x] Phase 0 — Tài liệu & thiết kế
+- [x] Phase 1 — Backend FastAPI + DB + Auth
+- [x] Phase 2 — Seed dữ liệu (moods, weathers, 100 quotes)
+- [x] Phase 3 — Flutter scaffold
+- [x] Phase 4 — Flutter features
+- [x] Phase 5 — Upload ảnh end-to-end
+- [ ] Phase 6 — Build apk *(web đã xong; apk cần cài Android SDK)*
 - [ ] Phase 7 — Kiểm thử & deploy
 
 ---
