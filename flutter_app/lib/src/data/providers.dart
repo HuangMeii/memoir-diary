@@ -31,6 +31,10 @@ final selectedMonthProvider = StateProvider<DateTime>((ref) {
 String monthKey(DateTime month) =>
     '${month.year.toString().padLeft(4, '0')}-${month.month.toString().padLeft(2, '0')}';
 
+/// Stable `YYYY-MM-DD` key for a day, safe to use as a provider family key.
+String dayKey(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
 final moodGridProvider =
     FutureProvider.family<List<GridCell>, String>((ref, month) async {
   final data = await ref
@@ -59,11 +63,16 @@ final monthSummaryProvider =
   return MonthSummary.fromJson(data as Map<String, dynamic>);
 });
 
+/// The diary entry for a day, or null when nothing is written yet.
+///
+/// Keyed by the `YYYY-MM-DD` string rather than a `DateTime`: a
+/// `DateTime.now()` taken on each build is a different object with a different
+/// `==`, so a `.family` keyed by it would spawn a fresh provider (and a fresh
+/// request) on every rebuild, looping forever. A normalised string is stable.
 final entryByDateProvider =
-    FutureProvider.family<DiaryEntry?, DateTime>((ref, date) async {
-  final iso = date.toIso8601String().substring(0, 10);
+    FutureProvider.family<DiaryEntry?, String>((ref, isoDate) async {
   try {
-    final data = await ref.read(apiClientProvider).get('/entries/by-date/$iso');
+    final data = await ref.read(apiClientProvider).get('/entries/by-date/$isoDate');
     return DiaryEntry.fromJson(data as Map<String, dynamic>);
   } on ApiException catch (e) {
     // No entry for that day yet -> the editor starts blank.
@@ -73,13 +82,14 @@ final entryByDateProvider =
 });
 
 /// A random quote pair: one library quote + one of the user's own messages.
+///
+/// Errors propagate instead of being swallowed, so the UI can tell "the request
+/// failed" apart from "the user has no self message yet". Returning null on any
+/// failure made a network error look like an empty library.
 final randomPairProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
-  try {
-    return await ref.read(apiClientProvider).get('/random-pair')
-        as Map<String, dynamic>;
-  } on ApiException {
-    return null;
-  }
+  return await ref
+      .read(apiClientProvider)
+      .get('/random-pair') as Map<String, dynamic>;
 });
 
 /// Images of one entry, each paired with a short-lived presigned read URL.

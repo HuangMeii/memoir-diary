@@ -57,7 +57,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
 
   /// Loads an existing entry for the day, if there is one.
   Future<void> _load() async {
-    final entry = await ref.read(entryByDateProvider(widget.date).future);
+    final entry = await ref.read(entryByDateProvider(dayKey(widget.date)).future);
     if (!mounted) return;
     if (entry != null) {
       _diary.text = entry.diaryText ?? '';
@@ -92,7 +92,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       };
 
       final existing =
-          await ref.read(entryByDateProvider(widget.date).future);
+          await ref.read(entryByDateProvider(dayKey(widget.date)).future);
       final client = ref.read(apiClientProvider);
       if (existing == null) {
         final created = await client.post('/entries', data: body);
@@ -135,7 +135,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     final file = await picker.pickImage(source: ImageSource.gallery);
     if (file == null) return;
     try {
-      final entry = await ref.read(entryByDateProvider(widget.date).future);
+      final entry = await ref.read(entryByDateProvider(dayKey(widget.date)).future);
       if (entry == null) {
         // Images attach to an entry, so save the entry first.
         if (mounted) {

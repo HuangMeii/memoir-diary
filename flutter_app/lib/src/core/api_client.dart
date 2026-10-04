@@ -29,7 +29,22 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 });
 
 class ApiClient {
-  ApiClient() : _dio = Dio();
+  ApiClient() : _dio = Dio() {
+    // Every request must carry the bearer token, otherwise FastAPI answers 401
+    // for the whole protected API. Doing it in an interceptor covers GET, POST,
+    // PUT, DELETE and the multipart upload with one place to keep correct.
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final current = token;
+          if (current != null && current.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $current';
+          }
+          handler.next(options);
+        },
+      ),
+    );
+  }
 
   final Dio _dio;
   String? token;

@@ -22,7 +22,7 @@ class HomeScreen extends ConsumerWidget {
     final today = DateTime.now();
     final moods = ref.watch(moodsProvider);
     final weathers = ref.watch(weathersProvider);
-    final entry = ref.watch(entryByDateProvider(today));
+    final entry = ref.watch(entryByDateProvider(dayKey(today)));
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
@@ -164,28 +164,41 @@ class QuotePairCard extends ConsumerWidget {
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => ErrorText('$e'),
               data: (data) {
-                if (data == null) {
+                final quote = data?['quote'];
+                final mine = data?['self_message'];
+                // An empty body means the user has not written any self message
+                // yet, which is normal for a new account. Only the library quote
+                // is guaranteed, so render each side independently.
+                if (quote == null && mine == null) {
                   return Text(
-                    'Thêm ít nhất một câu nhắn của riêng bạn để nhận cặp câu.',
+                    'Chưa có câu nào. Bấm nút làm mới hoặc kiểm tra kết nối.',
                     style: theme.textTheme.bodySmall,
                   );
                 }
-                final quote = data['quote'];
-                final mine = data['self_message'];
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('“${quote?['text'] ?? ''}”',
-                        style: theme.textTheme.bodyMedium),
-                    Text(
-                      '— ${quote?['author'] ?? 'Thư viện'}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (quote != null) ...[
+                      Text('“${quote['text']}”',
+                          style: theme.textTheme.bodyMedium),
+                      Text(
+                        '— ${quote['author'] ?? 'Thư viện'}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const Divider(height: 24),
-                    Text('💌 Của bạn: “${mine?['text'] ?? ''}”',
-                        style: theme.textTheme.bodyMedium),
+                    ],
+                    if (quote != null && mine != null) const Divider(height: 24),
+                    if (mine != null)
+                      Text('💌 Của bạn: “${mine['content']}”',
+                          style: theme.textTheme.bodyMedium)
+                    else
+                      Text(
+                        'Bạn chưa có lời nhắn nào để ghép cặp.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                   ],
                 );
               },

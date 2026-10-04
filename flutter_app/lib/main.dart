@@ -73,7 +73,14 @@ class _AuthListenable extends ChangeNotifier {
   _AuthListenable(WidgetRef ref) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       final wasAuthed = previous?.isAuthenticated ?? false;
-      if (wasAuthed != next.isAuthenticated) notifyListeners();
+      // The guard must also re-run once the initial token restore finishes:
+      // with no stored token `isAuthenticated` stays false while `isLoading`
+      // flips to false, and without watching that the router would leave the
+      // user stuck on '/' instead of sending them to '/login'.
+      final wasLoading = previous?.isLoading ?? false;
+      if (wasAuthed != next.isAuthenticated || wasLoading != next.isLoading) {
+        notifyListeners();
+      }
     });
   }
 }
