@@ -82,6 +82,35 @@ final randomPairProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   }
 });
 
+/// Images of one entry, each paired with a short-lived presigned read URL.
+///
+/// The list endpoint never returns a URL, so each image needs a second call.
+/// An image whose URL cannot be signed is skipped rather than failing the
+/// whole grid: a 503 (storage not configured) must not blank the section.
+final entryImagesProvider =
+    FutureProvider.family<List<EntryImageView>, String>((ref, entryId) async {
+  final client = ref.read(apiClientProvider);
+  final data = await client.get('/entries/$entryId/images');
+  final images = (data as List)
+      .map((e) => EntryImage.fromJson(e as Map<String, dynamic>))
+      .toList();
+
+  final views = <EntryImageView>[];
+  for (final image in images) {
+    try {
+      final res =
+          await client.get('/images/${image.id}/url') as Map<String, dynamic>;
+      final url = res['url'] as String?;
+      if (url != null && url.isNotEmpty) {
+        views.add(EntryImageView(image: image, url: url));
+      }
+    } on ApiException {
+      // Storage unavailable or the object vanished -> leave it out of the grid.
+    }
+  }
+  return views;
+});
+
 /// Invalidates everything that depends on entries so screens refresh.
 void refreshEntryData(WidgetRef ref) {
   ref.invalidate(moodGridProvider);
@@ -89,4 +118,5 @@ void refreshEntryData(WidgetRef ref) {
   ref.invalidate(monthSummaryProvider);
   ref.invalidate(entryByDateProvider);
   ref.invalidate(randomPairProvider);
+  ref.invalidate(entryImagesProvider);
 }

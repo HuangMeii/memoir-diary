@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../data/providers.dart';
+import '../widgets/entry_images_section.dart';
 import '../widgets/icon_picker_row.dart';
 
 /// The diary editor for one specific day.
@@ -31,6 +32,9 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
 
   int? _moodId;
   int? _weatherId;
+  /// Id of the saved entry for [widget.date]; null until the day is saved once.
+  /// Photos attach to an entry, so the gallery stays hidden until then.
+  String? _entryId;
   bool _loading = true;
   bool _saving = false;
 
@@ -65,6 +69,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       _dream.text = entry.dream ?? '';
       _moodId = entry.moodId;
       _weatherId = entry.weatherId;
+      _entryId = entry.id;
     }
     setState(() => _loading = false);
   }
@@ -90,9 +95,11 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
           await ref.read(entryByDateProvider(widget.date).future);
       final client = ref.read(apiClientProvider);
       if (existing == null) {
-        await client.post('/entries', data: body);
+        final created = await client.post('/entries', data: body);
+        _entryId = (created as Map<String, dynamic>)['id'] as String?;
       } else {
         await client.put('/entries/${existing.id}', data: body);
+        _entryId = existing.id;
       }
 
       // The reflection is stored separately, linked to today's entry.
@@ -142,6 +149,8 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
             '/entries/${entry.id}/images',
             file.path,
           );
+      // Refetch so the new thumbnail appears without leaving the editor.
+      ref.invalidate(entryImagesProvider(entry.id));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã tải ảnh lên')),
@@ -154,7 +163,8 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       }
     }
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     final moods = ref.watch(moodsProvider);
     final weathers = ref.watch(weathersProvider);
@@ -213,6 +223,10 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (_entryId != null) ...[
+                  EntryImagesSection(entryId: _entryId!),
+                  const SizedBox(height: 16),
+                ],
                 _Field(
                   icon: Icons.book_outlined,
                   label: 'Nội dung nhật ký',

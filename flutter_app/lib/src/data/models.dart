@@ -95,6 +95,52 @@ class Quote {
       );
 }
 
+/// An image attached to a diary entry.
+///
+/// The API returns `url: null` on purpose: the bucket is private, so reads go
+/// through a short-lived presigned URL from `/images/{id}/url` instead.
+class EntryImage {
+  const EntryImage({
+    required this.id,
+    required this.entryId,
+    required this.objectKey,
+    required this.contentType,
+    this.sizeBytes,
+    this.caption,
+    this.createdAt,
+  });
+
+  final String id;
+  final String entryId;
+  final String objectKey;
+  final String contentType;
+  final int? sizeBytes;
+  final String? caption;
+  final DateTime? createdAt;
+
+  factory EntryImage.fromJson(Map<String, dynamic> json) => EntryImage(
+        id: json['id'] as String,
+        entryId: json['entry_id'] as String,
+        objectKey: json['object_key'] as String,
+        contentType: json['content_type'] as String,
+        sizeBytes: json['size_bytes'] as int?,
+        caption: json['caption'] as String?,
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.parse(json['created_at'] as String),
+      );
+}
+
+/// An image plus a presigned URL that is valid for a short while.
+class EntryImageView {
+  const EntryImageView({required this.image, required this.url});
+
+  final EntryImage image;
+  final String url;
+
+  String get id => image.id;
+}
+
 /// A diary entry for one day.
 class DiaryEntry {
   const DiaryEntry({
