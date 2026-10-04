@@ -6,6 +6,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.core import storage
 from app.core.config import settings
 from app.core.database import Base, engine
 from app import models  # noqa: F401  (register all ORM models on Base.metadata)
@@ -50,7 +51,13 @@ app.add_middleware(
 
 @app.get("/health", tags=["system"])
 def health_check():
-    return {"status": "ok", "app": settings.app_name, "version": __version__}
+    return {
+        "status": "ok",
+        "app": settings.app_name,
+        "version": __version__,
+        # False = chua cau hinh S3 -> endpoint upload anh tra 503 (xem app/routers/images.py)
+        "storage_configured": storage.is_configured(),
+    }
 
 
 api = APIRouter(prefix=settings.api_v1_prefix)
