@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app import models  # noqa: F401  (register all ORM models on Base.metadata)
 from app.routers import (
+    admin,
     auth,
     daily_quotes,
     entries,
@@ -63,6 +64,7 @@ def health_check():
 
 api = APIRouter(prefix=settings.api_v1_prefix)
 api.include_router(auth.router)
+api.include_router(admin.router)
 api.include_router(lookups.router)
 api.include_router(entries.router)
 api.include_router(images.router)

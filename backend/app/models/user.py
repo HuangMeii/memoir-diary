@@ -9,6 +9,12 @@ from sqlalchemy.types import Uuid
 
 from app.core.database import Base
 
+# Roles are plain strings (not a DB enum) so adding one later is just a code
+# change, not a migration.
+ROLE_USER = "user"
+ROLE_ADMIN = "admin"
+ROLES = (ROLE_USER, ROLE_ADMIN)
+
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
@@ -25,12 +31,20 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     display_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # server_default keeps the migration safe for the rows that already exist.
+    role: Mapped[str] = mapped_column(
+        String(20), default=ROLE_USER, server_default=ROLE_USER, nullable=False, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False
     )
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == ROLE_ADMIN
 
     entries = relationship(
         "DiaryEntry", back_populates="user", cascade="all, delete-orphan"

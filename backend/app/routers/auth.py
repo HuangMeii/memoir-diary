@@ -54,7 +54,13 @@ def login(
             or_(User.email == form.username, User.username == form.username)
         )
     ).scalars().first()
-    if user is None or not verify_password(form.password, user.password_hash):
+    if (
+        user is None
+        or not user.is_active
+        or not verify_password(form.password, user.password_hash)
+    ):
+        # One message for all three failures: telling a caller whether the
+        # account exists or is disabled would leak that information.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email/username or password",

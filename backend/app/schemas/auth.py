@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     username: str
     display_name: str | None = None
     is_active: bool
+    role: str
     created_at: datetime
 
 

@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
+    # Admin bootstrap (dùng bởi `python -m app.seed.admin`).
+    # Để trống thì script dùng email/username mặc định và hỏi mật khẩu.
+    admin_email: str | None = None
+    admin_username: str | None = None
+    admin_password: str | None = None
+
     # CORS (comma separated)
     cors_origins: str = "http://localhost:8080,http://127.0.0.1:8080"
 

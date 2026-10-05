@@ -27,8 +27,21 @@ def _visible(user: User):
 def _get_manageable_quote(
     db: Session, user: User, quote_id: uuid.UUID
 ) -> Quote:
+    """Fetch a quote this user may edit.
+
+    System quotes (`user_id IS NULL`) are shared by everyone, so only an admin
+    can touch them; admins use the dedicated /admin/quotes endpoints for the
+    full library view.
+    """
     quote = db.get(Quote, quote_id)
-    if quote is None or quote.user_id not in (None, user.id):
+    if quote is None:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    if quote.user_id is None and not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can modify shared library quotes",
+        )
+    if quote.user_id not in (None, user.id):
         raise HTTPException(status_code=404, detail="Quote not found")
     return quote
 
