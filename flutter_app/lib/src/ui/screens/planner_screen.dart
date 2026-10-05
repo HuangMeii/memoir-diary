@@ -47,48 +47,58 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     _load();
   }
 
+  /// Loads the three lists independently.
+  ///
+  /// They used to share one `Future.wait`, which meant a single wrong path or a
+  /// hiccup on one endpoint rejected the whole batch: the catch swallowed it and
+  /// the lists kept showing whatever was there before, so a todo that had been
+  /// created successfully looked like it had vanished. Fetching each on its own
+  /// keeps one broken call from hiding the other two.
   Future<void> _load() async {
-    try {
-      final client = ref.read(apiClientProvider);
-      final results = await Future.wait([
-        client.get('/todos'),
-        client.get('/events'),
-        client.get('/schedules'),
-      ]);
-      if (!mounted) return;
-      setState(() {
+    final client = ref.read(apiClientProvider);
+    final results = await Future.wait([
+      client.get('/todos').catchError((_) => null),
+      client.get('/events').catchError((_) => null),
+      client.get('/schedule-items').catchError((_) => null),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      // A null means that call failed, so its previous contents are kept.
+      if (results[0] != null) {
         _todos = (results[0] as List).cast<Map<String, dynamic>>();
+      }
+      if (results[1] != null) {
         _events = (results[1] as List).cast<Map<String, dynamic>>();
+      }
+      if (results[2] != null) {
         _schedules = (results[2] as List).cast<Map<String, dynamic>>();
-        _loading = false;
-      });
-    } catch (e) {
-      if (mounted) setState(() => _loading = false);
-    }
+      }
+      _loading = false;
+    });
   }
 
-  /// Runs a POST then reloads, reporting failures in a snack bar.
-  Future<void> _post(String path, Map<String, dynamic> body) async {
+  /// Runs a write request then reloads, reporting failures in a snack bar.
+  Future<void> _write(
+    Future<dynamic> Function(ApiClient client) request,
+  ) async {
     try {
-      await ref.read(apiClientProvider).post(path, data: body);
+      await request(ref.read(apiClientProvider));
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
 
-  Future<void> _delete(String path) async {
-    try {
-      await ref.read(apiClientProvider).delete(path);
-      await _load();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
-    }
-  }
+  Future<void> _post(String path, Map<String, dynamic> body) =>
+      _write((c) => c.post(path, data: body));
+
+  Future<void> _put(String path, Map<String, dynamic> body) =>
+      _write((c) => c.put(path, data: body));
+
+  Future<void> _delete(String path) => _write((c) => c.delete(path));
 
   /// New goals belong to the week they are typed in, so the weekly list stays
   /// meaningful instead of piling everything into one bucket.
@@ -115,7 +125,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   Future<void> _addSchedule(String title) async {
     if (title.trim().isEmpty) return;
     final start = DateTime.now().add(const Duration(hours: 1));
-    await _post('/schedules', {
+    await _post('/schedule-items', {
       'title': title.trim(),
       'start_at': start.toIso8601String(),
     });
@@ -149,8 +159,9 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   todos: _todosForWeek(isoWeekLabel(DateTime.now())),
                   heading: weekHeading(DateTime.now()),
                   onAdd: _addTodo,
+                  // PUT, not POST: the update route for a goal is PUT /todos/{id}.
                   onToggle: (id, value) async =>
-                      _post('/todos/$id', {'is_done': value}),
+                      _put('/todos/$id', {'is_done': value}),
                   onDelete: (id) => _delete('/todos/$id'),
                 ),
                 _SimpleList(
@@ -165,7 +176,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   emptyLabel: 'Chưa có lịch biểu',
                   hint: 'Lịch hẹn trong ngày...',
                   onAdd: _addSchedule,
-                  onDelete: (id) => _delete('/schedules/$id'),
+                  onDelete: (id) => _delete('/schedule-items/$id'),
                 ),
               ]),
       ),
