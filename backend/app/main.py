@@ -26,6 +26,7 @@ from app.routers import (
     self_messages,
     stats,
     todos,
+    weather,
 )
 
 
@@ -78,4 +79,5 @@ api.include_router(events.router)
 api.include_router(schedules.router)
 api.include_router(health.router)
 api.include_router(stats.router)
+api.include_router(weather.router)
 app.include_router(api)

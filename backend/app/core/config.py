@@ -41,6 +41,16 @@ class Settings(BaseSettings):
     admin_username: str | None = None
     admin_password: str | None = None
 
+    # Weather forecast (Open-Meteo). Free and needs no API key; set
+    # `weather_api_enabled` to false to turn the feature off entirely.
+    weather_api_url: str = "https://api.open-meteo.com/v1/forecast"
+    weather_api_enabled: bool = True
+    weather_timeout_seconds: float = 5.0
+    weather_cache_ttl_minutes: int = 30
+    weather_forecast_days: int = 7
+    weather_default_lat: float = 21.0285
+    weather_default_lon: float = 105.8542
+
     # CORS (comma separated)
     cors_origins: str = "http://localhost:8080,http://127.0.0.1:8080"
 

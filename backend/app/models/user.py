@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import Boolean, DateTime, Float, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
@@ -45,6 +45,15 @@ class User(Base):
     @property
     def is_admin(self) -> bool:
         return self.role == ROLE_ADMIN
+
+    # --- Weather location ---
+    # Nullable so an account that never sets one falls back to the configured
+    # default rather than being forced to pick a city on first sign-up.
+    weather_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    weather_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    weather_location_name: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )
 
     entries = relationship(
         "DiaryEntry", back_populates="user", cascade="all, delete-orphan"

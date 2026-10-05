@@ -10,6 +10,7 @@ from app.models.schedule import ScheduleItem
 from app.models.todo import Todo
 from app.models.user import User
 from app.models.entry import DiaryEntry
+from app.models.weather_snapshot import WeatherSnapshot
 
 __all__ = [
     "User",
@@ -26,4 +27,5 @@ __all__ = [
     "Event",
     "ScheduleItem",
     "HealthLog",
+    "WeatherSnapshot",
 ]
