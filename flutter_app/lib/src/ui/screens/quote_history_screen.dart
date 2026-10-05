@@ -135,6 +135,12 @@ class _HistoryTile extends StatelessWidget {
                     child: Icon(Icons.bookmark_border,
                         size: 16, color: theme.colorScheme.onSurfaceVariant),
                   ),
+                if (pair.quoteId2 != null)
+                  Tooltip(
+                    message: 'ID câu 2: ${pair.quoteId2}',
+                    child: Icon(Icons.bookmark,
+                        size: 16, color: theme.colorScheme.onSurfaceVariant),
+                  ),
               ],
             ),
             const SizedBox(height: 8),
@@ -154,6 +160,18 @@ class _HistoryTile extends StatelessWidget {
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   )),
+            ],
+            // Days that drew two library quotes carry the second one here.
+            if (pair.hasQuote2) ...[
+              const Divider(height: 20),
+              Text('“${pair.quote2Text}”', style: theme.textTheme.bodyMedium),
+              if ((pair.quote2Author ?? '').isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text('— ${pair.quote2Author}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    )),
+              ],
             ],
             if (pair.hasSelfMessage) ...[
               const Divider(height: 20),

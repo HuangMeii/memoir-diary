@@ -138,6 +138,71 @@ Future<void> reshuffleTodayQuote(WidgetRef ref) async {
   ref.invalidate(quoteHistoryProvider);
 }
 
+/// The user's own messages, newest first.
+///
+/// Only the count matters on the quote card (it decides whether the day pairs
+/// a quote with one of these), but the id/content come along for the list view.
+final selfMessagesProvider = FutureProvider<List<SelfMessage>>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  final data = await ref.read(apiClientProvider).get('/self-messages');
+  return (data as List)
+      .map((e) => SelfMessage.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
+/// The user's reflections, newest first.
+final reflectionsProvider = FutureProvider<List<Reflection>>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  final data = await ref.read(apiClientProvider).get('/reflections');
+  return (data as List)
+      .map((e) => Reflection.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
+/// The reflection written today, or null when none is stored yet.
+///
+/// The list is newest first and the endpoint has no per-day filter, so the
+/// first row that is not older than today is treated as "today's".
+Reflection? todayReflection(List<Reflection> items) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  for (final item in items) {
+    final at = item.createdAt?.toLocal();
+    if (at == null) continue;
+    if (!at.isBefore(today)) return item;
+  }
+  return null;
+}
+
+/// Saves a message to self from the quote card.
+///
+/// The message joins the user's library, which is what the daily pairing draws
+/// from once there are enough of them. It is not attached to today's pair: that
+/// pair was already stored when the card loaded, and rewriting it would change
+/// the history for that day.
+Future<void> saveSelfMessage(WidgetRef ref, String text) async {
+  final content = text.trim();
+  if (content.isEmpty) return;
+  await ref
+      .read(apiClientProvider)
+      .post('/self-messages', data: {'content': content});
+  ref.invalidate(selfMessagesProvider);
+}
+
+/// Saves a thought about the pair shown today.
+///
+/// `entry_id` is left out on purpose: the server fills in the pair stored for
+/// today, so the reflection points at the quotes the user actually saw even
+/// when they have no diary entry for that day.
+Future<void> saveReflection(WidgetRef ref, String thought) async {
+  final body = thought.trim();
+  if (body.isEmpty) return;
+  await ref
+      .read(apiClientProvider)
+      .post('/reflections', data: {'thought': body});
+  ref.invalidate(reflectionsProvider);
+}
+
 /// Images of one entry, each paired with a short-lived presigned read URL.
 ///
 /// The list endpoint never returns a URL, so each image needs a second call.

@@ -160,16 +160,70 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Shows one quote from the library + one of the user's own messages.
+/// Shows what the app drew for today, plus the two boxes the user writes in.
 ///
 /// The pair comes from `/daily-quotes/today`, so it is stored rather than
 /// redrawn: reopening the app later the same day shows the same quote, and the
 /// history screen can show what was actually displayed.
-class QuotePairCard extends ConsumerWidget {
+///
+/// What gets drawn depends on how many self messages the user has saved. With
+/// fewer than [minSelfMessagesToPair] the server sends two library quotes; from
+/// that point on it sends one quote next to one of the user's own.
+class QuotePairCard extends ConsumerStatefulWidget {
   const QuotePairCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuotePairCard> createState() => _QuotePairCardState();
+}
+
+class _QuotePairCardState extends ConsumerState<QuotePairCard> {
+  final _message = TextEditingController();
+  final _thought = TextEditingController();
+  bool _savingMessage = false;
+  bool _savingThought = false;
+
+  @override
+  void dispose() {
+    _message.dispose();
+    _thought.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitMessage() async {
+    if (_savingMessage || _message.text.trim().isEmpty) return;
+    setState(() => _savingMessage = true);
+    try {
+      await saveSelfMessage(ref, _message.text);
+      _message.clear();
+      if (mounted) _toast('Đã lưu vào kho câu gửi gắm 🌱');
+    } catch (e) {
+      if (mounted) _toast('$e');
+    } finally {
+      if (mounted) setState(() => _savingMessage = false);
+    }
+  }
+
+  Future<void> _submitThought() async {
+    if (_savingThought || _thought.text.trim().isEmpty) return;
+    setState(() => _savingThought = true);
+    try {
+      await saveReflection(ref, _thought.text);
+      _thought.clear();
+      if (mounted) _toast('Đã lưu suy nghĩ 💭');
+    } catch (e) {
+      if (mounted) _toast('$e');
+    } finally {
+      if (mounted) setState(() => _savingThought = false);
+    }
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final pair = ref.watch(todayQuoteProvider);
 
@@ -214,10 +268,10 @@ class QuotePairCard extends ConsumerWidget {
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => ErrorText('$e'),
               data: (data) {
-                // An empty body means the user has not written any self message
-                // yet, which is normal for a new account. Only the library quote
-                // is guaranteed, so render each side independently.
-                if (!data.hasQuote && !data.hasSelfMessage) {
+                // An empty body means nothing was drawn yet, which happens for a
+                // brand new account with an empty library. Render each side
+                // independently so one missing piece does not blank the card.
+                if (!data.hasQuote && !data.hasQuote2 && !data.hasSelfMessage) {
                   return Text(
                     'Chưa có câu nào. Bấm nút làm mới hoặc kiểm tra kết nối.',
                     style: theme.textTheme.bodySmall,
@@ -226,37 +280,38 @@ class QuotePairCard extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (data.hasQuote) ...[
-                      Text('“${data.quoteText}”',
-                          style: theme.textTheme.bodyMedium),
-                      Text(
-                        '— ${data.quoteAuthor ?? 'Thư viện'}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (data.hasQuote && data.hasSelfMessage)
-                      const Divider(height: 24),
+                    if (data.hasQuote) _QuoteBlock(data.quoteText!, data.quoteAuthor),
+                    if (data.hasQuote && (data.hasQuote2 || data.hasSelfMessage))
+                      const Divider(height: 20),
+                    // Only set on days that drew two library quotes.
+                    if (data.hasQuote2)
+                      _QuoteBlock(data.quote2Text!, data.quote2Author),
+                    if (data.hasQuote2 && data.hasSelfMessage)
+                      const Divider(height: 20),
                     if (data.hasSelfMessage)
                       Text('💌 Của bạn: “${data.selfMessageContent}”',
-                          style: theme.textTheme.bodyMedium)
-                    else
-                      Text(
-                        'Bạn chưa có lời nhắn nào để ghép cặp.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                          style: theme.textTheme.bodyMedium),
                   ],
                 );
               },
             ),
+            const SizedBox(height: 14),
+            _InlineInput(
+              label: 'Câu hỏi gửi gắm tương lai của bạn?',
+              hint: 'Ví dụ: Một năm nữa mình đã dám nói chưa?',
+              controller: _message,
+              saving: _savingMessage,
+              icon: Icons.send_rounded,
+              onSubmit: _submitMessage,
+            ),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () => showReflectionDialog(context, ref),
-              icon: const Icon(Icons.psychology_outlined, size: 18),
-              label: const Text('Suy nghĩ của bạn về 2 câu này?'),
+            _InlineInput(
+              label: 'Suy nghĩ của bạn về câu hôm nay?',
+              hint: 'Viết suy nghĩ ngay tại đây...',
+              controller: _thought,
+              saving: _savingThought,
+              icon: Icons.psychology_outlined,
+              onSubmit: _submitThought,
             ),
           ],
         ),
@@ -265,42 +320,91 @@ class QuotePairCard extends ConsumerWidget {
   }
 }
 
-/// Lets the user record what they think about the two quotes above.
-void showReflectionDialog(BuildContext context, WidgetRef ref) {
-  final controller = TextEditingController();
-  showDialog<void>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Suy nghĩ của bạn'),
-      content: TextField(
-        controller: controller,
-        maxLines: 4,
-        decoration: const InputDecoration(hintText: 'Viết suy nghĩ...'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Hủy'),
-        ),
-        FilledButton(
-          onPressed: () async {
-            if (controller.text.trim().isEmpty) return;
-            try {
-              await ref
-                  .read(apiClientProvider)
-                  .post('/reflections', data: {'text': controller.text.trim()});
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            } catch (e) {
-              if (!dialogContext.mounted) return;
-              ScaffoldMessenger.of(dialogContext)
-                  .showSnackBar(SnackBar(content: Text('$e')));
-            }
-          },
-          child: const Text('Lưu'),
+/// One quote plus its author, styled the same everywhere on the card.
+class _QuoteBlock extends StatelessWidget {
+  const _QuoteBlock(this.text, this.author);
+
+  final String text;
+  final String? author;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('“$text”', style: theme.textTheme.bodyMedium),
+        Text(
+          '— ${author ?? 'Thư viện'}',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
-    ),
-  );
+    );
+  }
+}
+
+/// A labelled box with a save button: typing and submitting happen here
+/// instead of in a dialog that covers the quotes being thought about.
+class _InlineInput extends StatelessWidget {
+  const _InlineInput({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    required this.saving,
+    required this.icon,
+    required this.onSubmit,
+  });
+
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final bool saving;
+  final IconData icon;
+  final Future<void> Function() onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.labelMedium),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                ),
+                onSubmitted: (_) => onSubmit(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              tooltip: 'Lưu',
+              icon: saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(icon),
+              onPressed: saving ? null : () => onSubmit(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// Navigation tiles to the other parts of the journal.

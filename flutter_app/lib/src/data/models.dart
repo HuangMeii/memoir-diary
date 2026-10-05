@@ -100,43 +100,118 @@ class Quote {
 /// Both sides are optional: a brand new account has no self message yet, and a
 /// quote deleted from the library leaves a row with `quote == null` rather than
 /// dropping the day from the history.
+///
+/// When the user has fewer than 10 saved self messages the server draws two
+/// library quotes instead of pairing one with their own, so `quote2` is set
+/// and there is no self message on those days.
 class DailyQuotePair {
   const DailyQuotePair({
     required this.id,
     required this.date,
     this.quoteId,
+    this.quoteId2,
     this.selfMessageId,
     this.quoteText,
     this.quoteAuthor,
+    this.quote2Text,
+    this.quote2Author,
     this.selfMessageContent,
   });
 
   final String id;
   final DateTime date;
   final String? quoteId;
+  final String? quoteId2;
   final String? selfMessageId;
   final String? quoteText;
   final String? quoteAuthor;
+  final String? quote2Text;
+  final String? quote2Author;
   final String? selfMessageContent;
 
   bool get hasQuote => (quoteText ?? '').isNotEmpty;
+  bool get hasQuote2 => (quote2Text ?? '').isNotEmpty;
   bool get hasSelfMessage => (selfMessageContent ?? '').isNotEmpty;
 
   factory DailyQuotePair.fromJson(Map<String, dynamic> json) {
     final quote = json['quote'] as Map<String, dynamic>?;
+    final quote2 = json['quote_2'] as Map<String, dynamic>?;
     final mine = json['self_message'] as Map<String, dynamic>?;
     return DailyQuotePair(
       id: json['id'] as String,
       date: DateTime.parse(json['quote_date'] as String),
       quoteId: json['quote_id'] as String?,
+      quoteId2: json['quote_id_2'] as String?,
       selfMessageId: json['self_message_id'] as String?,
       quoteText: quote?['text'] as String?,
       quoteAuthor: quote?['author'] as String?,
+      quote2Text: quote2?['text'] as String?,
+      quote2Author: quote2?['author'] as String?,
       selfMessageContent: mine?['content'] as String?,
     );
   }
 }
 
+/// A message the user wrote to their future self.
+///
+/// These build the library the daily pairing draws from: once the user has
+/// saved [MIN_SELF_MESSAGES_TO_PAIR] of them a day shows one library quote next
+/// to one of these.
+class SelfMessage {
+  const SelfMessage({
+    required this.id,
+    required this.content,
+    this.createdAt,
+  });
+
+  final String id;
+  final String content;
+  final DateTime? createdAt;
+
+  factory SelfMessage.fromJson(Map<String, dynamic> json) => SelfMessage(
+        id: json['id'] as String,
+        content: json['content'] as String? ?? '',
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.parse(json['created_at'] as String),
+      );
+}
+
+/// The user's thoughts about a quote pair.
+class Reflection {
+  const Reflection({
+    required this.id,
+    this.thought,
+    this.quoteId,
+    this.selfMessageId,
+    this.entryId,
+    this.createdAt,
+  });
+
+  final String id;
+  final String? thought;
+  final String? quoteId;
+  final String? selfMessageId;
+  final String? entryId;
+  final DateTime? createdAt;
+
+  factory Reflection.fromJson(Map<String, dynamic> json) => Reflection(
+        id: json['id'] as String,
+        thought: json['thought'] as String?,
+        quoteId: json['quote_id'] as String?,
+        selfMessageId: json['self_message_id'] as String?,
+        entryId: json['entry_id'] as String?,
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.parse(json['created_at'] as String),
+      );
+}
+
+/// Number of saved self messages needed before the daily card pairs a quote
+/// with one of the user's own instead of showing two library quotes.
+///
+/// Mirrors `quote_service.MIN_SELF_MESSAGES_TO_PAIR` on the server.
+const int minSelfMessagesToPair = 10;
 /// An image attached to a diary entry.
 ///
 /// The API returns `url: null` on purpose: the bucket is private, so reads go
