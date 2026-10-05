@@ -161,11 +161,21 @@ Mỗi ngày chỉ lưu **một** cặp câu, nhờ ràng buộc `uq_daily_quotes
 | id | uuid | PK | |
 | user_id | uuid | FK→users(id) ON DELETE CASCADE, NOT NULL | |
 | quote_date | date | NOT NULL, index | Ngày hiển thị |
-| quote_id | uuid | FK→quotes(id) ON DELETE SET NULL, NULL | Câu kho đã hiển thị |
+| quote_id | uuid | FK→quotes(id) ON DELETE SET NULL, NULL | Câu kho thứ nhất |
+| quote_id_2 | uuid | FK→quotes(id) ON DELETE SET NULL, NULL | Câu kho thứ hai — chỉ có khi ngày đó rút **2 câu** (xem bên dưới) |
 | self_message_id | uuid | FK→self_messages(id) ON DELETE SET NULL, NULL | Lời nhắn đã ghép |
 | created_at | timestamptz | NOT NULL default now() | |
 
 `ON DELETE SET NULL` giữ lại dòng khi câu bị xoá khỏi kho, nên lịch sử không bị mất ngày.
+
+**Quy tắc ghép cặp** (`quote_service.MIN_SELF_MESSAGES_TO_PAIR = 10`):
+
+| Số lời nhắn đã lưu | Ngày đó hiển thị | Lưu vào DB |
+|---|---|---|
+| `< 10` | **2 câu kho** (random khác nhau) | `quote_id` + `quote_id_2` |
+| `>= 10` | **1 câu kho + 1 lời nhắn** của bạn | `quote_id` + `self_message_id` |
+
+Câu nhập ở ô *gửi gắm tương lai* chỉ vào kho `self_messages`; nó **không** ghi đè cặp của hôm nay (cặp đã lưu lúc mở app, sửa lại sẽ làm sai lịch sử).
 
 ## 11. Bảng `reflections` (suy nghĩ về 2 câu)
 
@@ -173,7 +183,7 @@ Mỗi ngày chỉ lưu **một** cặp câu, nhờ ràng buộc `uq_daily_quotes
 |---|---|---|---|
 | id | uuid | PK | |
 | user_id | uuid | FK→users(id), NOT NULL | |
-| entry_id | uuid | FK→diary_entries(id) ON DELETE CASCADE | Gắn với entry ngày đó |
+| entry_id | uuid | FK→diary_entries(id) ON DELETE CASCADE, **NULL** | Gắn với entry ngày đó — có thể NULL vì suy nghĩ được viết ngay trên thẻ câu |
 | quote_id | uuid | FK→quotes(id) ON DELETE SET NULL, NULL | Câu kho được hiển thị |
 | self_message_id | uuid | FK→self_messages(id) ON DELETE SET NULL, NULL | Câu của bản thân được hiển thị |
 | thought | text | NULL | Suy nghĩ của bạn về 2 câu |
