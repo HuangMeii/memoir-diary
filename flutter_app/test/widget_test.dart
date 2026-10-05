@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/ui/theme.dart';
+import 'package:memoir_app/src/ui/widgets/icon_picker_row.dart';
 import 'package:memoir_app/src/ui/widgets/month_grid.dart';
 import 'package:memoir_app/src/data/models.dart';
 
@@ -75,5 +76,106 @@ void main() {
     ));
 
     expect(find.text('😀 Vui'), findsOneWidget);
+  });
+  group('IconPickerStrip', () {
+    // Mirrors the seeded rows: five weathers, five moods.
+    List<LookupItem> weather() => [
+          for (final t in [
+            ['sunny', 'Nắng', '☀️'],
+            ['cloudy', 'Râm', '⛅'],
+            ['rainy', 'Mưa', '🌧️'],
+            ['storm', 'Bão', '⛈️'],
+            ['other', 'Khác', '❔'],
+          ])
+            LookupItem(
+              id: t[0].hashCode % 97 + 1,
+              code: t[0],
+              label: t[1],
+              colorHex: '#5C9EDB',
+              icon: t[2],
+            ),
+        ];
+
+    List<LookupItem> moods() => [
+          for (final t in [
+            ['happy', 'Vui', '😀'],
+            ['sad', 'Buồn', '😢'],
+            ['bored', 'Chán', '😑'],
+            ['neutral', 'Bình thường', '😐'],
+            ['angry', 'Giận', '😠'],
+          ])
+            LookupItem(
+              id: t[0].hashCode % 89 + 1,
+              code: t[0],
+              label: t[1],
+              colorHex: '#FFD93D',
+              icon: t[2],
+            ),
+        ];
+
+    // Matches the private widget so the count can be asserted without
+    // exporting it from the library.
+    Finder cells() => find.byWidgetPredicate(
+          (w) => w.runtimeType.toString().contains('IconCell'),
+        );
+
+    Widget strip({required double width, int? weatherId, int? moodId}) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: width,
+              child: IconPickerStrip(
+                weatherLabel: 'THỜI TIẾT',
+                weatherItems: weather(),
+                weatherSelectedId: weatherId,
+                onWeatherSelected: (_) {},
+                moodLabel: 'CẢM XÚC',
+                moodItems: moods(),
+                moodSelectedId: moodId,
+                onMoodSelected: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('puts all ten icons on one row when wide', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(strip(width: 1000));
+      await tester.pumpAndSettle();
+
+      expect(cells(), findsNWidgets(10));
+      // Two group captions share one line, which is what tells us the groups
+      // sit side by side rather than being stacked.
+      expect(find.text('Chưa chọn'), findsNWidgets(2));
+    });
+
+    testWidgets('stacks into two rows when the window is narrow',
+        (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(strip(width: 300));
+      await tester.pumpAndSettle();
+
+      // Same ten icons, just not beside each other.
+      expect(cells(), findsNWidgets(10));
+    });
+
+    testWidgets('names the selection instead of relying on colour alone',
+        (tester) async {
+      final items = weather();
+      await tester.pumpWidget(strip(width: 1000, weatherId: items[1].id));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Râm'), findsOneWidget);
+      expect(find.text('Chưa chọn'), findsOneWidget);
+    });
   });
 }
