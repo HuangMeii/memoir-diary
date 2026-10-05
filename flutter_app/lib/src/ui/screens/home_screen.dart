@@ -179,6 +179,11 @@ class QuotePairCard extends ConsumerStatefulWidget {
 class _QuotePairCardState extends ConsumerState<QuotePairCard> {
   final _message = TextEditingController();
   final _thought = TextEditingController();
+
+  // Remembered so a second save edits the same row instead of adding a near
+  // duplicate; that is what makes keeping the text in the box safe.
+  String? _messageId;
+  String? _thoughtId;
   bool _savingMessage = false;
   bool _savingThought = false;
 
@@ -193,9 +198,10 @@ class _QuotePairCardState extends ConsumerState<QuotePairCard> {
     if (_savingMessage || _message.text.trim().isEmpty) return;
     setState(() => _savingMessage = true);
     try {
-      await saveSelfMessage(ref, _message.text);
-      _message.clear();
-      if (mounted) _toast('Đã lưu vào kho câu gửi gắm 🌱');
+      final editing = _messageId != null;
+      _messageId = await saveSelfMessage(ref, _message.text, id: _messageId);
+      // The text stays put so it can be read back and edited.
+      if (mounted) _toast(editing ? 'Đã cập nhật câu gửi gắm 🌱' : 'Đã lưu vào kho câu gửi gắm 🌱');
     } catch (e) {
       if (mounted) _toast('$e');
     } finally {
@@ -207,9 +213,9 @@ class _QuotePairCardState extends ConsumerState<QuotePairCard> {
     if (_savingThought || _thought.text.trim().isEmpty) return;
     setState(() => _savingThought = true);
     try {
-      await saveReflection(ref, _thought.text);
-      _thought.clear();
-      if (mounted) _toast('Đã lưu suy nghĩ 💭');
+      final editing = _thoughtId != null;
+      _thoughtId = await saveReflection(ref, _thought.text, id: _thoughtId);
+      if (mounted) _toast(editing ? 'Đã cập nhật suy nghĩ 💭' : 'Đã lưu suy nghĩ 💭');
     } catch (e) {
       if (mounted) _toast('$e');
     } finally {
@@ -390,7 +396,7 @@ class _InlineInput extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              tooltip: 'Lưu',
+              tooltip: saving ? 'Đang lưu' : 'Lưu',
               icon: saving
                   ? const SizedBox(
                       width: 18,

@@ -174,33 +174,44 @@ Reflection? todayReflection(List<Reflection> items) {
   return null;
 }
 
-/// Saves a message to self from the quote card.
+/// Saves a message to self from the quote card and returns its id.
 ///
-/// The message joins the user's library, which is what the daily pairing draws
-/// from once there are enough of them. It is not attached to today's pair: that
-/// pair was already stored when the card loaded, and rewriting it would change
-/// the history for that day.
-Future<void> saveSelfMessage(WidgetRef ref, String text) async {
+/// Passing [id] edits that message instead of creating a second one, which is
+/// what lets the card keep the text in the box after saving: a second save
+/// tweaks the same row rather than piling up near-duplicates.
+Future<String> saveSelfMessage(WidgetRef ref, String text, {String? id}) async {
   final content = text.trim();
-  if (content.isEmpty) return;
-  await ref
-      .read(apiClientProvider)
-      .post('/self-messages', data: {'content': content});
+  if (content.isEmpty) return id ?? '';
+  final client = ref.read(apiClientProvider);
+  if (id != null) {
+    await client.put('/self-messages/$id', data: {'content': content});
+  } else {
+    final created =
+        await client.post('/self-messages', data: {'content': content});
+    id = created['id'] as String?;
+  }
   ref.invalidate(selfMessagesProvider);
+  return id ?? '';
 }
 
-/// Saves a thought about the pair shown today.
+/// Saves a thought about the pair shown today and returns the reflection id.
 ///
 /// `entry_id` is left out on purpose: the server fills in the pair stored for
 /// today, so the reflection points at the quotes the user actually saw even
-/// when they have no diary entry for that day.
-Future<void> saveReflection(WidgetRef ref, String thought) async {
+/// when they have no diary entry for that day. Passing [id] edits the existing
+/// reflection instead of adding another.
+Future<String> saveReflection(WidgetRef ref, String thought, {String? id}) async {
   final body = thought.trim();
-  if (body.isEmpty) return;
-  await ref
-      .read(apiClientProvider)
-      .post('/reflections', data: {'thought': body});
+  if (body.isEmpty) return id ?? '';
+  final client = ref.read(apiClientProvider);
+  if (id != null) {
+    await client.put('/reflections/$id', data: {'thought': body});
+  } else {
+    final created = await client.post('/reflections', data: {'thought': body});
+    id = created['id'] as String?;
+  }
   ref.invalidate(reflectionsProvider);
+  return id ?? '';
 }
 
 /// Images of one entry, each paired with a short-lived presigned read URL.
