@@ -84,6 +84,12 @@ class DailyQuote(Base):
     quote_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("quotes.id", ondelete="SET NULL"), nullable=True
     )
+    # Second library quote, used when the user has too few self messages to
+    # pair up (see quote_service.random_pair). NULL on days that showed one
+    # quote next to a self message.
+    quote_id_2: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("quotes.id", ondelete="SET NULL"), nullable=True
+    )
     self_message_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("self_messages.id", ondelete="SET NULL"),
@@ -95,7 +101,8 @@ class DailyQuote(Base):
 
     # Loaded eagerly by the history endpoint: without these, SQLAlchemy would
     # emit one extra query per row while the response is being built.
-    quote = relationship("Quote")
+    quote = relationship("Quote", foreign_keys=[quote_id])
+    quote_2 = relationship("Quote", foreign_keys=[quote_id_2])
     self_message = relationship("SelfMessage")
 
 
@@ -110,9 +117,10 @@ class Reflection(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    entry_id: Mapped[uuid.UUID] = mapped_column(
+    entry_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("diary_entries.id", ondelete="CASCADE"),
+        nullable=True,
         index=True,
     )
     quote_id: Mapped[uuid.UUID | None] = mapped_column(

@@ -1,6 +1,7 @@
 """Reflection CRUD endpoints (thoughts about the daily quote pair)."""
 
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models import DiaryEntry, Reflection, User
+from app.models import DailyQuote, DiaryEntry, Reflection, User
 from app.schemas.quote import ReflectionCreate, ReflectionOut, ReflectionUpdate
 
 router = APIRouter(prefix="/reflections", tags=["reflections"])
@@ -40,10 +41,39 @@ def create_reflection(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    entry = db.get(DiaryEntry, payload.entry_id)
-    if entry is None or entry.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Entry not found")
-    item = Reflection(user_id=current_user.id, **payload.model_dump())
+    """Save a thought about the daily pair.
+
+    The entry is optional: the quote card lets the user write a reflection
+    without having a diary entry for that day. When `quote_id` is omitted
+    the stored pair for today is used, so the thought always points at the
+    quotes the user actually saw.
+    """
+    if payload.entry_id is not None:
+        entry = db.get(DiaryEntry, payload.entry_id)
+        if entry is None or entry.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Entry not found")
+
+    quote_id = payload.quote_id
+    self_message_id = payload.self_message_id
+    if quote_id is None and self_message_id is None:
+        today = datetime.now().date()
+        stored = db.execute(
+            select(DailyQuote).where(
+                DailyQuote.user_id == current_user.id,
+                DailyQuote.quote_date == today,
+            )
+        ).scalars().first()
+        if stored is not None:
+            quote_id = stored.quote_id
+            self_message_id = stored.self_message_id
+
+    item = Reflection(
+        user_id=current_user.id,
+        entry_id=payload.entry_id,
+        quote_id=quote_id,
+        self_message_id=self_message_id,
+        thought=payload.thought,
+    )
     db.add(item)
     db.commit()
     db.refresh(item)

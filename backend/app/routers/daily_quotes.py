@@ -17,7 +17,11 @@ router = APIRouter(prefix="/daily-quotes", tags=["daily-quotes"])
 
 #: Matches `today` on the server rather than trusting a client clock, so a phone
 #: with a wrong timezone cannot request someone else's "today".
-_LOADS = (selectinload(DailyQuote.quote), selectinload(DailyQuote.self_message))
+_LOADS = (
+    selectinload(DailyQuote.quote),
+    selectinload(DailyQuote.quote_2),
+    selectinload(DailyQuote.self_message),
+)
 
 
 def _load(stmt):

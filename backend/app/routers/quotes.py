@@ -81,8 +81,8 @@ def random_pair(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    quote, self_message = quote_service.random_pair(db, current_user.id)
-    return RandomPairOut(quote=quote, self_message=self_message)
+    quote, quote_2, self_message = quote_service.random_pair(db, current_user.id)
+    return RandomPairOut(quote=quote, quote_2=quote_2, self_message=self_message)
 
 
 @router.post("/quotes", response_model=QuoteOut, status_code=status.HTTP_201_CREATED)
