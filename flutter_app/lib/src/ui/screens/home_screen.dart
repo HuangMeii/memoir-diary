@@ -74,25 +74,26 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Weather and mood share one row when the window is wide
+                    // enough for ten tap targets.
                     weathers.when(
                       loading: () => const LinearProgressIndicator(),
                       error: (e, _) => ErrorText('$e'),
-                      data: (items) => IconPickerRow(
-                        label: 'THỜI TIẾT',
-                        items: items,
-                        selectedId: entry.valueOrNull?.weatherId,
-                        onSelected: (id) => _pick(context, ref, weather: id),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    moods.when(
-                      loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => ErrorText('$e'),
-                      data: (items) => IconPickerRow(
-                        label: 'CẢM XÚC',
-                        items: items,
-                        selectedId: entry.valueOrNull?.moodId,
-                        onSelected: (id) => _pick(context, ref, mood: id),
+                      data: (weather) => moods.when(
+                        loading: () => const LinearProgressIndicator(),
+                        error: (e, _) => ErrorText('$e'),
+                        data: (mood) => IconPickerStrip(
+                          weatherLabel: 'THỜI TIẾT',
+                          weatherItems: weather,
+                          weatherSelectedId: entry.valueOrNull?.weatherId,
+                          onWeatherSelected: (id) =>
+                              _pick(context, ref, weather: id),
+                          moodLabel: 'CẢM XÚC',
+                          moodItems: mood,
+                          moodSelectedId: entry.valueOrNull?.moodId,
+                          onMoodSelected: (id) =>
+                              _pick(context, ref, mood: id),
+                        ),
                       ),
                     ),
                   ],
