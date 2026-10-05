@@ -373,3 +373,30 @@ Cặp câu được **lưu theo ngày**, nên mở app nhiều lần trong ngày
   "ends_at": "2026-10-31T23:59:59+07:00" }
 ```
 
+---
+
+## 19. Calendar — `/calendar` (CHƯA TRIỂN KHAI)
+
+> **Đặc tả, chưa có endpoint.** Xem [10-calendar.md](10-calendar.md). Sẽ thay bằng `events` + `schedule_items` hiện tại.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/calendar?view=day\|week\|month&date=` | Lịch trong khoảng của chế độ đã chọn |
+| GET | `/calendar/{id}` | Chi tiết 1 sự kiện |
+| POST | `/calendar` | Tạo |
+| PUT | `/calendar/{id}` | Sửa |
+| DELETE | `/calendar/{id}` | Xóa |
+| PATCH | `/calendar/{id}/status` | `{ "status": "done" }` |
+| GET | `/calendar/upcoming` | Sắp tới / đang diễn ra (kèm `remind_at`) |
+| GET | `/calendar/stats?month=` | Phút đã lên lịch vs thực tế học |
+
+## 20. Weather — `/weather` (CHƯA TRIỂN KHAI)
+
+> **Đặc tả, chưa có endpoint.** Xem [11-weather-forecast.md](11-weather-forecast.md). Gọi qua backend, không gọi thẳng.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/weather/current?lat=&lon=` | Thời tiết hiện tại + dự báo 7 ngày |
+| GET | `/weather/daily?date=` | Thời tiết một ngày (ưu tiên snapshot) |
+| GET | `/weather/history?from=&to=` | Lịch sử từ snapshot, không gọi mạng |
+| PUT | `/weather/location` | Lưu vị trí của user |

@@ -135,7 +135,52 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ---
 
-## 16. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
+## 16. Module Calendar — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Xem [10-calendar.md](10-calendar.md). Lộ trình: [Phase 14–18](../PLAN.md).
+
+- **Mô tả**: quản lý lịch ở mức phù hợp app nhật ký — ngang hàng với Study Garden.
+- **Dữ liệu**: `events` (sau khi hợp nhất `schedule_items`), liên kết `entry_id` + `focus_session_id`.
+
+### 16.1. Xem lịch theo 3 chế độ
+- **Ngày**: timeline theo giờ 06:00 → 23:00, sự kiện nằm đúng vị trí.
+- **Tuần**: 7 cột, tuần bắt đầu **thứ Hai**.
+- **Tháng**: lưới ngày, sự kiện hiện chấm nhỏ trong ô.
+
+### 16.2. Quản lý sự kiện
+- **Tạo / sửa / xoá** — tiêu đề, giờ bắt đầu–kết thúc, mô tả, địa điểm, màu, cả ngày hay không.
+- **Lặp lại**: hằng ngày / tuần / tháng, có `recurrence_until`.
+- **Trạng thái**: `planned` → `done` hoặc `skipped`; xem lịch chia **đã qua / đang diễn ra / sắp tới**.
+
+### 16.3. Nhắc nhở (cả 2 kiểu)
+- **Trong lúc app đang mở**: banner/snackbar khi tới giờ nhắc (5/15/30/60 phút).
+- **Khi mở app**: danh sách "sắp tới cần chú ý" trong 24h tới.
+- Server tính sẵn `remind_at`; web **không có push** nên đóng app thì không nhắc được — đã chấp nhận.
+
+### 16.4. Liên kết & thống kê
+- **Study**: mở Focus Timer ngay từ sự kiện "học buổi sáng" (cần Phase 8).
+- **Journal**: "Ghi nhật ký sau sự kiện".
+- **Thống kê**: tổng phút **đã lên lịch** so với **thực tế học**.
+
+### 16.5. Quyết định thiết kế
+- Sự kiện lặp lưu **một hàng + quy tắc**, bung ra khi đọc — không nhân bản hàng.
+- Sửa/xoá **một lần lặp đơn lẻ** trả `409`; chỉ sửa được cả chuỗi.
+
+---
+
+## 17. Dự báo thời tiết (Open-Meteo) — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Xem [11-weather-forecast.md](11-weather-forecast.md). Lộ trình: [Phase 19–20](../PLAN.md).
+
+- **Mô tả**: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện thời tiết thật.
+- **Dữ liệu**: bảng `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) + vị trí lưu trên `users`.
+- **UI**: thẻ thời tiết trên Home + màn hình đổi vị trí + nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết.
+- **Quy tắc**: backend gọi API (không cho client gọi thẳng), **cache 2 tầng**, timeout 5s, lỗi thì trả dữ liệu cache kèm nhãn "cập nhật lúc HH:mm".
+- **Ánh xạ**: mã WMO → 5 nhóm `weathers` sẵn có (nắng/râm/mưa/bão/khác).
+
+---
+
+## 18. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
 
 | Yêu cầu | Bảng | Cột/Trường |
 |---|---|---|
@@ -161,3 +206,6 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 | *(P8–13)* Mua nước/phân bón/hạt | shop_items, user_inventory | price_coins, item_code, quantity |
 | *(P8–13)* Bảng xếp hạng | garden_profiles, focus_sessions | (SUM credited_minutes theo kỳ) |
 | *(P8–13)* Sự kiện | garden_challenges, garden_challenge_progress | metric, target, progress, reward_coins |
+| *(P14–18)* Lịch / sự kiện | events (gộp schedule_items) | start_at, end_at, recurrence_rule, reminder_minutes, status |
+| *(P14–18)* Liên kết lịch ↔ nhật ký / học | events | entry_id, focus_session_id |
+| *(P19–20)* Dự báo thời tiết | weather_snapshots, users | weather_code, temp_max, temp_min, weather_lat, weather_lon |

@@ -13,6 +13,8 @@ Xây dựng ứng dụng nhật ký đa người dùng, cho phép:
 - Nuôi dưỡng động lực bằng kho câu động viên (CRUD) + câu ngẫu nhiên + phản tư.
 - Quản lý ghi chú, todo, sự kiện, lịch biểu và theo dõi sức khỏe.
 - Biến thời gian học thành động lực: vòng tập trung (timer) → coin/EXP → gieo hạt đậu nảy mầm → mua nước/phân bón → bảng xếp hạng và sự kiện (đặc tả: [docs/09-focus-garden.md](docs/09-focus-garden.md)).
+- Quản lý lịch đầy đủ như Google Calendar ở mức vừa phải: ngày/tuần/tháng, timeline theo giờ, sự kiện lặp, nhắc nhở, liên kết Study + Journal (đặc tả: [docs/10-calendar.md](docs/10-calendar.md)).
+- Dự báo thời tiết thật từ **Open-Meteo** (miễn phí, không cần key) để gợi ý khi viết nhật ký (đặc tả: [docs/11-weather-forecast.md](docs/11-weather-forecast.md)).
 
 ---
 
@@ -118,6 +120,53 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] `garden_events_screen.dart` (sự kiện + tiến độ + nhận thưởng)
 - [ ] Gắn lối vào khu vườn từ `home_screen.dart`
 
+### ⬜ Phase 14 — Calendar: gộp bảng & migration (CHƯA TRIỂN KHAI)
+> Đặc tả đầy đủ: [docs/10-calendar.md](docs/10-calendar.md)
+
+- [ ] Thêm cột mới vào `events`: `recurrence_rule`, `recurrence_until`, `reminder_minutes`, `status`, `color`, `entry_id`, `focus_session_id`
+- [ ] **Đếm `schedule_items` trước khi migrate** — báo lại số hàng, chỉ xoá bảng khi khớp
+- [ ] `INSERT INTO events SELECT ... FROM schedule_items`, rồi `DROP TABLE schedule_items`
+
+### ⬜ Phase 15 — Backend Calendar (CHƯA TRIỂN KHAI)
+- [ ] `GET /calendar?view=day|week|month&date=` — bung lần lặp khi trả về
+- [ ] CRUD `/calendar` + `PATCH /calendar/{id}/status`
+- [ ] `GET /calendar/upcoming` (kèm `remind_at` tính sẵn) + `/calendar/stats?month=`
+- [ ] Test: lặp ngày/tuần/tháng, sửa-xoá một lần lặp đơn lẻ trả `409`
+
+### ⬜ Phase 16 — Flutter: timeline ngày + form (CHƯA TRIỂN KHAI)
+- [ ] `calendar_screen.dart` (chế độ ngày) + `calendar_timeline.dart` (`CustomPainter` cột giờ 06:00–23:00)
+- [ ] `calendar_event_sheet.dart` — form tạo/sửa: giờ, mô tả, vị trí, màu, lặp, nhắc
+- [ ] Sửa tab **Lịch biểu** trong planner dùng chung dữ liệu Calendar
+
+### ⬜ Phase 17 — Calendar: tuần/tháng + nhắc nhở (CHƯA TRIỂN KHAI)
+- [ ] `calendar_month_grid.dart` + chế độ tuần
+- [ ] Trạng thái **đã qua / đang diễn ra / sắp tới**
+- [ ] Nhắc nhở **cả 2 kiểu**: banner khi app đang mở + danh sách cần chú ý khi mới mở app
+
+### ⬜ Phase 18 — Calendar: liên kết Study + Journal (CHƯA TRIỂN KHAI)
+- [ ] Mở Focus Timer từ sự kiện (`focus_session_id`, cần Phase 8)
+- [ ] "Ghi nhật ký sau sự kiện" (`entry_id`)
+- [ ] Thống kê so sánh **phút đã lên lịch** vs **thực tế học**
+
+### ⬜ Phase 19 — Backend: API thời tiết Open-Meteo (CHƯA TRIỂN KHAI)
+> Đặc tả đầy đủ: [docs/11-weather-forecast.md](docs/11-weather-forecast.md)
+
+- [ ] Thêm `httpx` vào `requirements.txt` (đang chỉ có trong dev)
+- [ ] Bảng `weather_snapshots` + cột vị trí trên `users`
+- [ ] `weather_service`: gọi Open-Meteo, ánh xạ mã WMO → 5 nhóm `weathers`, cache 2 tầng
+- [ ] Router `/weather` (current / daily / history / location) + timeout 5s, lỗi thì trả cache
+
+### ⬜ Phase 20 — Flutter: dự báo thời tiết (CHƯA TRIỂN KHAI)
+- [ ] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới
+- [ ] `weather_settings_screen.dart` — đổi vị trí
+- [ ] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
+- [ ] Lỗi mạng → hiện dữ liệu cache kèm nhãn "cập nhật lúc HH:mm"
+
+### ⬜ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (CHƯA TRIỂN KHAI)
+- [ ] `IconPickerStrip` — gộp 2 nhóm (5 thời tiết + 5 cảm xúc) thành **1 hàng ngang** trên web
+- [ ] `LayoutBuilder` chọn `Row` khi đủ rộng, `Wrap` khi hẹp (mobile không tràn)
+- [ ] Giữ nguyên: `Semantics`, màu chọn, tap bỏ chọn, hiện tên đã chọn
+
 ---
 
 ## 4. Cột mốc (Milestones)
@@ -132,6 +181,9 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | M5 | Build web + apk, deploy |
 | M6 | *(đang chờ)* Backend Focus Garden: timer + chống gian lân + coin/EXP |
 | M7 | *(đang chờ)* Vườn + shop + bảng xếp hạng + sự kiện, Flutter hoàn chỉnh |
+| M8 | *(đang chờ)* Calendar: gộp bảng, CRUD, timeline, lặp + nhắc nhở |
+| M9 | *(đang chờ)* Liên kết Calendar ↔ Study ↔ Journal + thống kê thời gian |
+| M10 | *(đang chờ)* Dự báo thời tiết Open-Meteo + thẻ thời tiết trên Home |
 
 ---
 
@@ -150,6 +202,11 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | *(Phase 8–13)* Giới hạn ngày bị lách bằng nhiều thiết bị/nhiều tài khoản | Trung | Chặm trần 480 phút/ngày tính trên DB, không tin client |
 | *(Phase 8–13)* Mất mạng giữa lúc tập trung → mất thưởng | Trung | UI cảnh báo và **tự pause** thay vì đếm tiếp |
 | *(Phase 8–13)* Đồng hồ hệ thống lệch ảnh hưởng `streak_days` | Thấp | Server dùng `now()` của DB làm chuẩn; `streak` tính theo ngày server |
+| *(Phase 14)* Xoá `schedule_items` làm mất lịch người dùng | **Cao** | Đếm hàng trước → migrate → **đối chiếu số hàng khớp** → mới `DROP`. Có bước rollback trong `downgrade()` |
+| *(Phase 14–18)* Lịch lặp nhân bản hàng làm DB phình | Trung *(đã chốt thiết kế)* | Lưu **1 hàng + quy tắc**, bung lần lặp khi đọc |
+| *(Phase 17)* Web không có push → không nhắc được khi app đóng | Trung *(đã chốt)* | Chấp nhận: nhắc 2 lớp (khi app mở + banner). Muốn nhắc khi đóng thì cần web push, ngoài phạm vi |
+| *(Phase 19–20)* Open-Meteo chậm / mất mạng làm treo app | Trung *(đã chốt thiết kế)* | Timeout cứng 5s + cache 2 tầng + luôn có đường về bằng `weather_snapshots`; lỗi thì trả cache chứ không trả lỗi |
+| *(Phase 19–20)* Gọi Open-Meteo quá nhiều lần bị giới hạn | Thấp | Cache bộ nhớ 30 phút theo tọa độ; `WEATHER_API_ENABLED=false` để tắt hẳn |
 
 ---
 

@@ -403,6 +403,12 @@ Câu nhập ở ô *gửi gắm tương lai* chỉ vào kho `self_messages`; nó
 | *(Phase 8–13)* user_inventory | `uq_inventory_user_item (user_id, item_code)` |
 | *(Phase 8–13)* garden_challenge_progress | `uq_progress_challenge_user (challenge_id, user_id)` |
 
+> **Phase 14–20 — chưa triển khai.** Xem [10-calendar.md](10-calendar.md) và [11-weather-forecast.md](11-weather-forecast.md).
+> Bảng `events` sẽ được bổ sung `recurrence_rule`, `recurrence_until`, `reminder_minutes`, `status`,
+> `color`, `entry_id`, `focus_session_id`; bảng `schedule_items` sẽ được migrate rồi bỏ.
+> Bảng mới `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) lưu lịch sử thời tiết;
+> bảng `users` thêm `weather_lat`, `weather_lon`, `weather_location_name`.
+
 ## 19. Ghi chú kỹ thuật
 
 - `gen_random_uuid()` cần extension `pgcrypto` (Neon hỗ trợ sẵn).
