@@ -1,27 +1,8 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'config.dart';
-
-/// Persists the JWT in platform-secure storage (never in plain text).
-class TokenStorage {
-  TokenStorage(this._storage);
-
-  final FlutterSecureStorage _storage;
-  static const _key = 'memoir_access_token';
-
-  Future<String?> read() => _storage.read(key: _key);
-
-  Future<void> write(String token) => _storage.write(key: _key, value: token);
-
-  Future<void> clear() => _storage.delete(key: _key);
-}
-
-final tokenStorageProvider = Provider<TokenStorage>(
-  (ref) => TokenStorage(const FlutterSecureStorage()),
-);
 
 /// Holds the current session state and drives navigation guards.
 class AuthState {
@@ -53,34 +34,50 @@ final authProvider =
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._ref) : super(const AuthState(isLoading: true)) {
+    // The client reports a session it cannot recover; drop straight to the
+    // login screen instead of leaving dead buttons that fail one by one.
+    _ref.read(sessionStoreProvider).onSessionLost = _handleSessionLost;
     _restore();
   }
 
   final Ref _ref;
 
-  TokenStorage get _tokenStorage => _ref.read(tokenStorageProvider);
+  SessionStore get _session => _ref.read(sessionStoreProvider);
 
-TokenHolder get _tokenHolder => _ref.read(tokenHolderProvider);
+  void _handleSessionLost() {
+    if (state.isAuthenticated) logout();
+  }
 
-  /// On startup: read a stored token and validate it via `/auth/me`.
+  /// On startup: read the stored tokens and validate via `/auth/me`.
+  ///
+  /// An expired access token is normal, not a reason to throw the user out:
+  /// the refresh token is exchanged first (the client interceptor does it), so
+  /// an account that has not logged in for weeks still lands on the home
+  /// screen. Only when that also fails is the session discarded.
   Future<void> _restore() async {
-    final token = await _tokenStorage.read();
-    if (token == null) {
+    final access = await _session.readAccess();
+    final refresh = await _session.readRefresh();
+    if (access == null && refresh == null) {
       state = const AuthState();
       return;
     }
+
+    // Publish before /auth/me: that route is protected, so the request
+    // itself needs the Authorization header.
+    _session.accessToken = access;
+    _session.refreshToken = refresh;
     try {
-      // Publish the token before validating: /auth/me is a protected route,
-      // so the request itself needs the Authorization header.
-      _tokenHolder.set(token);
       final user = await _ref.read(apiClientProvider).get('/auth/me');
-      state = AuthState(token: token, user: user);
+      state = AuthState(token: access, user: user);
     } catch (_) {
-      // Token expired or invalid -> clear it and show the login screen.
-      _tokenHolder.set(null);
-      await _tokenStorage.clear();
-      state = const AuthState();
+      // The interceptor already tried to refresh; nothing left to recover.
+      await _clearSession();
     }
+  }
+
+  Future<void> _clearSession() async {
+    await _session.clear();
+    state = const AuthState();
   }
 
   Future<void> login(String username, String password) async {
@@ -92,14 +89,13 @@ TokenHolder get _tokenHolder => _ref.read(tokenHolderProvider);
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
       final token = response['access_token'] as String;
-      await _tokenStorage.write(token);
+      final refresh = response['refresh_token'] as String?;
+      await _session.write(token, refresh);
       // Publish before /auth/me, which runs before state is updated below.
-      _tokenHolder.set(token);
       final user = await _ref.read(apiClientProvider).get('/auth/me');
       state = AuthState(token: token, user: user);
     } catch (_) {
-      _tokenHolder.set(null);
-      state = const AuthState();
+      await _clearSession();
       rethrow;
     }
   }
@@ -116,10 +112,10 @@ TokenHolder get _tokenHolder => _ref.read(tokenHolderProvider);
         data: {'email': email, 'username': username, 'password': password},
       );
       final token = response['access_token'] as String;
-      await _tokenStorage.write(token);
-      // Register builds the state inline, but the holder must know the token too
-      // so later authenticated requests carry it.
-      _tokenHolder.set(token);
+      final refresh = response['refresh_token'] as String?;
+      // Register builds the state inline, but the session must know the
+      // token too so later requests carry it.
+      await _session.write(token, refresh);
       state = AuthState(
         token: token,
         user: {
@@ -130,17 +126,12 @@ TokenHolder get _tokenHolder => _ref.read(tokenHolderProvider);
         },
       );
     } catch (_) {
-      _tokenHolder.set(null);
-      state = const AuthState();
+      await _clearSession();
       rethrow;
     }
   }
 
-  Future<void> logout() async {
-    _tokenHolder.set(null);
-    await _tokenStorage.clear();
-    state = const AuthState();
-  }
+  Future<void> logout() => _clearSession();
 }
 
 /// Debug helper so screens can show which backend they target.
