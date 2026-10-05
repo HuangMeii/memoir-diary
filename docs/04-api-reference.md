@@ -30,8 +30,26 @@ username=a@example.com&password=secret123
 ```
 ```json
 // Response 200
+{ "access_token": "eyJ...", "refresh_token": "eyJ...", "token_type": "bearer", "expires_in": 3600 }
+```
+
+### 2.2b. Làm mới token (refresh)
+`POST /auth/refresh`
+```json
+// Request
+{ "refresh_token": "eyJ..." }
+// Response 200
 { "access_token": "eyJ...", "token_type": "bearer", "expires_in": 3600 }
 ```
+
+> **Access token hạn 60 phút, refresh token hạn 30 ngày.** Mỗi token mang claim `type`
+> (`access` / `refresh`) và **không dùng chỗ cho nhau**: dùng refresh token gọi API thì
+> `401`, dùng access token gọi `/auth/refresh` cũng `401`. Endpoint này nạp lại user và
+> kiểm tra `is_active`, nên tài khoản bị khoá không thể dùng refresh token cũ để gia hạn.
+>
+> Refresh token là **stateless** (không lưu DB): không xoay vòng, nên thu hồi riêng từng
+> token không được. Việc vô hiệu hóa tài khoản vẫn cắt phiên ngay vì `is_active` được
+> kiểm tra ở cả `/auth/refresh` lẫn mọi request.
 
 ### 2.3. Thông tin user hiện tại
 `GET /auth/me` → `200 { "id", "email", "username", "display_name", "is_active", "role", "created_at" }`

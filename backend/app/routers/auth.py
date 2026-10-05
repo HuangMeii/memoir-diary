@@ -1,16 +1,31 @@
-"""Authentication endpoints: register, login, me."""
+"""Authentication endpoints: register, login, refresh, me."""
+
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from jose import JWTError
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
+    hash_password,
+    verify_password,
+)
 from app.models import User
-from app.schemas.auth import RegisterResponse, Token, UserCreate, UserOut
+from app.schemas.auth import (
+    RefreshRequest,
+    RegisterResponse,
+    Token,
+    UserCreate,
+    UserOut,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -40,7 +55,9 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
 
     token = create_access_token(str(user.id))
     return RegisterResponse(
-        **UserOut.model_validate(user).model_dump(), access_token=token
+        **UserOut.model_validate(user).model_dump(),
+        access_token=token,
+        refresh_token=create_refresh_token(str(user.id)),
     )
 
 
@@ -70,6 +87,44 @@ def login(
     token = create_access_token(str(user.id))
     return Token(
         access_token=token,
+        refresh_token=create_refresh_token(str(user.id)),
+        expires_in=settings.access_token_expire_minutes * 60,
+    )
+
+
+@router.post("/refresh", response_model=Token)
+def refresh(
+    payload: RefreshRequest,
+    db: Session = Depends(get_db),
+) -> Token:
+    """Issue a fresh access token from a valid refresh token.
+
+    `decode_refresh_token` rejects an access token sent here, so the two cannot
+    be swapped. The account is re-loaded and re-checked: a deactivated user must
+    not be able to keep renewing their session with an old refresh token.
+    """
+    try:
+        subject = decode_refresh_token(payload.refresh_token).get("sub")
+        if subject is None:
+            raise ValueError("no subject")
+        user_id = uuid.UUID(str(subject))
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from None
+
+    user = db.get(User, user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return Token(
+        access_token=create_access_token(str(user.id)),
         expires_in=settings.access_token_expire_minutes * 60,
     )
 

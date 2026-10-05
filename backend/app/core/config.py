@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    #: Refresh tokens are long-lived; access tokens stay short and are renewed
+    #: silently through POST /auth/refresh.
+    refresh_token_expire_days: int = 30
 
     # Admin bootstrap (dùng bởi `python -m app.seed.admin`).
     # Để trống thì script dùng email/username mặc định và hỏi mật khẩu.
