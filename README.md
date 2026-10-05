@@ -1,4 +1,4 @@
-# 📔 Memoir — Nhật ký số (Digital Diary)
+﻿# 📔 Memoir — Nhật ký số (Digital Diary)
 
 > Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **FastAPI**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
 
@@ -24,6 +24,8 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 - ✅ **Todo list**: mục tiêu tuần, sự kiện đặc biệt, lịch biểu.
 - ❤️ **Theo dõi sức khỏe**: số bước chân, thời gian tập luyện.
 - 👤 **Multi-user**: đăng ký / đăng nhập / cách ly dữ liệu theo tài khoản.
+- 🔐 **Quản trị (admin)**: thêm/sửa/xoá câu trong **kho câu dùng chung**, xem danh sách tài khoản, khoá/mở tài khoản, nâng/hạ quyền. Tài khoản thường không sửa được câu dùng chung.
+- 🌳 **Khu vườn học tập** *(đang phát triển — xem [docs/09-focus-garden.md](docs/09-focus-garden.md))*: timer tập trung có chống gian lân → đổi thời gian học thành **coin/EXP** → gieo **hạt đậu nảy mầm** → mua **nước, phân bón** → **bảng xếp hạng** và **sự kiện** do admin tổ chức.
 
 ---
 
@@ -42,6 +44,10 @@ Flutter Web (build web)   ─┘                                      │
                                                                            reflections, notes, todos,
                                                                            events, schedule_items,
                                                                            health_logs
+                                                                            · Phase 8-13 (chua co):
+                                                                            ·   focus_sessions, garden_profiles,
+                                                                            ·   garden_plots, shop_items, user_inventory,
+                                                                            ·   garden_challenges, garden_challenge_progress
 ```
 
 - **1 codebase Flutter** build ra cả **app** (`flutter build apk/appbundle`, iOS) và **web** (`flutter build web`).
@@ -55,7 +61,7 @@ Flutter Web (build web)   ─┘                                      │
 |---|---|
 | Frontend | Flutter 3.47 (Material 3), Riverpod, go_router, dio, image_picker, flutter_secure_storage, fl_chart |
 | Backend | Python 3.14 (Miniconda), FastAPI, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic v2, boto3, psycopg 3 |
-| Auth | JWT (HS256) + bcrypt (passlib), OAuth2 password flow |
+| Auth | JWT (HS256) + bcrypt, OAuth2 password flow, phân quyền `role` (`user` / `admin`) |
 | Database | PostgreSQL (Neon serverless) |
 | Object Storage | Neon Object Storage (S3-compatible) |
 | Tooling | Git, winget, Docker (tùy chọn) |
@@ -76,12 +82,13 @@ Memoir/
 │  ├─ 05-features.md
 │  ├─ 06-setup-deploy.md
 │  ├─ 07-ui-design.md
-│  └─ 08-quotes-seed.md
+│  ├─ 08-quotes-seed.md
+│  └─ 09-focus-garden.md
 ├─ backend/        # FastAPI (Phase 1)
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13) đã có đặc tả nhưng chưa viết code.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -97,6 +104,7 @@ Memoir/
 | [docs/06-setup-deploy.md](docs/06-setup-deploy.md) | Cài đặt, cấu hình, migrate, seed, build |
 | [docs/07-ui-design.md](docs/07-ui-design.md) | Wireframe, bảng màu mood/weather |
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
+| [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 
 ---
 
@@ -110,8 +118,8 @@ pip install -r requirements.txt
 copy .env.example .env      # điền DATABASE_URL, S3_*, JWT_SECRET
 alembic upgrade head
 python -m app.seed.seed
+python -m app.seed.admin    # tạo tài khoản admin quản lý kho câu
 uvicorn app.main:app --reload
-
 # Flutter web
 cd flutter_app
 flutter pub get
@@ -120,6 +128,22 @@ flutter run -d chrome
 # Flutter app
 flutter build apk --release
 ```
+
+**Tạo tài khoản admin** (quản lý kho câu dùng chung):
+
+- Để trống `ADMIN_*` trong `.env` → script hỏi mật khẩu ở terminal (không hiện ký tự):
+
+  ```powershell
+  python -m app.seed.admin
+  ```
+
+- Hoặc chỉ đặt quyền admin cho tài khoản đã có (không cần mật khẩu):
+
+  ```powershell
+  python -m app.seed.admin --email ban@example.com --promote-only
+  ```
+
+Admin đăng nhập bình thường rồi dùng nhóm endpoint `/api/v1/admin/*` (Swagger: http://127.0.0.1:8000/docs). Tài khoản thường gọi nhóm này sẽ nhận `403`.
 
 Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 
@@ -135,6 +159,14 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 - [x] Phase 5 — Upload ảnh end-to-end
 - [ ] Phase 6 — Build apk *(web đã xong; apk cần cài Android SDK)*
 - [ ] Phase 7 — Kiểm thử & deploy
+- [ ] Phase 8 — Backend Focus Garden: timer + session *(đặc tả đã xong, chưa code)*
+- [ ] Phase 9 — Chống gian lân + coin/EXP
+- [ ] Phase 10 — Vườn, shop, vật phẩm
+- [ ] Phase 11 — Bảng xếp hạng + sự kiện
+- [ ] Phase 12 — Flutter: timer + hub vườn
+- [ ] Phase 13 — Flutter: shop, leaderboard, sự kiện
+
+> Các phase 8–13 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md).
 
 ---
 

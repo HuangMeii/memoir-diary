@@ -12,6 +12,7 @@ Xây dựng ứng dụng nhật ký đa người dùng, cho phép:
 - Lưu giữ các mục phản tư cá nhân (góc nhìn khác, nhắn nhủ tương lai, biết ơn, giấc mơ...).
 - Nuôi dưỡng động lực bằng kho câu động viên (CRUD) + câu ngẫu nhiên + phản tư.
 - Quản lý ghi chú, todo, sự kiện, lịch biểu và theo dõi sức khỏe.
+- Biến thời gian học thành động lực: vòng tập trung (timer) → coin/EXP → gieo hạt đậu nảy mầm → mua nước/phân bón → bảng xếp hạng và sự kiện (đặc tả: [docs/09-focus-garden.md](docs/09-focus-garden.md)).
 
 ---
 
@@ -81,6 +82,44 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 
 ---
 
+### ⬜ Phase 8 — Backend: Focus Garden (CHƯA TRIỂN KHAI)
+> Đặc tả đầy đủ: [docs/09-focus-garden.md](docs/09-focus-garden.md)
+
+- [ ] 7 bảng mới (`garden_profiles`, `focus_sessions`, `garden_plots`, `shop_items`, `user_inventory`, `garden_challenges`, `garden_challenge_progress`) + migration Alembic
+- [ ] `focus_service` + router `/focus` (start / active / heartbeat / pause / resume / complete / cancel / history)
+- [ ] Test: vòng đời phiên, idempotency, restore phiên sau khi app bị tắt
+
+### ⬜ Phase 9 — Chống gian lân + Coin/EXP (CHƯA TRIỂN KHAI)
+- [ ] Server đo thời gian (không tin client), heartbeat 30s, `stall_count`
+- [ ] Đối chiếu `desync` (|server − client| > 30s), chặn phiên < 60s
+- [ ] Giới hạn ngày (480 phút) → trả `capped`
+- [ ] Cộng Coin `floor(minutes/5)`, EXP, `level`, `streak_days`
+
+### ⬜ Phase 10 — Vườn, shop, vật phẩm (CHƯA TRIỂN KHAI)
+- [ ] Gieo hạt đậu, 5 stage nảy mầm (`seed → sprout → young → mature → bloom`)
+- [ ] Seed `shop_items` (nước 5 · phân bón 10 · hạt 3 coin)
+- [ ] Router `/garden` (profile / plots / water / fertilize / harvest / shop / inventory / purchase)
+- [ ] Thu hoạch khi `bloom` → thưởng EXP
+
+### ⬜ Phase 11 — Bảng xếp hạng + Sự kiện (CHƯA TRIỂN KHAI)
+- [ ] `GET /garden/leaderboard?period=day|week|all` (kèm hạng của chính mình)
+- [ ] Sự kiện do admin tạo qua `/admin/garden/challenges` (dùng `require_admin`)
+- [ ] Tiến độ tự động theo hoạt động thật + nhận thưởng (`claim`)
+
+### ⬜ Phase 12 — Flutter: timer + hub vườn (CHƯA TRIỂN KHAI)
+- [ ] `FocusTimerNotifier` (Riverpod) + `Timer.periodic` heartbeat + `WidgetsBindingObserver`
+- [ ] `focus_timer_screen.dart`: Pause / Resume / Reset / Complete theo flow đã chốt
+- [ ] `garden_screen.dart` (hub) + `plant_view.dart` (`CustomPainter` theo stage)
+- [ ] Mất mạng → cảnh báo và tự pause
+
+### ⬜ Phase 13 — Flutter: shop, leaderboard, sự kiện (CHƯA TRIỂN KHAI)
+- [ ] `garden_shop_screen.dart` (mua nước / phân bón / hạt)
+- [ ] `leaderboard_screen.dart` (ngày / tuần / tất cả)
+- [ ] `garden_events_screen.dart` (sự kiện + tiến độ + nhận thưởng)
+- [ ] Gắn lối vào khu vườn từ `home_screen.dart`
+
+---
+
 ## 4. Cột mốc (Milestones)
 
 | Mốc | Kết quả |
@@ -91,6 +130,8 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | M3 | Flutter chạy được web, viết & lưu nhật ký |
 | M4 | Upload ảnh end-to-end |
 | M5 | Build web + apk, deploy |
+| M6 | *(đang chờ)* Backend Focus Garden: timer + chống gian lân + coin/EXP |
+| M7 | *(đang chờ)* Vườn + shop + bảng xếp hạng + sự kiện, Flutter hoàn chỉnh |
 
 ---
 
@@ -105,6 +146,10 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | Android SDK chưa cài | **Cao** | Chặn `flutter build apk` và test trên điện thoại thật. Cài tại https://developer.android.com/studio |
 | Android chặn HTTP cleartext (API 9+) | **Cao** | Đã thêm `android:usesCleartextTraffic` vào `AndroidManifest.xml` để test với backend LAN |
 | Xác thực JWT bị lộ secret | Cao | Lưu `JWT_SECRET` trong `.env`, không commit |
+| *(Phase 8–13)* Timer gian lật: bỏ app nhưng giữ phiên chạy | Cao *(đã chốt thiết kế)* | **Server đo thời gian**, heartbeat 30s, quãng > 90s bị loại khỏi `credited_minutes`, `stall_count >= 3` → từ chối |
+| *(Phase 8–13)* Giới hạn ngày bị lách bằng nhiều thiết bị/nhiều tài khoản | Trung | Chặm trần 480 phút/ngày tính trên DB, không tin client |
+| *(Phase 8–13)* Mất mạng giữa lúc tập trung → mất thưởng | Trung | UI cảnh báo và **tự pause** thay vì đếm tiếp |
+| *(Phase 8–13)* Đồng hồ hệ thống lệch ảnh hưởng `streak_days` | Thấp | Server dùng `now()` của DB làm chuẩn; `streak` tính theo ngày server |
 
 ---
 

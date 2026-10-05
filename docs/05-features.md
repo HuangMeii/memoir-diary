@@ -97,7 +97,45 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ---
 
-## 15. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
+## 15. Khu vườn học tập (Focus Garden) — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Thiết kế đầy đủ: [09-focus-garden.md](09-focus-garden.md).
+> Lộ trình: [Phase 8–13](../PLAN.md).
+
+- **Mô tả**: vòng lặp "học → được thưởng": timer tập trung có chống gian lân → đổi thời gian học thành coin/EXP → gieo hạt đậu nảy mầm → mua nước, phân bón → xếp hạng và sự kiện.
+- **Dữ liệu**: `focus_sessions`, `garden_profiles`, `garden_plots`, `shop_items`, `user_inventory`, `garden_challenges`, `garden_challenge_progress`.
+
+### 15.1. Timer tập trung
+- **Mô tả**: chọn thời lượng, bấm START, đếm ngồi. Mỗi 30s gửi **heartbeat** lên server.
+- **UI**: `focus_timer_screen.dart` — đồng hồ đếm ngược + 4 nút: **Pause** (tạm dừng → Resume), **Reset** (hủy → 0 coin), **Thoát app** (hủy), **Hoàn thành**.
+- **Luồng**: START → Focus → *(Pause | Thoát app | Reset)* → *(Tạm dừng | Hủy session)* → *(Resume)* → Hoàn thành → **kiểm tra gian lân** → **kiểm tra giới hạn ngày** → **tính Study Time** → **tính Coin/EXP**.
+- **Quy tắc**: server đo thời gian; quãng > 90s không heartbeat bị loại khỏi `credited_minutes`; phiên < 60s không được thưởng.
+- **Mất mạng**: hiện cảnh báo và **tự pause** (không đếm rồi mất thưởng).
+
+### 15.2. Gieo hạt đậu — cây nảy mầm
+- **Mô tả**: mỗi phiên hoàn thành tự tưới và cộng `credited_minutes` vào cây đang lớn.
+- **5 giai đoạn**: `seed` (hạt) → `sprout` (nảy mầm, 30) → `young` (cây non, 90) → `mature` (cây lớn, 180) → `bloom` (nở hoa, 300).
+- **Thu hoạch**: chỉ khi `bloom` → thưởng EXP, cây đánh dấu `harvested_at`.
+- **UI**: `garden_screen.dart` (hub) + `plant_view.dart` (vẽ cây theo stage bằng `CustomPainter`).
+
+### 15.3. Shop: coin → nước, phân bón, hạt
+- **Giá**: nước **5** · phân bón **10** · hạt đậu **3** coin.
+- **Tỉ lệ**: `coin = floor(credited_minutes / 5)`, `exp = credited_minutes`, `level = 1 + exp // 300`.
+- **UI**: `garden_shop_screen.dart` — danh mục + số coin hiện có + túi vật phẩm.
+
+### 15.4. Bảng xếp hạng
+- **Mô tả**: xếp theo phút học đã được tính thưởng, kỳ `day` / `week` / `all`.
+- **UI**: `leaderboard_screen.dart` — luôn hiển thị **hạng của chính mình** dù ngoài top.
+- **Riêng tư**: chỉ hiện `username`, không lộ email hay nội dung nhật ký.
+
+### 15.5. Sự kiện (tổ chức bởi admin)
+- **Mô tả**: admin tạo sự kiện có mốc (`metric`, `target`) và phần thưởng trong cửa sổ thời gian; tiến độ user **tự động** tăng theo hoạt động thật.
+- **Nhận thưởng**: nút claim khi đủ điều kiện (`claimed_at` chống nhận 2 lần).
+- **UI**: `garden_events_screen.dart` (user) + API `/admin/garden/challenges` (admin).
+
+---
+
+## 16. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
 
 | Yêu cầu | Bảng | Cột/Trường |
 |---|---|---|
@@ -117,3 +155,9 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 | Sự kiện đặc biệt | events | title, start_at, end_at |
 | Lịch biểu | schedule_items | title, start_at, recurrence_rule |
 | Sức khỏe | health_logs | steps, workout_minutes |
+| *(P8–13)* Timer tập trung | focus_sessions | planned_minutes, elapsed_seconds, credited_minutes, stall_count |
+| *(P8–13)* Ví coin/EXP | garden_profiles | coins, exp, level, streak_days |
+| *(P8–13)* Cây nảy mầm | garden_plots | stage, growth, water_level, fertilizer_level |
+| *(P8–13)* Mua nước/phân bón/hạt | shop_items, user_inventory | price_coins, item_code, quantity |
+| *(P8–13)* Bảng xếp hạng | garden_profiles, focus_sessions | (SUM credited_minutes theo kỳ) |
+| *(P8–13)* Sự kiện | garden_challenges, garden_challenge_progress | metric, target, progress, reward_coins |
