@@ -357,6 +357,7 @@ class WeatherCurrent {
     required this.icon,
     this.time,
     this.temperature,
+    this.updatedAt,
   });
 
   final String? time;
@@ -365,12 +366,17 @@ class WeatherCurrent {
   final String condition;
   final String icon;
 
+  /// When the server fetched this reading, so a cached answer can be labelled
+  /// with the time it was actually taken.
+  final String? updatedAt;
+
   factory WeatherCurrent.fromJson(Map<String, dynamic> json) => WeatherCurrent(
         time: json['time'] as String?,
         temperature: (json['temperature'] as num?)?.toDouble(),
         weatherCode: json['weather_code'] as int? ?? 0,
         condition: json['condition'] as String? ?? '',
         icon: json['icon'] as String? ?? '',
+        updatedAt: json['updated_at'] as String?,
       );
 }
 

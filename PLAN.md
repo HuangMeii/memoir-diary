@@ -157,12 +157,12 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [x] Router `/weather` (current / daily / history / location) + timeout 5s, lỗi thì trả cache
 - [x] Endpoint `weather` tương ứng trong backend Serverpod
 
-### 🟡 Phase 20 — Flutter: dự báo thời tiết (ĐANG LÀM)
-- [x] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới (ẩn khi 503, nhãn "Dữ liệu cũ")
+### ✅ Phase 20 — Flutter: dự báo thời tiết (HOÀN THÀNH)
+- [x] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới (ẩn khi 503)
 - [x] `weather_screen.dart` — đổi vị trí (lat/lon/tên)
 - [x] Footer **Tiện ích** (`app_footer.dart` + `utilities.dart`) có mục Thời tiết, mở rộng dần
-- [ ] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
-- [ ] Lỗi mạng → hiện nhãn "cập nhật lúc HH:mm"
+- [x] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
+- [x] Dữ liệu cache → nhãn **"Dữ liệu cũ · cập nhật HH:mm"** (backend trả `updated_at`)
 
 ### ⬜ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (CHƯA TRIỂN KHAI)
 - [ ] `IconPickerStrip` — gộp 2 nhóm (5 thời tiết + 5 cảm xúc) thành **1 hàng ngang** trên web

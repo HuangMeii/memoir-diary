@@ -243,7 +243,11 @@ def current_weather(db: Session, user: User) -> dict:
                 raw = _fetch(lat, lon)
                 rows = _daily_rows(raw)
                 payload = {
-                    "current": raw.get("current") or {},
+                    "current": {
+                        **(raw.get("current") or {}),
+                        # When the reading was taken, so the UI can label it.
+                        "updated_at": datetime.now(UTC).isoformat(),
+                    },
                     "daily": [_shape_row(r, ids) for r in rows],
                 }
                 _remember(lat, lon, payload)
@@ -270,6 +274,8 @@ def current_weather(db: Session, user: User) -> dict:
                 "time": today.isoformat(),
                 "temperature": stored[0].temp_avg,
                 "weather_code": stored[0].weather_code,
+                # When the stored reading was fetched (newest snapshot first).
+                "updated_at": stored[0].fetched_at.isoformat(),
             },
             # Reversed: that query is newest-first, the UI wants a forecast.
             "daily": [_from_snapshot(s) for s in reversed(stored)],
@@ -290,6 +296,7 @@ def current_weather(db: Session, user: User) -> dict:
             "weather_code": code,
             "condition": label,
             "icon": icon,
+            "updated_at": current.get("updated_at"),
         },
         "daily": payload.get("daily") or [],
         "source": source,

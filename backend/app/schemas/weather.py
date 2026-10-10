@@ -17,6 +17,9 @@ class WeatherCurrentOut(BaseModel):
     weather_code: int
     condition: str
     icon: str
+    #: When this reading was fetched; lets the UI label a cached answer with
+    #: the time it was actually taken.
+    updated_at: str | None = None
 
 
 class WeatherDayOut(BaseModel):

@@ -5,7 +5,8 @@
 > snapshot theo ngày); backend Serverpod có endpoint `weather` tương ứng. Flutter có thẻ
 > `weather_card.dart`, màn hình `weather_screen.dart` (đổi vị trí) và mục **Thời tiết**
 > trong footer **Tiện ích**.
-> Còn lại: nút "Dùng thời tiết hôm nay" ở entry editor và nhãn "cập nhật lúc HH:mm".
+> Đã có cả nút **"Dùng thời tiết hôm nay"** ở entry editor và nhãn **"Dữ liệu cũ · cập nhật HH:mm"**
+> (backend trả thêm `updated_at` cho lượt đọc lấy từ cache/snapshot).
 
 ---
 

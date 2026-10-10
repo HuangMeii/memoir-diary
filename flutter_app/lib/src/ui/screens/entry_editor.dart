@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../widgets/entry_images_section.dart';
 import '../widgets/icon_picker_row.dart';
@@ -158,6 +159,46 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     }
   }
 
+  /// Prefills the weather picker with what the server mapped the forecast to.
+  ///
+  /// The app never writes the weather on its own: the forecast only picks the
+  /// option, and the user can change it before saving.
+  Future<void> _useTodayWeather() async {
+    try {
+      final forecast = await ref.read(weatherProvider.future);
+      final id = _weatherIdFor(forecast);
+      if (id == null) {
+        _snack('Chưa có dữ liệu thời tiết cho ngày này');
+        return;
+      }
+      setState(() => _weatherId = id);
+      _snack('Đã chọn thời tiết theo dự báo');
+    } catch (_) {
+      _snack('Không lấy được dữ liệu thời tiết');
+    }
+  }
+
+  /// The `weathers.id` the server mapped [widget.date] to, falling back to the
+  /// first forecast day when the exact day is missing.
+  int? _weatherIdFor(WeatherForecast forecast) {
+    final target = widget.date;
+    for (final day in forecast.daily) {
+      final d = day.date.toLocal();
+      if (d.year == target.year &&
+          d.month == target.month &&
+          d.day == target.day) {
+        return day.weatherId;
+      }
+    }
+    return forecast.daily.isEmpty ? null : forecast.daily.first.weatherId;
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final moods = ref.watch(moodsProvider);
@@ -199,6 +240,14 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                             selectedId: _weatherId,
                             onSelected: (id) =>
                                 setState(() => _weatherId = id),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: _useTodayWeather,
+                            icon: const Icon(Icons.wb_sunny_outlined, size: 18),
+                            label: const Text('Dùng thời tiết hôm nay'),
                           ),
                         ),
                         const SizedBox(height: 18),

@@ -68,8 +68,8 @@ class WeatherForecastView extends StatelessWidget {
                   ),
                 ),
                 if (forecast.isStale)
-                  const Chip(
-                    label: Text('Dữ liệu cũ'),
+                  Chip(
+                    label: Text(_staleLabel(current.updatedAt)),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -92,6 +92,17 @@ class WeatherForecastView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Label for a cached reading: includes the time it was taken when the server
+/// sent one, otherwise falls back to a plain warning.
+String _staleLabel(String? updatedAt) {
+  final parsed = updatedAt == null ? null : DateTime.tryParse(updatedAt);
+  if (parsed == null) return 'Dữ liệu cũ';
+  final local = parsed.toLocal();
+  final hh = local.hour.toString().padLeft(2, '0');
+  final mm = local.minute.toString().padLeft(2, '0');
+  return 'Dữ liệu cũ · cập nhật $hh:$mm';
 }
 
 class _DayTile extends StatelessWidget {
