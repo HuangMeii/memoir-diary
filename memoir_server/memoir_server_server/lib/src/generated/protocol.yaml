@@ -1,0 +1,80 @@
+admin:
+  - listUsers:
+  - setUserActive:
+  - setUserRole:
+  - systemQuotes:
+  - createSystemQuote:
+  - updateSystemQuote:
+  - deleteSystemQuote:
+auth:
+  - register:
+  - login:
+  - me:
+  - logout:
+health:
+  - list:
+  - save:
+entries:
+  - list:
+  - byDate:
+  - create:
+  - update:
+  - delete:
+images:
+  - createUploadDescription:
+  - confirmUpload:
+  - forEntry:
+  - delete:
+lookups:
+  - moods:
+  - weathers:
+notes:
+  - list:
+  - create:
+  - update:
+  - delete:
+events:
+  - list:
+  - create:
+  - update:
+  - delete:
+schedules:
+  - list:
+  - create:
+  - update:
+  - delete:
+todos:
+  - list:
+  - create:
+  - update:
+  - delete:
+dailyQuotes:
+  - today:
+  - history:
+  - reshuffle:
+quotes:
+  - list:
+  - create:
+  - update:
+  - delete:
+reflections:
+  - list:
+  - create:
+  - update:
+  - delete:
+selfMessages:
+  - list:
+  - create:
+  - update:
+  - delete:
+seed:
+  - run:
+stats:
+  - moodGrid:
+  - weatherGrid:
+  - summary:
+weather:
+  - current:
+  - daily:
+  - history:
+  - setLocation:

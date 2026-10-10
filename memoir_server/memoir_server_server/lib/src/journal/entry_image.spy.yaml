@@ -1,0 +1,14 @@
+### Entry image metadata. Bytes live in object storage.
+class: EntryImage
+table: entry_images
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  entryId: UuidValue, relation(parent=diary_entries, onDelete=Cascade)
+  objectKey: String
+  url: String?
+  contentType: String, default='image/jpeg'
+  sizeBytes: int?
+  width: int?
+  height: int?
+  caption: String?
+  createdAt: DateTime, default=now

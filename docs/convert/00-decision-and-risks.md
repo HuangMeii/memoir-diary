@@ -1,12 +1,16 @@
-# 00 — Quyết định giữ FastAPI và rủi ro
+# 00 — Quyết định chuyển backend sang Serverpod/Dart và rủi ro
 
 ## 1. Câu trả lời ngắn
 
-Không có phương án an toàn để chuyển **toàn bộ backend** vào Flutter binary.
-Flutter Web còn công khai hơn vì JavaScript bundle và network request đều có thể
-được kiểm tra.
+Đích dài hạn là **Dart backend riêng (Serverpod)** cho toàn bộ nghiệp vụ.
+FastAPI chỉ còn là **reference implementation** trong thời gian migration để
+kiểm tra parity và rollback.
 
-Có thể chuyển phần sau vào Flutter:
+Điều **không** làm: **không nhúng backend vào Flutter binary** (app/web).
+Flutter Web đặc biệt không an toàn vì JavaScript bundle và network request đều
+có thể bị kiểm tra. Serverpod là process server riêng, giữ secret phía server.
+
+Có thể chuyển vào Flutter (client):
 
 - UI và routing.
 - Model/DTO.
@@ -15,30 +19,33 @@ Có thể chuyển phần sau vào Flutter:
 - Validation không nhạy cảm.
 - Presentation logic và optimistic UI.
 
-Phải giữ ở managed backend/serverless:
+Bắt buộc ở server (Serverpod, không bao giờ ở client):
 
 - Password authentication và refresh token signing.
-- Quyền truy cập theo user trong FastAPI dependencies/query filters.
-- Admin authorization.
-- Tính cặp quote server-side.
+- Quyền truy cập theo user và admin authorization.
+- Tính cặp quote server-side trong transaction.
 - Presigned/private storage access.
 - Database transaction, uniqueness và aggregate nhạy cảm.
 
 ## 2. Quyết định kiến trúc
 
-Đã quyết định **không thay FastAPI**. FastAPI tiếp tục là lớp application
-server duy nhất cho Flutter App và Flutter Web.
+Đã chốt: backend nghiệp vụ đích là **Serverpod/Dart**. Trong thời gian
+migration, FastAPI tiếp tục chạy như **reference implementation** để kiểm tra
+parity và rollback; FastAPI chỉ bị xóa sau khi Serverpod đạt parity và rollback
+đã kiểm tra (chi tiết ở `07-serverpod-migration-roadmap.md`).
 
-## 3. Các thành phần được giữ
+## 3. Thành phần FastAPI tạm giữ trong migration
 
-| Tiêu chí | Bắt buộc |
+Các thành phần dưới đây tiếp tục chạy trong FastAPI cho tới khi Serverpod đạt
+parity, sau đó được thay thế ở tầng server.
+
+| Thành phần FastAPI (tạm giữ) | Thay bằng (Serverpod/Dart) |
 |---|---|
-- FastAPI routers, services, schemas và dependencies.
-- SQLAlchemy + Alembic.
-- Neon PostgreSQL.
-- Neon Object Storage qua boto3/SigV4.
-- JWT/bcrypt và CORS server-side.
-- Flutter `ApiClient` + Riverpod.
+| routers, services, schemas, dependencies | Serverpod endpoints + domain services |
+| SQLAlchemy + Alembic | Serverpod ORM + migration |
+| JWT/bcrypt + CORS server-side | Serverpod auth/session + role checks |
+| Neon Object Storage qua boto3/SigV4 | Serverpod storage gateway (signed URL) |
+| Flutter `ApiClient` + Riverpod | Giữ nguyên; chỉ đổi DataSource sang SDK Serverpod |
 
 ## 4. Rủi ro chính
 
@@ -55,13 +62,18 @@ server duy nhất cho Flutter App và Flutter Web.
 | API contract lệch tài liệu | Medium | Contract test và typed DTO |
 | Dev secret dùng ở production | Critical | Secret manager và config theo môi trường |
 | FastAPI downtime | High | Health check, logs, backup và deploy rollback |
+| Serverpod parity drift theo domain | High | Contract fixtures + parity test trước khi chuyển traffic |
+| Lệch phiên bản protocol/code-gen Serverpod client-server | Medium | Pin version Serverpod trong CI, regenerate và review |
+| Migrate session/refresh token sang Serverpod | High | Dual-issue token trong canary, test logout/refresh |
+| Lệch timezone/`now()` khi chuyển sang Dart | Medium | Dùng `now()` của DB làm chuẩn, test ISO week/ngày |
 
-## 5. Điều kiện bắt đầu Phase 1
+## 5. Điều kiện bắt đầu Phase 0 (roadmap 07)
 
-Không bắt đầu Phase 1 nếu chưa có:
+Không bắt đầu rewrite Serverpod nếu chưa có:
 
-- FastAPI staging chạy được và có health check.
+- Dart SDK pin và Serverpod CLI cài/pin trong CI và máy dev.
+- FastAPI staging chạy được và có health check (`/health` local đã OK).
+- Contract fixtures lấy từ response FastAPI hiện tại.
 - Backup database và manifest ảnh.
-- Quyết định giữ FastAPI/Neon PostgreSQL/Object Storage đã được chốt.
 - Danh sách user/auth migration được chấp thuận.
 - Kế hoạch rollback đã thử trên staging.

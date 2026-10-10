@@ -1,0 +1,7 @@
+### Serializable API exception so the client receives a code and a message.
+### Throw on the server; catch `on ApiException` on the client.
+exception: ApiException
+fields:
+  message: String
+  ### Stable code: unauthorized | forbidden | conflict | notFound | validation.
+  code: String?

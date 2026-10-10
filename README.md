@@ -134,7 +134,7 @@ Memoir/
 | [docs/07-ui-design.md](docs/07-ui-design.md) | Wireframe, bảng màu mood/weather |
 | [docs/UI/README.md](docs/UI/README.md) | Bộ đặc tả giao diện Figma: IA, màn hình, flow, wireframe, design system, handoff |
 | [docs/UI-design/README.md](docs/UI-design/README.md) | Brief riêng cho từng trang/màn hình để dựng Figma |
-| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch giữ FastAPI/Neon và hoàn thiện Flutter App + Web |
+| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch chuyển backend sang Serverpod/Dart (FastAPI giữ làm reference/parity) |
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
 | [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |

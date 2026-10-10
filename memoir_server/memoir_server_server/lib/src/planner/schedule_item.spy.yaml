@@ -1,0 +1,12 @@
+### Schedule (timetable) item.
+class: ScheduleItem
+table: schedule_items
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  title: String
+  startAt: DateTime
+  endAt: DateTime?
+  recurrenceRule: String?
+  reminderMinutes: int?
+  createdAt: DateTime, default=now

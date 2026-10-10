@@ -1,18 +1,24 @@
-# 05 — Lộ trình thực thi
+# 05 — Hoàn thiện Flutter & ổn định FastAPI reference
+
+> Đây là track chuẩn bị: tách abstraction trong Flutter và giữ FastAPI ổn định
+> làm reference. Lộ trình **rewrite backend sang Serverpod/Dart** nằm ở
+> `07-serverpod-migration-roadmap.md`.
+>
+> Trạng thái đánh dấu theo thực tế repo ngày 2026-10-10. `[~]` = làm một phần.
 
 ## Phase 0 — Chốt target và bảo vệ hiện trạng
 
-**Deliverable:** chốt Serverpod là backend đích, bảo vệ FastAPI hiện tại làm
-implementation tham chiếu, backup và inventory hoàn chỉnh.
+**Deliverable:** chốt Serverpod là backend đích, giữ FastAPI hiện tại làm
+reference, backup và inventory.
 
-- [x] Chốt hướng Serverpod/Dart + Neon PostgreSQL + Neon Object Storage.
+- [x] Chốt hướng Serverpod/Dart + Neon PostgreSQL + Neon Object Storage (mới trên tài liệu, chưa có ADR — nay đã bổ sung `08`).
 - [x] Giữ FastAPI làm reference backend trong thời gian migration.
-- [ ] Tạo FastAPI staging và kiểm tra `/health`.
-- [ ] Bổ sung config dev/staging/production tách biệt.
+- [~] `/health` trả `ok` ở local (`backend/app/main.py`); staging chưa dựng.
+- [ ] Tách config dev/staging/production (hiện chỉ có 1 `.env`).
 - [ ] Ghi ADR và chi phí ước tính.
 - [ ] Backup DB và manifest ảnh.
 - [ ] Freeze schema production trong thời gian migrate.
-- [ ] Bổ sung feature flag datasource trong Flutter.
+- [ ] Feature flag chọn datasource trong Flutter (`AppConfig` mới có `apiBaseUrl`).
 
 **Gate:** rollback staging thành công.
 
@@ -25,10 +31,10 @@ transport có thể đổi từ FastAPI sang Serverpod.
 - [x] Tạo `FastApiDataSource` và repository đầu tiên cho lookup/journal.
 - [x] Chuyển provider quote, reflection, image gallery và health sang repository.
 - [x] Chuyển auth, entry write, notes, planner và health write khỏi UI gọi `ApiClient` trực tiếp.
-- [ ] Di chuyển model từ `data/models.dart` thành typed domain models.
+- [ ] Di chuyển model từ `data/models.dart` thành typed domain models (notes/planner còn `Map<String, dynamic>`).
 - [ ] Tạo error mapping và loading/empty/error state chuẩn.
 - [ ] Bọc datasource cũ trong `LegacyBackendDataSource`.
-- [ ] Giữ toàn bộ test hiện tại chạy xanh.
+- [ ] Bổ sung test (hiện chỉ có `test/widget_test.dart`) và giữ chúng chạy xanh.
 
 **Gate:** hành vi app không đổi, chỉ thay đổi cấu trúc code.
 
@@ -78,10 +84,26 @@ transport có thể đổi từ FastAPI sang Serverpod.
 
 **Gate:** user thường không thấy/không gọi được admin operation.
 
-## Phase 7 — Production FastAPI và Flutter
+## Phase 7 — Production FastAPI reference
 
-- [ ] Deploy FastAPI production với HTTPS.
+- [ ] Deploy FastAPI production với HTTPS (là reference trong giai đoạn migration).
 - [ ] Build Flutter Web/App trỏ tới production API bằng `--dart-define`.
 - [ ] Theo dõi error rate, auth failure và storage failure.
 - [ ] Canary release Flutter trước khi phát hành rộng.
 - [ ] Giữ rollback image/build và backup bất biến.
+
+## Track Serverpod/Dart — xem `07-serverpod-migration-roadmap.md`
+
+- Toolchain (2026-10-10): Dart 3.13.5 ✅, Flutter 3.47.6 ✅,
+  Serverpod CLI **4.0.4 đã cài** ✅, Docker ❌ (không cần — dùng embedded PostgreSQL).
+- Phase 0 (toolchain + workspace): ✅ `memoir_server/` (workspace + server +
+  generated client + migration `20261010150402579`).
+- Phase 1 (shared infra): ✅ custom `authenticationHandler` + token table
+  (`auth_tokens`), bcrypt cho parity hash cũ, `ApiException` cho lỗi, cloud
+  storage private cho ảnh, model cho toàn bộ 14 bảng.
+- Phase 2–4 (domain phía server): ✅ auth, lookups, entries, images, quotes,
+  self messages, daily quotes, reflections, notes, todos, events, schedules,
+  health, stats, admin, weather, seed. `dart analyze` sạch.
+- Còn lại: Flutter `ServerpodDataSource` sau feature flag, contract fixtures và
+  parity test với FastAPI, chạy `dart test` (embedded PostgreSQL không khởi tạo
+  được trong sandbox hiện tại), rồi cutover theo domain.

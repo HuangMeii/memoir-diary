@@ -1,0 +1,7 @@
+### One coloured cell in the mood/weather month grid.
+class: GridCell
+fields:
+  date: DateTime
+  code: String?
+  label: String?
+  color: String?

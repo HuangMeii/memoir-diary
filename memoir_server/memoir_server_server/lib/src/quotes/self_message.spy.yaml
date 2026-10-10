@@ -1,0 +1,9 @@
+### The user's own message to self.
+class: SelfMessage
+table: self_messages
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  entryId: UuidValue?
+  content: String
+  createdAt: DateTime, default=now

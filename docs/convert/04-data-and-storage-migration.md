@@ -1,5 +1,8 @@
 # 04 — Migration dữ liệu, Auth và Storage
 
+> Transport: FastAPI = reference trong migration; đích cuối = Serverpod/Dart
+> (xem `07-serverpod-migration-roadmap.md`).
+
 ## Phase A — Inventory và backup
 
 - Dump PostgreSQL schema + data.

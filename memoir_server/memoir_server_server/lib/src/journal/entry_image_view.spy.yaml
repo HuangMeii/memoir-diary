@@ -1,0 +1,5 @@
+### An image row plus a short-lived download URL.
+class: EntryImageView
+fields:
+  image: EntryImage
+  url: String

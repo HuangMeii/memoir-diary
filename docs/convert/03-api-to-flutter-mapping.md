@@ -1,5 +1,8 @@
 # 03 — Mapping FastAPI sang Flutter
 
+> Transport: FastAPI = reference trong migration; đích cuối = Serverpod/Dart
+> (xem `07-serverpod-migration-roadmap.md`).
+
 ## 1. Nguyên tắc mapping
 
 Mỗi endpoint FastAPI phải có repository method, model response và test parity.

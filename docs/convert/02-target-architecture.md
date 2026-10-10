@@ -1,5 +1,8 @@
 # 02 — Kiến trúc đích
 
+> Transport: FastAPI = reference trong migration; đích cuối = Serverpod/Dart
+> (xem `07-serverpod-migration-roadmap.md`).
+
 ## 1. Cấu trúc Flutter
 
 ```text

@@ -1,5 +1,8 @@
 # 06 — Kiểm thử, rollout và rollback
 
+> Transport: FastAPI = reference trong migration; đích cuối = Serverpod/Dart
+> (xem `07-serverpod-migration-roadmap.md`).
+
 ## 1. Test matrix
 
 ### Auth
