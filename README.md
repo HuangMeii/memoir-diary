@@ -87,6 +87,28 @@ Memoir/
 │  ├─ 05-features.md
 │  ├─ 06-setup-deploy.md
 │  ├─ 07-ui-design.md
+│  ├─ UI/
+│  │  ├─ README.md
+│  │  ├─ 01-information-architecture.md
+│  │  ├─ 02-screen-inventory.md
+│  │  ├─ 03-user-flows.md
+│  │  ├─ 04-wireframes.md
+│  │  ├─ 05-design-system.md
+│  │  └─ 06-figma-handoff.md
+│  ├─ UI-design/
+│  │  ├─ README.md
+│  │  ├─ 01-auth-login.md
+│  │  ├─ ...
+│  │  └─ 26-shared-components.md
+│  ├─ convert/
+│  │  ├─ README.md
+│  │  ├─ 00-decision-and-risks.md
+│  │  ├─ 01-current-backend-inventory.md
+│  │  ├─ 02-target-architecture.md
+│  │  ├─ 03-api-to-flutter-mapping.md
+│  │  ├─ 04-data-and-storage-migration.md
+│  │  ├─ 05-execution-phases.md
+│  │  └─ 06-testing-and-cutover.md
 │  ├─ 08-quotes-seed.md
 │  ├─ 09-focus-garden.md
 │  ├─ 10-calendar.md
@@ -110,6 +132,9 @@ Memoir/
 | [docs/05-features.md](docs/05-features.md) | Đặc tả tính năng → màn hình |
 | [docs/06-setup-deploy.md](docs/06-setup-deploy.md) | Cài đặt, cấu hình, migrate, seed, build |
 | [docs/07-ui-design.md](docs/07-ui-design.md) | Wireframe, bảng màu mood/weather |
+| [docs/UI/README.md](docs/UI/README.md) | Bộ đặc tả giao diện Figma: IA, màn hình, flow, wireframe, design system, handoff |
+| [docs/UI-design/README.md](docs/UI-design/README.md) | Brief riêng cho từng trang/màn hình để dựng Figma |
+| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch giữ FastAPI/Neon và hoàn thiện Flutter App + Web |
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
 | [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |

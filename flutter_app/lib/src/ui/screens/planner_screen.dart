@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
+import '../../data/providers.dart';
+import '../../data/repositories/planner_repository.dart';
 import '../../data/providers.dart' show dayKey;
 
 /// The ISO week label the API expects, e.g. `2026-W41`.
@@ -55,34 +56,25 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   /// created successfully looked like it had vanished. Fetching each on its own
   /// keeps one broken call from hiding the other two.
   Future<void> _load() async {
-    final client = ref.read(apiClientProvider);
     final results = await Future.wait([
-      client.get('/todos').catchError((_) => null),
-      client.get('/events').catchError((_) => null),
-      client.get('/schedule-items').catchError((_) => null),
+      ref.read(plannerRepositoryProvider).todos().catchError((_) => <Map<String, dynamic>>[]),
+      ref.read(plannerRepositoryProvider).events().catchError((_) => <Map<String, dynamic>>[]),
+      ref.read(plannerRepositoryProvider).schedules().catchError((_) => <Map<String, dynamic>>[]),
     ]);
     if (!mounted) return;
     setState(() {
       // A null means that call failed, so its previous contents are kept.
-      if (results[0] != null) {
-        _todos = (results[0] as List).cast<Map<String, dynamic>>();
-      }
-      if (results[1] != null) {
-        _events = (results[1] as List).cast<Map<String, dynamic>>();
-      }
-      if (results[2] != null) {
-        _schedules = (results[2] as List).cast<Map<String, dynamic>>();
-      }
+      _todos = results[0];
+      _events = results[1];
+      _schedules = results[2];
       _loading = false;
     });
   }
 
   /// Runs a write request then reloads, reporting failures in a snack bar.
-  Future<void> _write(
-    Future<dynamic> Function(ApiClient client) request,
-  ) async {
+  Future<void> _write(Future<void> Function(PlannerRepository) request) async {
     try {
-      await request(ref.read(apiClientProvider));
+      await request(ref.read(plannerRepositoryProvider));
       await _load();
     } catch (e) {
       if (mounted) {
@@ -93,12 +85,13 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   }
 
   Future<void> _post(String path, Map<String, dynamic> body) =>
-      _write((c) => c.post(path, data: body));
+      _write((repository) => repository.create(path, body));
 
   Future<void> _put(String path, Map<String, dynamic> body) =>
-      _write((c) => c.put(path, data: body));
+      _write((repository) => repository.update(path, body));
 
-  Future<void> _delete(String path) => _write((c) => c.delete(path));
+  Future<void> _delete(String path) =>
+      _write((repository) => repository.delete(path));
 
   /// New goals belong to the week they are typed in, so the weekly list stays
   /// meaningful instead of piling everything into one bucket.

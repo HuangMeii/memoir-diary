@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 
@@ -129,7 +128,7 @@ class _Thumbnail extends ConsumerWidget {
     if (confirmed != true) return;
 
     try {
-      await ref.read(apiClientProvider).delete('/images/${image.id}');
+      await ref.read(imageRepositoryProvider).delete(image.id);
       ref.invalidate(entryImagesProvider(image.image.entryId));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

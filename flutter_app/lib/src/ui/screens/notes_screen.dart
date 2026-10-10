@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
+import '../../data/providers.dart';
 
 /// Quick notes: "Ghi chú nhanh các nội dung cần nhớ".
 class NotesScreen extends ConsumerStatefulWidget {
@@ -30,9 +30,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
   Future<void> _load() async {
     try {
-      final data = await ref.read(apiClientProvider).get('/notes');
+      final notes = await ref.read(notesRepositoryProvider).list();
       setState(() {
-        _notes = (data as List).cast<Map<String, dynamic>>();
+        _notes = notes;
         _loading = false;
       });
     } catch (e) {
@@ -44,10 +44,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     try {
-      await ref.read(apiClientProvider).post('/notes', data: {
-        'title': text.length > 60 ? text.substring(0, 60) : text,
-        'content': text,
-      });
+      await ref.read(notesRepositoryProvider).add(text);
       _controller.clear();
       await _load();
     } catch (e) {
@@ -60,7 +57,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
   Future<void> _delete(String id) async {
     try {
-      await ref.read(apiClientProvider).delete('/notes/$id');
+      await ref.read(notesRepositoryProvider).delete(id);
       await _load();
     } catch (e) {
       if (mounted) {

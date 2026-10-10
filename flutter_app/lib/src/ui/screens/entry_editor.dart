@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/api_client.dart';
 import '../../data/providers.dart';
 import '../widgets/entry_images_section.dart';
 import '../widgets/icon_picker_row.dart';
@@ -93,21 +92,19 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
 
       final existing =
           await ref.read(entryByDateProvider(dayKey(widget.date)).future);
-      final client = ref.read(apiClientProvider);
       if (existing == null) {
-        final created = await client.post('/entries', data: body);
-        _entryId = (created as Map<String, dynamic>)['id'] as String?;
+        final created = await ref.read(entryRepositoryProvider).create(body);
+        _entryId = created['id'] as String?;
       } else {
-        await client.put('/entries/${existing.id}', data: body);
+        await ref.read(entryRepositoryProvider).update(existing.id, body);
         _entryId = existing.id;
       }
 
       // The reflection is stored separately, linked to today's entry.
       if (_reflection.text.trim().isNotEmpty) {
-        await client.post('/reflections', data: {
-          'text': _reflection.text.trim(),
-          'entry_date': iso,
-        });
+        await ref.read(quoteRepositoryProvider).saveReflection(
+          _reflection.text.trim(),
+        );
       }
 
       refreshEntryData(ref);
@@ -145,10 +142,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
         }
         return;
       }
-      await ref.read(apiClientProvider).uploadImage(
-            '/entries/${entry.id}/images',
-            file.path,
-          );
+      await ref.read(imageRepositoryProvider).upload(entry.id, file.path);
       // Refetch so the new thumbnail appears without leaving the editor.
       ref.invalidate(entryImagesProvider(entry.id));
       if (mounted) {

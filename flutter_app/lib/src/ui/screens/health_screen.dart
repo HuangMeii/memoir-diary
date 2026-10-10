@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 
@@ -81,10 +80,10 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(apiClientProvider).post('/health-logs', data: {
-        'log_date': log.logDate.toIso8601String().substring(0, 10),
-        ...payload,
-      });
+      await ref.read(healthRepositoryProvider).save(
+            log.logDate.toIso8601String().substring(0, 10),
+            payload,
+          );
       ref.invalidate(healthLogsProvider(_range));
       // The month summary aggregates health data too, so refresh it as well.
       ref.invalidate(

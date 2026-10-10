@@ -1,5 +1,9 @@
 # 07 — Thiết kế UI (Wireframe & Design System)
 
+> Bộ tài liệu chi tiết để dựng Figma đã được tách tại
+> [docs/UI/README.md](UI/README.md). File này giữ lại design notes và bảng màu
+> nền tảng để tương thích với các tài liệu cũ.
+
 ## 1. Design System
 
 - **Style**: Material 3, bo góc mềm, màu chủ đạo xanh lam dịu.

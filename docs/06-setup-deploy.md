@@ -107,20 +107,24 @@ flutter pub get
 
 **Web (dev)**:
 ```powershell
-flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
 ```
 
 **App (dev, có thiết bị/emulator)**:
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000   # Android emulator
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1   # Android emulator
 ```
 
 **Build phát hành**:
 ```powershell
-flutter build web --release --dart-define=API_BASE_URL=https://api.example.com
-flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com
+flutter build web --release --dart-define=API_BASE_URL=https://api.example.com/api/v1
+flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com/api/v1
 # iOS (cần macOS): flutter build ios --release
 ```
+
+> `API_BASE_URL` phải **kết thúc bằng `/api/v1`** (code nối tiếp `/{endpoint}`).
+> Khi chạy web/emulator dev thì **không cần** `--dart-define` — `AppConfig` tự chọn theo nền tảng (`kIsWeb`).
+> Chỉ **bắt buộc** `--dart-define` khi deploy production hoặc chạy trên thiết bị thật.
 
 ---
 
