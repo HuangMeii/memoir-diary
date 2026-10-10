@@ -168,13 +168,13 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ---
 
-## 17. Dự báo thời tiết (Open-Meteo) — CHƯA TRIỂN KHAI
+## 17. Dự báo thời tiết (Open-Meteo) — ĐÃ TRIỂN KHAI
 
-> **Đặc tả, chưa có trong mã nguồn.** Xem [11-weather-forecast.md](11-weather-forecast.md). Lộ trình: [Phase 19–20](../PLAN.md).
+> **Đã có trong mã nguồn** (Phase 19–20). Xem [11-weather-forecast.md](11-weather-forecast.md).
 
 - **Mô tả**: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện thời tiết thật.
 - **Dữ liệu**: bảng `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) + vị trí lưu trên `users`.
-- **UI**: thẻ thời tiết trên Home + màn hình đổi vị trí + nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết.
+- **UI**: thẻ thời tiết trên Home + màn hình đổi vị trí (mở từ footer **Tiện ích**) + (còn lại) nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết.
 - **Quy tắc**: backend gọi API (không cho client gọi thẳng), **cache 2 tầng**, timeout 5s, lỗi thì trả dữ liệu cache kèm nhãn "cập nhật lúc HH:mm".
 - **Ánh xạ**: mã WMO → 5 nhóm `weathers` sẵn có (nắng/râm/mưa/bão/khác).
 

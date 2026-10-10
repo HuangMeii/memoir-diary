@@ -117,7 +117,7 @@ Memoir/
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18), dự báo thời tiết (Phase 19–20) và UI thời tiết/cảm xúc một hàng (Phase 21) đã có đặc tả nhưng chưa viết code.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13) và Calendar (Phase 14–18) đã có đặc tả nhưng chưa viết code; dự báo thời tiết (Phase 19–20) đã xong (backend + thẻ trên Home + màn hình đổi vị trí, mở từ footer Tiện ích).** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -204,8 +204,8 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 - [ ] Phase 16 — Flutter: timeline ngày + form tạo/sửa
 - [ ] Phase 17 — Calendar: tuần/tháng + nhắc nhở
 - [ ] Phase 18 — Calendar: liên kết Study + Journal
-- [ ] Phase 19 — Backend: API thời tiết Open-Meteo *(đặc tả xong, chưa code)*
-- [ ] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí
+- [x] Phase 19 — Backend: API thời tiết Open-Meteo
+- [x] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí + footer Tiện ích
 - [ ] Phase 21 — UI: thời tiết & cảm xúc cùng một hàng
 
 > Các phase 8–21 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md) và [docs/11-weather-forecast.md](docs/11-weather-forecast.md).

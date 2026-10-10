@@ -148,19 +148,21 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] "Ghi nhật ký sau sự kiện" (`entry_id`)
 - [ ] Thống kê so sánh **phút đã lên lịch** vs **thực tế học**
 
-### ⬜ Phase 19 — Backend: API thời tiết Open-Meteo (CHƯA TRIỂN KHAI)
+### ✅ Phase 19 — Backend: API thời tiết Open-Meteo (HOÀN THÀNH)
 > Đặc tả đầy đủ: [docs/11-weather-forecast.md](docs/11-weather-forecast.md)
 
-- [ ] Thêm `httpx` vào `requirements.txt` (đang chỉ có trong dev)
-- [ ] Bảng `weather_snapshots` + cột vị trí trên `users`
-- [ ] `weather_service`: gọi Open-Meteo, ánh xạ mã WMO → 5 nhóm `weathers`, cache 2 tầng
-- [ ] Router `/weather` (current / daily / history / location) + timeout 5s, lỗi thì trả cache
+- [x] Thêm `httpx` vào `requirements.txt` (đang chỉ có trong dev)
+- [x] Bảng `weather_snapshots` + cột vị trí trên `users`
+- [x] `weather_service`: gọi Open-Meteo, ánh xạ mã WMO → 5 nhóm `weathers`, cache 2 tầng
+- [x] Router `/weather` (current / daily / history / location) + timeout 5s, lỗi thì trả cache
+- [x] Endpoint `weather` tương ứng trong backend Serverpod
 
-### ⬜ Phase 20 — Flutter: dự báo thời tiết (CHƯA TRIỂN KHAI)
-- [ ] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới
-- [ ] `weather_settings_screen.dart` — đổi vị trí
+### 🟡 Phase 20 — Flutter: dự báo thời tiết (ĐANG LÀM)
+- [x] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới (ẩn khi 503, nhãn "Dữ liệu cũ")
+- [x] `weather_screen.dart` — đổi vị trí (lat/lon/tên)
+- [x] Footer **Tiện ích** (`app_footer.dart` + `utilities.dart`) có mục Thời tiết, mở rộng dần
 - [ ] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
-- [ ] Lỗi mạng → hiện dữ liệu cache kèm nhãn "cập nhật lúc HH:mm"
+- [ ] Lỗi mạng → hiện nhãn "cập nhật lúc HH:mm"
 
 ### ⬜ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (CHƯA TRIỂN KHAI)
 - [ ] `IconPickerStrip` — gộp 2 nhóm (5 thời tiết + 5 cảm xúc) thành **1 hàng ngang** trên web

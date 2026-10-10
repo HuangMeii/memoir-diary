@@ -1,8 +1,11 @@
 # 11 — Dự báo thời tiết (Open-Meteo)
 
-> **Trạng thái: ĐẶC TẢ — CHƯA TRIỂN KHAI.**
-> Mã nguồn hiện tại **không có** bất kỳ lời gọi API thời tiết nào. Bảng `weathers` chỉ là **bảng tra cứu 5 giá trị cố định** (nắng / râm / mưa / bão / khác) dùng để tô màu lưới tháng — chưa phải dữ liệu thời tiết thật.
-> Sẽ triển khai ở [Phase 19–20](../PLAN.md).
+> **Trạng thái: ĐÃ TRIỂN KHAI (backend + Flutter).**
+> Backend FastAPI có `/weather/current|daily|history|location` (Open-Meteo, cache 2 tầng,
+> snapshot theo ngày); backend Serverpod có endpoint `weather` tương ứng. Flutter có thẻ
+> `weather_card.dart`, màn hình `weather_screen.dart` (đổi vị trí) và mục **Thời tiết**
+> trong footer **Tiện ích**.
+> Còn lại: nút "Dùng thời tiết hôm nay" ở entry editor và nhãn "cập nhật lúc HH:mm".
 
 ---
 

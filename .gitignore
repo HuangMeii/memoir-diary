@@ -39,6 +39,12 @@ server.log
 server.err
 *.err
 
+# Local run/build logs (server + static dev server)
+backend_run.log
+web_server.log
+build_web.log
+*.status
+
 # --- OS / IDE ---
 .vscode/*
 !.vscode/extensions.json

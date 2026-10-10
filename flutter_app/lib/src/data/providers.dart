@@ -15,6 +15,7 @@ import 'repositories/lookup_repository.dart';
 import 'repositories/notes_repository.dart';
 import 'repositories/planner_repository.dart';
 import 'repositories/quote_repository.dart';
+import 'repositories/weather_repository.dart';
 
 /// The backend the whole app talks to, chosen at build time:
 ///
@@ -80,6 +81,17 @@ final moodsProvider = FutureProvider<List<LookupItem>>(
 final weathersProvider = FutureProvider<List<LookupItem>>(
   (ref) => ref.read(lookupRepositoryProvider).weathers(),
 );
+
+final weatherRepositoryProvider = Provider<WeatherRepository>(
+  (ref) => WeatherRepository(ref.watch(backendDataSourceProvider)),
+);
+
+/// Live forecast plus the multi-day outlook. The server falls back to stored
+/// snapshots when Open-Meteo is unreachable, so this rarely errors.
+final weatherProvider = FutureProvider<WeatherForecast>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(weatherRepositoryProvider).current();
+});
 
 /// The month currently being browsed, as the first day of that month.
 final selectedMonthProvider = StateProvider<DateTime>((ref) {

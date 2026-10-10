@@ -11,7 +11,9 @@ import 'month_grids_screen.dart';
 import 'notes_screen.dart';
 import 'planner_screen.dart';
 import 'quote_history_screen.dart';
+import '../widgets/app_footer.dart';
 import '../widgets/icon_picker_row.dart';
+import '../widgets/weather_card.dart';
 
 /// Home = today's overview: quick mood/weather pick, the daily quote pair,
 /// and shortcuts into the editor, grids and the other journals.
@@ -22,6 +24,9 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final today = DateTime.now();
+    // Wide layouts (web) keep utilities in a persistent footer bar; narrow ones
+    // (mobile) show the same list at the end of the page instead.
+    final wide = MediaQuery.sizeOf(context).width >= kFooterBreakpoint;
     final auth = ref.watch(authProvider);
     // Watched before the data providers below so a guarded provider never runs
     // while the stored token is still being read.
@@ -102,6 +107,8 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 14),
+            const WeatherCard(),
+            const SizedBox(height: 14),
             const QuotePairCard(),
             const SizedBox(height: 14),
             const ShortcutGrid(),
@@ -117,9 +124,14 @@ class HomeScreen extends ConsumerWidget {
                     style: TextStyle(fontSize: 16)),
               ),
             ),
+            if (!wide) ...[
+              const SizedBox(height: 20),
+              const UtilitiesSection(),
+            ],
           ],
         ),
       ),
+      bottomNavigationBar: wide ? const AppFooterBar() : null,
     );
   }
 
