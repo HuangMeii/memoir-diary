@@ -5,32 +5,51 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 
 | File | Nội dung |
 |---|---|
-| `03-backlog-import.csv` | 15 Epic, import trực tiếp vào Jira |
+| `03-backlog-import.csv` | 15 Epic để import (không có cột `Project Key`) |
+| `03-backlog-import.min.csv` | Bản tối giản 2 cột (`Summary`, `Issue Type`) để thử import khi bị lỗi |
 | `00-conventions.md` | *(sẽ thêm)* issue types, workflow, DoR/DoD, naming, labels |
 | `01-epics.md` | *(sẽ thêm)* epic + link thật sau khi tạo |
 | `02-stories.md` | *(sẽ thêm)* story + subtask + acceptance criteria |
 
 ## Import CSV vào Jira Cloud
 
-1. Jira → menu **Filters** → **Import issues from CSV** (hoặc trong project:
-   **Project settings → Import**).
+1. **Filters → Import issues from CSV**, hoặc **⚙ Settings → System → Import and
+   export → External system import → CSV**, hoặc URL trực tiếp
+   `https://huynhmai2755.atlassian.net/secure/ImportWizard!default.jspa`.
 2. Chọn file `03-backlog-import.csv` → **Next**.
-3. Ở bước map field:
+3. Chọn **Project = MD** ở dropdown. CSV **không** có cột `Project Key`: project
+   luôn được chọn trong wizard, không map từ file.
+4. Ở bước map field, kiểm tra 3 thiết lập dưới đây trước (sai delimiter là
+   nguyên nhân phổ biến nhất của lỗi "thiếu Summary"):
+
+| Thiết lập | Giá trị đúng |
+|---|---|
+| Delimiter | **Comma (`,`)** |
+| First line is the header | **Bật** |
+| Encoding | **UTF-8** |
+
+Bảng map cột:
 
 | Cột trong CSV | Map tới |
 |---|---|
-| `Project Key` | Project key (giá trị `MD`) |
-| `Issue Type` | Issue Type |
 | `Summary` | Summary |
-| `Epic Name` | Epic Name — nếu project đã bỏ field này thì chọn **Do not map** (Jira dùng Summary làm tên epic) |
+| `Issue Type` | Issue Type |
 | `Description` | Description |
-| `Labels` | Labels — **delimiter của multi-value là dấu phẩy** |
+| `Labels` | Labels (delimiter của multi-value là dấu phẩy) |
 | `Priority` | Priority (`Highest/High/Medium/Low` có sẵn trong Jira) |
 
-4. **Begin import**.
+5. **Begin import**.
+
+### Nếu vẫn báo "thiếu Summary"
+Import thử `03-backlog-import.min.csv` — chỉ có `Summary,Issue Type` và **không
+chứa dấu phẩy nào trong Summary**. Nếu file này chạy được thì lỗi nằm ở 3 thiết
+lập delimiter/header/encoding, không phải ở dữ liệu.
 
 ## Lưu ý
 
+- CSV chỉ có 5 cột: `Summary, Issue Type, Description, Labels, Priority`.
+  **Không** có `Project Key` (Jira lấy project từ wizard) và **không** có
+  `Epic Name` (bản Jira Cloud hiện tại dùng `Summary` làm tên epic).
 - Số issue thật do Jira sinh; nếu project `MD` đã có issue khác thì epic mới
   **không** bắt đầu ở `MD-1`. Sau khi import, cập nhật lại link thật vào
   `01-epics.md`.
