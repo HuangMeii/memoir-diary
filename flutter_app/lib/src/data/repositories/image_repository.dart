@@ -1,11 +1,11 @@
 import '../../core/api_client.dart';
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 import '../models.dart';
 
 class ImageRepository {
   const ImageRepository(this._source);
 
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<List<EntryImageView>> forEntry(String entryId) async {
     final data = await _source.get('/entries/$entryId/images');

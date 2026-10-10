@@ -104,6 +104,7 @@ transport có thể đổi từ FastAPI sang Serverpod.
 - Phase 2–4 (domain phía server): ✅ auth, lookups, entries, images, quotes,
   self messages, daily quotes, reflections, notes, todos, events, schedules,
   health, stats, admin, weather, seed. `dart analyze` sạch.
-- Còn lại: Flutter `ServerpodDataSource` sau feature flag, contract fixtures và
-  parity test với FastAPI, chạy `dart test` (embedded PostgreSQL không khởi tạo
-  được trong sandbox hiện tại), rồi cutover theo domain.
+- Còn lại: contract fixtures và parity test với FastAPI, chạy `dart test`
+  (embedded PostgreSQL không khởi tạo được trong sandbox hiện tại), và cutover
+  từng domain. Flutter đã nối xong: `BackendDataSource` + `ServerpodDataSource`
+  sau flag `--dart-define=BACKEND=serverpod` (mặc định vẫn là FastAPI).

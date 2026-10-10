@@ -1,10 +1,10 @@
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 import '../models.dart';
 
 class QuoteRepository {
   const QuoteRepository(this._source);
 
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<DailyQuotePair> today() async {
     final data = await _source.get('/daily-quotes/today');

@@ -51,6 +51,7 @@ import 'health/health_log.dart' as _ipi876o6;
 import 'journal/diary_entry.dart' as _isn947xq;
 import 'journal/entry_image.dart' as _i22rqx9f;
 import 'journal/entry_image_view.dart' as _iop7kemj;
+import 'journal/image_upload_ticket.dart' as _ir6xzchz;
 import 'lookups/mood.dart' as _ie2xden6;
 import 'lookups/weather.dart' as _i262ionk;
 import 'notes/note.dart' as _iylmodbg;
@@ -75,6 +76,7 @@ export 'health/health_log.dart';
 export 'journal/diary_entry.dart';
 export 'journal/entry_image.dart';
 export 'journal/entry_image_view.dart';
+export 'journal/image_upload_ticket.dart';
 export 'lookups/mood.dart';
 export 'lookups/weather.dart';
 export 'notes/note.dart';
@@ -1444,6 +1446,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _iop7kemj.EntryImageView) {
       return _iop7kemj.EntryImageView.fromJson(data) as T;
     }
+    if (t == _ir6xzchz.ImageUploadTicket) {
+      return _ir6xzchz.ImageUploadTicket.fromJson(data) as T;
+    }
     if (t == _ie2xden6.Mood) {
       return _ie2xden6.Mood.fromJson(data) as T;
     }
@@ -1515,6 +1520,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_iop7kemj.EntryImageView?>()) {
       return (data != null ? _iop7kemj.EntryImageView.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ir6xzchz.ImageUploadTicket?>()) {
+      return (data != null ? _ir6xzchz.ImageUploadTicket.fromJson(data) : null)
           as T;
     }
     if (t == _is.getType<_ie2xden6.Mood?>()) {
@@ -1682,6 +1691,7 @@ class Protocol extends _is.DatabaseSerializationManager {
       _isn947xq.DiaryEntry => 'DiaryEntry',
       _i22rqx9f.EntryImage => 'EntryImage',
       _iop7kemj.EntryImageView => 'EntryImageView',
+      _ir6xzchz.ImageUploadTicket => 'ImageUploadTicket',
       _ie2xden6.Mood => 'Mood',
       _i262ionk.Weather => 'Weather',
       _iylmodbg.Note => 'Note',
@@ -1730,6 +1740,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'EntryImage';
       case _iop7kemj.EntryImageView():
         return 'EntryImageView';
+      case _ir6xzchz.ImageUploadTicket():
+        return 'ImageUploadTicket';
       case _ie2xden6.Mood():
         return 'Mood';
       case _i262ionk.Weather():
@@ -1798,6 +1810,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'EntryImageView') {
       return deserialize<_iop7kemj.EntryImageView>(data['data']);
+    }
+    if (dataClassName == 'ImageUploadTicket') {
+      return deserialize<_ir6xzchz.ImageUploadTicket>(data['data']);
     }
     if (dataClassName == 'Mood') {
       return deserialize<_ie2xden6.Mood>(data['data']);

@@ -11,17 +11,19 @@ class ImagesEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
-  Future<String> createUploadDescription(
+  Future<ImageUploadTicket> createUploadDescription(
     Session session, {
     required UuidValue entryId,
     required String filename,
   }) async {
     await _ownedEntry(session, entryId);
     // The path is derived server-side so a client cannot choose its location.
-    return session.storage.createUploadDescription(
+    final objectKey = _objectKey(entryId, filename);
+    final uploadUrl = await session.storage.createUploadDescription(
       storageId: 'private',
-      path: _objectKey(entryId, filename),
+      path: objectKey,
     );
+    return ImageUploadTicket(uploadUrl: uploadUrl, objectKey: objectKey);
   }
 
   Future<EntryImage> confirmUpload(

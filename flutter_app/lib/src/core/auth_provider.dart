@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
+import 'auth_gateway.dart';
 import 'auth_repository.dart';
 import 'config.dart';
+import 'serverpod_auth_repository.dart';
+import 'serverpod_backend.dart';
 
 /// Holds the current session state and drives navigation guards.
 class AuthState {
@@ -32,9 +35,13 @@ class AuthState {
 final authProvider =
     StateNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepository(ref.watch(apiClientProvider)),
-);
+/// The auth backend, matching [AppConfig.backend].
+final authGatewayProvider = Provider<AuthGateway>((ref) {
+  if (AppConfig.useServerpod) {
+    return ServerpodAuthRepository(ref.watch(serverpodClientProvider));
+  }
+  return AuthRepository(ref.watch(apiClientProvider));
+});
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._ref) : super(const AuthState(isLoading: true)) {
@@ -71,7 +78,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _session.accessToken = access;
     _session.refreshToken = refresh;
     try {
-      final user = await _ref.read(authRepositoryProvider).me();
+      final user = await _ref.read(authGatewayProvider).me();
       state = AuthState(token: access, user: user);
     } catch (_) {
       // The interceptor already tried to refresh; nothing left to recover.
@@ -88,12 +95,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       final response =
-          await _ref.read(authRepositoryProvider).login(username, password);
+          await _ref.read(authGatewayProvider).login(username, password);
       final token = response['access_token'] as String;
       final refresh = response['refresh_token'] as String?;
       await _session.write(token, refresh);
       // Publish before /auth/me, which runs before state is updated below.
-      final user = await _ref.read(authRepositoryProvider).me();
+      final user = await _ref.read(authGatewayProvider).me();
       state = AuthState(token: token, user: user);
     } catch (_) {
       await _clearSession();
@@ -108,7 +115,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true);
     try {
-      final response = await _ref.read(authRepositoryProvider).register(
+      final response = await _ref.read(authGatewayProvider).register(
             email: email,
             username: username,
             password: password,

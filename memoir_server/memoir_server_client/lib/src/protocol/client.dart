@@ -23,6 +23,8 @@ import 'package:memoir_server_client/src/protocol/journal/entry_image.dart'
     as _ij0vjl03;
 import 'package:memoir_server_client/src/protocol/journal/entry_image_view.dart'
     as _itedwayj;
+import 'package:memoir_server_client/src/protocol/journal/image_upload_ticket.dart'
+    as _i2nv2rse;
 import 'package:memoir_server_client/src/protocol/lookups/mood.dart'
     as _i7s3fkt2;
 import 'package:memoir_server_client/src/protocol/lookups/weather.dart'
@@ -349,10 +351,10 @@ class EndpointImages extends _isc.EndpointRef {
   @override
   String get name => 'images';
 
-  _ida.Future<String> createUploadDescription({
+  _ida.Future<_i2nv2rse.ImageUploadTicket> createUploadDescription({
     required _isc.UuidValue entryId,
     required String filename,
-  }) => caller.callServerEndpoint<String>(
+  }) => caller.callServerEndpoint<_i2nv2rse.ImageUploadTicket>(
     'images',
     'createUploadDescription',
     {

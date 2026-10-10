@@ -1,8 +1,8 @@
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 
 class NotesRepository {
   const NotesRepository(this._source);
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<List<Map<String, dynamic>>> list() async =>
       ((await _source.get('/notes')) as List).cast<Map<String, dynamic>>();

@@ -1,8 +1,8 @@
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 
 class PlannerRepository {
   const PlannerRepository(this._source);
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<List<Map<String, dynamic>>> todos() => _list('/todos');
   Future<List<Map<String, dynamic>>> events() => _list('/events');

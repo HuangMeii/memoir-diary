@@ -2,7 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
 import '../core/auth_provider.dart';
+import '../core/config.dart';
+import '../core/serverpod_backend.dart';
+import 'datasources/backend_data_source.dart';
 import 'datasources/fastapi_data_source.dart';
+import 'datasources/serverpod_data_source.dart';
 import 'models.dart';
 import 'repositories/entry_repository.dart';
 import 'repositories/health_repository.dart';
@@ -12,36 +16,46 @@ import 'repositories/notes_repository.dart';
 import 'repositories/planner_repository.dart';
 import 'repositories/quote_repository.dart';
 
-final fastApiDataSourceProvider = Provider<FastApiDataSource>(
-  (ref) => FastApiDataSource(ref.watch(apiClientProvider)),
-);
+/// The backend the whole app talks to, chosen at build time:
+///
+///   flutter run -d chrome --dart-define=BACKEND=serverpod
+///
+/// `fastapi` (default) keeps the Python reference backend; `serverpod` routes
+/// everything through the Dart backend. Screens and repositories are unaware of
+/// which one is active.
+final backendDataSourceProvider = Provider<BackendDataSource>((ref) {
+  if (AppConfig.useServerpod) {
+    return ServerpodDataSource(ref.watch(serverpodClientProvider));
+  }
+  return FastApiDataSource(ref.watch(apiClientProvider));
+});
 
 final lookupRepositoryProvider = Provider<LookupRepository>(
-  (ref) => LookupRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => LookupRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final entryRepositoryProvider = Provider<EntryRepository>(
-  (ref) => EntryRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => EntryRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final quoteRepositoryProvider = Provider<QuoteRepository>(
-  (ref) => QuoteRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => QuoteRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final imageRepositoryProvider = Provider<ImageRepository>(
-  (ref) => ImageRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => ImageRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final healthRepositoryProvider = Provider<HealthRepository>(
-  (ref) => HealthRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => HealthRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final notesRepositoryProvider = Provider<NotesRepository>(
-  (ref) => NotesRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => NotesRepository(ref.watch(backendDataSourceProvider)),
 );
 
 final plannerRepositoryProvider = Provider<PlannerRepository>(
-  (ref) => PlannerRepository(ref.watch(fastApiDataSourceProvider)),
+  (ref) => PlannerRepository(ref.watch(backendDataSourceProvider)),
 );
 
 /// Resolves once the stored token has been read (and validated, when present).

@@ -1,10 +1,10 @@
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 import '../models.dart';
 
 class HealthRepository {
   const HealthRepository(this._source);
 
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<List<HealthLog>> logs({
     required String from,

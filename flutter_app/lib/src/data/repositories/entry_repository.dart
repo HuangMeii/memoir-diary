@@ -1,11 +1,11 @@
 import '../../core/api_client.dart';
-import '../datasources/fastapi_data_source.dart';
+import '../datasources/backend_data_source.dart';
 import '../models.dart';
 
 class EntryRepository {
   const EntryRepository(this._source);
 
-  final FastApiDataSource _source;
+  final BackendDataSource _source;
 
   Future<DiaryEntry?> byDate(String isoDate) async {
     try {

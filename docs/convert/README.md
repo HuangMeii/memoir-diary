@@ -14,16 +14,22 @@ Không copy backend Python vào app/web.
 | Track | Nguồn | Trạng thái |
 |---|---|---|
 | Flutter abstraction & ổn định FastAPI reference | `05-execution-phases.md` | ~50% — repository interfaces + `FastApiDataSource` xong; thiếu typed domain models, error mapping, feature flag datasource, test |
-| Serverpod/Dart rewrite (backend đích) | `07-serverpod-migration-roadmap.md` | Đã dựng workspace `memoir_server/` (Serverpod 4.0.4) và port **toàn bộ domain phía server** (xem dưới); Flutter chưa đổi DataSource; test DB chưa chạy được ở sandbox này |
+| Serverpod/Dart rewrite (backend đích) | `07-serverpod-migration-roadmap.md` | Server đã có đủ model + endpoint; Flutter đã nối `ServerpodDataSource` sau feature flag `BACKEND=serverpod`; test DB chưa chạy được ở sandbox này |
 
 Serverpod backend nằm ở `memoir_server/` (`memoir_server_server` + generated
 `memoir_server_client`). Các domain đã có model + endpoint: auth, lookups,
 entries, images, quotes, self messages, daily quotes, reflections, notes, todos,
 events, schedules, health, stats, admin, weather, seed. `dart analyze` sạch.
 
-Việc còn lại của `07`: Flutter `ServerpodDataSource` sau feature flag, contract
-fixtures/parity test với FastAPI, chạy `dart test` (embedded PostgreSQL), và
-cutover theo domain. FastAPI vẫn là backend đang chạy cho tới lúc đó.
+Flutter chọn backend bằng `--dart-define=BACKEND=serverpod` (mặc định `fastapi`).
+`BackendDataSource` là interface dùng chung; `ServerpodDataSource` ánh xạ REST →
+endpoint Serverpod và trả lại đúng JSON snake_case nên repository/UI không đổi.
+`dart analyze` của `flutter_app` cũng sạch.
+
+Việc còn lại của `07`: contract fixtures/parity test với FastAPI, chạy `dart test`
+(embedded PostgreSQL không khởi tạo được trong sandbox hiện tại), upload ảnh trên
+web (đọc file theo path chỉ chạy trên mobile/desktop), và cutover theo domain.
+FastAPI vẫn là backend mặc định cho tới lúc đó.
 
 ## 2. Kiến trúc đích
 

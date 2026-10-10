@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/providers.dart';
 import '../../data/repositories/planner_repository.dart';
-import '../../data/providers.dart' show dayKey;
 
 /// The ISO week label the API expects, e.g. `2026-W41`.
 ///

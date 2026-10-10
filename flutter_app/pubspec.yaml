@@ -31,6 +31,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   fl_chart: ^1.2.0
 
+  # Generated Serverpod client SDK for the Dart backend (memoir_server).
+  # Lets the app talk to Serverpod through ServerpodDataSource.
+  memoir_server_client:
+    path: ../memoir_server/memoir_server_client
+  serverpod_client: ^4.0.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

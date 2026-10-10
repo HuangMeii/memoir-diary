@@ -24,6 +24,8 @@ import 'package:memoir_server_server/src/generated/journal/entry_image.dart'
     as _ie3y056o;
 import 'package:memoir_server_server/src/generated/journal/entry_image_view.dart'
     as _iqimgcp7;
+import 'package:memoir_server_server/src/generated/journal/image_upload_ticket.dart'
+    as _idm8ef37;
 import 'package:memoir_server_server/src/generated/lookups/mood.dart'
     as _ivwgwn86;
 import 'package:memoir_server_server/src/generated/lookups/weather.dart'
@@ -1008,7 +1010,7 @@ class _ImagesEndpoint {
 
   final _is.SerializationManager _serializationManager;
 
-  _ida.Future<String> createUploadDescription(
+  _ida.Future<_idm8ef37.ImageUploadTicket> createUploadDescription(
     _ist.TestSessionBuilder sessionBuilder, {
     required _is.UuidValue entryId,
     required String filename,
@@ -1035,7 +1037,7 @@ class _ImagesEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<String>);
+                as _ida.Future<_idm8ef37.ImageUploadTicket>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
