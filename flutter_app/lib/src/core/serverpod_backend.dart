@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:memoir_server_client/memoir_server_client.dart' as sp;
 import 'package:serverpod_client/serverpod_client.dart' show ClientAuthKeyProvider;
 
-import 'api_client.dart';
+import 'session.dart';
 import 'config.dart';
 
 /// Feeds the stored access token to the Serverpod client as a bearer header.

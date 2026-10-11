@@ -1,4 +1,4 @@
-import '../../core/api_client.dart';
+import '../../core/api_exception.dart';
 import '../datasources/backend_data_source.dart';
 import '../models.dart';
 

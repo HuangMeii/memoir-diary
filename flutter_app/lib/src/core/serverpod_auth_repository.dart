@@ -5,8 +5,8 @@ import 'auth_gateway.dart';
 /// [AuthGateway] backed by the Serverpod backend.
 ///
 /// Token handling lives in the caller ([SessionStore]); this class only maps
-/// the Serverpod `AuthResult`/`User` onto the same shapes the FastAPI
-/// implementation returned.
+/// the Serverpod `AuthResult`/`User` onto the plain maps the auth notifier and
+/// the screens expect.
 class ServerpodAuthRepository implements AuthGateway {
   const ServerpodAuthRepository(this._client);
 

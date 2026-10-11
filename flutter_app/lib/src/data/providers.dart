@@ -1,11 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/api_client.dart';
 import '../core/auth_provider.dart';
-import '../core/config.dart';
 import '../core/serverpod_backend.dart';
 import 'datasources/backend_data_source.dart';
-import 'datasources/fastapi_data_source.dart';
 import 'datasources/serverpod_data_source.dart';
 import 'models.dart';
 import 'repositories/entry_repository.dart';
@@ -16,19 +13,13 @@ import 'repositories/notes_repository.dart';
 import 'repositories/planner_repository.dart';
 import 'repositories/quote_repository.dart';
 
-/// The backend the whole app talks to, chosen at build time:
+/// The backend the whole app talks to: the Dart Serverpod server.
 ///
-///   flutter run -d chrome --dart-define=BACKEND=serverpod
-///
-/// `fastapi` (default) keeps the Python reference backend; `serverpod` routes
-/// everything through the Dart backend. Screens and repositories are unaware of
-/// which one is active.
-final backendDataSourceProvider = Provider<BackendDataSource>((ref) {
-  if (AppConfig.useServerpod) {
-    return ServerpodDataSource(ref.watch(serverpodClientProvider));
-  }
-  return FastApiDataSource(ref.watch(apiClientProvider));
-});
+/// Screens and repositories only know [BackendDataSource], so the transport can
+/// change without touching the UI.
+final backendDataSourceProvider = Provider<BackendDataSource>(
+  (ref) => ServerpodDataSource(ref.watch(serverpodClientProvider)),
+);
 
 final lookupRepositoryProvider = Provider<LookupRepository>(
   (ref) => LookupRepository(ref.watch(backendDataSourceProvider)),
@@ -62,8 +53,8 @@ final plannerRepositoryProvider = Provider<PlannerRepository>(
 ///
 /// Every authenticated provider awaits this before issuing its first request.
 /// Without it they race `_restore()`: the request goes out with no
-/// `Authorization` header, FastAPI answers 401, and Riverpod caches that error
-/// for the rest of the session because nothing ever invalidates the provider.
+/// `Authorization` header, the server answers 401, and Riverpod caches that
+/// error for the rest of the session because nothing invalidates the provider.
 final authReadyProvider = FutureProvider<void>((ref) async {
   // Watching keeps this provider alive alongside the auth state, so the
   // `isLoading` flip below re-runs it after a login or logout.

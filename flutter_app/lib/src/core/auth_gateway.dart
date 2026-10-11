@@ -1,8 +1,7 @@
 /// The authentication surface the app depends on.
 ///
-/// Both the FastAPI implementation ([AuthRepository]) and the Serverpod one
-/// ([ServerpodAuthRepository]) implement it, so the auth notifier can switch
-/// backend with the same build flag the data layer uses.
+/// [ServerpodAuthRepository] implements it, and the auth notifier only knows
+/// this interface, so the transport can change without touching the UI.
 abstract class AuthGateway {
   Future<dynamic> me();
 

@@ -1,17 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:memoir_server_client/memoir_server_client.dart' as sp;
 
-import '../../core/api_client.dart';
+import '../../core/api_exception.dart';
 import 'backend_data_source.dart';
 import 'file_bytes.dart';
 
 /// [BackendDataSource] backed by the generated Serverpod client.
 ///
-/// The repositories were written against FastAPI's REST shape, so this class
-/// maps each REST call onto the matching Serverpod endpoint and rebuilds the
-/// response as the same snake_case JSON the repositories already parse. That
-/// keeps every repository, provider and screen unchanged while the transport
-/// moves from FastAPI to Serverpod.
+/// The repositories speak in REST-shaped paths, so this class maps each path
+/// onto the matching Serverpod endpoint and rebuilds the response as the same
+/// snake_case JSON the repositories already parse. That keeps every
+/// repository, provider and screen unchanged.
 class ServerpodDataSource implements BackendDataSource {
   ServerpodDataSource(this._client);
 

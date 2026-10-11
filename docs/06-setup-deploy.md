@@ -15,86 +15,66 @@
 
 ---
 
-## 2. Cài Backend (FastAPI)
+## 2. Cài Backend (Serverpod/Dart)
 
 ```powershell
-cd backend
-# Khuyến nghị dùng conda env Python 3.12 nếu máy đang chạy 3.14
-conda create -n memoir python=3.12 -y
-conda activate memoir
-
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+cd memoir_server
+dart pub get
 ```
 
-`requirements.txt` (dự kiến):
+Yêu cầu: **Dart SDK** (workspace khai báo `sdk: ^3.12.2`) và **Serverpod CLI**:
+
+```powershell
+dart pub global activate serverpod_cli
+# nếu `serverpod` chưa có trên PATH: thêm %LOCALAPPDATA%\Pub\Cache\bin vào PATH
 ```
-fastapi
-uvicorn[standard]
-sqlalchemy>=2.0
-alembic
-psycopg[binary]
-pydantic>=2
-pydantic-settings
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
-boto3
-python-dotenv
-```
+
+Không cần cài PostgreSQL hay Docker: `config/development.yaml` đặt
+`database.dataPath: .serverpod/development/pgdata`, nên Serverpod tự quản một
+PostgreSQL nhúng cho môi trường dev (DB port `8090`).
 
 ---
 
-## 3. Cấu hình `.env`
+## 3. Cấu hình
 
-Tạo `backend/.env` từ `backend/.env.example`:
-
-```env
-# --- Database (Neon PostgreSQL) ---
-DATABASE_URL=postgresql+psycopg://USER:PASSWORD@ep-xxx.aws-us-east-1.aws.neon.tech/memoir?sslmode=require
-
-# --- Neon Object Storage (S3-compatible) ---
-S3_ENDPOINT_URL=https://<branch-endpoint>.neon.tech
-S3_REGION=aws-us-east-1
-S3_ACCESS_KEY_ID=nak_live_xxxxxxxx     # = token_id
-S3_SECRET_ACCESS_KEY=nsk_live_xxxxxxxx # = s3_secret_access_key
-S3_BUCKET=diary-images
-
-# --- Auth ---
-JWT_SECRET=change-me-to-a-long-random-string
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-# --- App ---
-CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
-```
-
-> **Lưu ý Neon Object Storage**: chỉ hỗ trợ **path-style + SigV4** → boto3 phải đặt `endpoint_url` và `config=Config(s3={'addressing_style':'path'})`. Không hỗ trợ `PutBucketAcl`/`PutBucketPolicy`; đặt access level (`private`/`public_read`) qua Neon Console/API.
+- `memoir_server/memoir_server_server/config/development.yaml` — cổng API
+  (`apiServer.port: 8080`), Insights (`8081`), tên DB/user.
+- `memoir_server/memoir_server_server/config/passwords.yaml` — mật khẩu DB dev
+  (**không commit**). `staging.yaml` / `production.yaml` cho môi trường thật.
+- Ảnh dùng **object storage riêng tư** qua storage gateway của server; database,
+  JWT và storage secret **không bao giờ** đi xuống Flutter.
 
 ---
 
 ## 4. Migrate & Seed
 
-```powershell
-# Tạo migration đầu tiên
-alembic revision --autogenerate -m "init schema"
-alembic upgrade head
+`serverpod start` **apply migration còn thiếu khi khởi động**. Muốn sinh migration
+mới sau khi đổi model:
 
-# Seed moods, weathers, 100 quotes
-python -m app.seed.seed
+```powershell
+cd memoir_server\memoir_server_server
+serverpod create-migration          # thêm --force nếu là thay đổi phá huỷ
 ```
+
+Dữ liệu tham chiếu (moods, weathers, 100 quotes) seed qua **endpoint `seed`**
+(idempotent) — xem `lib/src/seed/seed_endpoint.dart`.
 
 ---
 
 ## 5. Chạy backend (dev)
 
 ```powershell
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd memoir_server
+serverpod start
 ```
 
-- Swagger UI: http://127.0.0.1:8000/docs
-- Health: http://127.0.0.1:8000/health
+- API: http://localhost:8080 · Insights: http://localhost:8081
+- `serverpod start` watch file → sinh code tăng dần + hot reload.
+- Khi CLI không chạy được, fallback:
+  ```powershell
+  cd memoir_server\memoir_server_server
+  dart bin\main.dart
+  ```
 
 ---
 

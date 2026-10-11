@@ -1,6 +1,6 @@
 ﻿# 📔 Memoir — Nhật ký số (Digital Diary)
 
-> Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **FastAPI**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
+> Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **Serverpod/Dart**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
 
 ---
 
@@ -145,39 +145,26 @@ Memoir/
 ## 6. Quick start (sau khi code xong)
 
 ```bash
-# Backend
-cd backend
-python -m venv .venv && .venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env      # điền DATABASE_URL, S3_*, JWT_SECRET
-alembic upgrade head
-python -m app.seed.seed
-python -m app.seed.admin    # tạo tài khoản admin quản lý kho câu
-uvicorn app.main:app --reload
+# Backend (Serverpod/Dart)
+cd memoir_server
+dart pub get
+serverpod start          # tự quản PostgreSQL nhúng, apply migration khi boot
+# API: http://localhost:8080 · Insights: http://localhost:8081
+
 # Flutter web
 cd flutter_app
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome    # mặc định trỏ tới http://127.0.0.1:8080
 
 # Flutter app
 flutter build apk --release
 ```
 
-**Tạo tài khoản admin** (quản lý kho câu dùng chung):
+**Tài khoản admin** (quản lý kho câu dùng chung):
 
-- Để trống `ADMIN_*` trong `.env` → script hỏi mật khẩu ở terminal (không hiện ký tự):
-
-  ```powershell
-  python -m app.seed.admin
-  ```
-
-- Hoặc chỉ đặt quyền admin cho tài khoản đã có (không cần mật khẩu):
-
-  ```powershell
-  python -m app.seed.admin --email ban@example.com --promote-only
-  ```
-
-Admin đăng nhập bình thường rồi dùng nhóm endpoint `/api/v1/admin/*` (Swagger: http://127.0.0.1:8000/docs). Tài khoản thường gọi nhóm này sẽ nhận `403`.
+Quyền admin giờ do server Dart quyết định (`memoir_server_server/lib/src/admin/`);
+nhóm endpoint admin chỉ chấp nhận role phù hợp, tài khoản thường sẽ bị từ chối.
+Các script `seed`/`admin` bằng Python đã bị gỡ cùng backend FastAPI.
 
 Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 

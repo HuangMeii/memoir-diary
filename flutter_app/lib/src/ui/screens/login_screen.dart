@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth_provider.dart';
+import '../../core/config.dart';
 
 /// Login / Register screen. A single screen with a toggle keeps the flow short.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -170,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'API: ${ref.watch(apiBaseUrlProvider)}',
+                      'Server: ${AppConfig.serverpodUrl}',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,

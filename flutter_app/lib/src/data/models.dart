@@ -1,4 +1,4 @@
-/// Immutable data models mirroring the FastAPI response shapes.
+/// Immutable data models mirroring the backend response shapes.
 library;
 
 /// A mood or weather option, e.g. (happy, "Vui", "#FFD93D").

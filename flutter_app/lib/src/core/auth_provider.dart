@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'api_client.dart';
 import 'auth_gateway.dart';
-import 'auth_repository.dart';
-import 'config.dart';
 import 'serverpod_auth_repository.dart';
 import 'serverpod_backend.dart';
+import 'session.dart';
 
 /// Holds the current session state and drives navigation guards.
 class AuthState {
@@ -35,13 +33,10 @@ class AuthState {
 final authProvider =
     StateNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
-/// The auth backend, matching [AppConfig.backend].
-final authGatewayProvider = Provider<AuthGateway>((ref) {
-  if (AppConfig.useServerpod) {
-    return ServerpodAuthRepository(ref.watch(serverpodClientProvider));
-  }
-  return AuthRepository(ref.watch(apiClientProvider));
-});
+/// The auth backend: the Dart Serverpod server.
+final authGatewayProvider = Provider<AuthGateway>(
+  (ref) => ServerpodAuthRepository(ref.watch(serverpodClientProvider)),
+);
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._ref) : super(const AuthState(isLoading: true)) {
@@ -142,6 +137,3 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() => _clearSession();
 }
-
-/// Debug helper so screens can show which backend they target.
-final apiBaseUrlProvider = Provider<String>((ref) => AppConfig.apiBaseUrl);
