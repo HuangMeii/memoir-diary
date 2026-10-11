@@ -9,7 +9,8 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 | `03-backlog-import.min.csv` | Bản tối giản 2 cột (`Summary`, `Issue Type`) để thử import khi bị lỗi |
 | `00-conventions.md` | *(sẽ thêm)* issue types, workflow, DoR/DoD, naming, labels |
 | `01-epics.md` | *(sẽ thêm)* epic + link thật sau khi tạo |
-| `02-stories.md` | *(sẽ thêm)* story + subtask + acceptance criteria |
+| `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) |
+| `04-stories-batch1.csv` | 19 Story/Spike của Batch 1, cột `Parent` trỏ tới epic |
 
 ## Import CSV vào Jira Cloud
 
