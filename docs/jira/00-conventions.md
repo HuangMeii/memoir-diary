@@ -26,7 +26,8 @@ thuật không gắn người dùng vẫn là **Story**, hoặc **Subtask** củ
 - Chỉ tạo Subtask **khi Story bắt đầu được làm**; **không** tạo hàng loạt (~63) trước.
 - Bắt đầu từ **MD-9-S1** → danh sách ở `06-subtasks-md-9-s1.csv`.
 - Subtask **bắt buộc có parent** ⇒ **không** import bằng file `.noparent.csv`. Tạo
-  bằng `jira-create-subtasks.ps1 -ParentKey <key story>` (hoặc UI: *Add a child issue*).
+  bằng `jira-create-subtasks.ps1` (`-ParentSummary '<summary story>'` hoặc
+  `-ParentKey <key>`; hoặc UI: *Add a child issue*).
 - Cập nhật `02-stories.md` nếu danh sách subtask đổi.
 
 ## 3. Naming

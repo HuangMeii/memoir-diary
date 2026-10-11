@@ -106,28 +106,53 @@ Lấy API token: https://id.atlassian.com/manage-profile/security/api-tokens
 `06-subtasks-*.csv` **không** import trực tiếp được (khác Story/Spike) — import kiểu
 `.noparent` sẽ bị Jira từ chối. Dùng script REST bên dưới.
 
-### 1) Lấy key thật của Story
+### 1) Xác định Story cha
 
-`02-stories.md` dùng id nội bộ (`MD-9-S1`); Jira cấp key thật (`MD-53`…). Lấy key:
+**Cách A (khỏi cần biết key)** — truyền Summary, script tự tra key:
+
+```powershell
+./docs/jira/jira-create-subtasks.ps1 -ParentSummary '[CI] Lint + test cho backend (FastAPI)' -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
+```
+
+**Cách B** — lấy key thật rồi truyền `-ParentKey`. `02-stories.md` dùng id nội bộ
+(`MD-9-S1`); Jira cấp key thật (`MD-24`…). Lấy key:
 
 ```powershell
 ./docs/jira/jira-link-parent.ps1 -Csv ./docs/jira/04-stories-batch1.csv -DryRun
 # -> xem cột Key của story "[CI] Lint + test cho backend (FastAPI)"
 ```
 
+> ⚠️ Mọi key xuất hiện trong tài liệu (`MD-24`, `MD-9`, `MD-11`…) chỉ là **ví dụ /
+> placeholder**. Luôn lấy key thật bằng Cách A hoặc B.
+
 ### 2) Tạo Subtask — ⚠️ script này **CÓ tạo issue**
 
 ```powershell
 $env:JIRA_EMAIL     = 'you@example.com'
 $env:JIRA_API_TOKEN = '***'
-./docs/jira/jira-create-subtasks.ps1 -ParentKey MD-53 -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
-./docs/jira/jira-create-subtasks.ps1 -ParentKey MD-53 -Csv ./docs/jira/06-subtasks-md-9-s1.csv
+./docs/jira/jira-create-subtasks.ps1 -ParentSummary '[CI] Lint + test cho backend (FastAPI)' -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
+./docs/jira/jira-create-subtasks.ps1 -ParentSummary '[CI] Lint + test cho backend (FastAPI)' -Csv ./docs/jira/06-subtasks-md-9-s1.csv
 ```
 
-- Script verify parent tồn tại, tự tìm issue type có `subtask = true` (không hardcode
-  `Subtask` vs `Sub-task`), **chống trùng** theo `Summary` ⇒ chạy lại ra `SKIP`.
+- Script verify parent tồn tại; lấy **issue type từ `createmeta`** (id đúng cho API
+  create — dùng id từ `/project/{key}` có thể bị **400**); **chống trùng** theo
+  `Summary` ⇒ chạy lại ra `SKIP`.
 - Chỉ tạo `Subtask` dưới parent đã tồn tại ⇒ **không thể sinh epic trùng**.
+- Lỗi Jira được **in nguyên văn** (cột `Note` + mục "Chi tiết lỗi"), và script tự
+  **bỏ field gây lỗi rồi thử lại 1 lần** (self-heal).
+- `-ShowPayload` in JSON gửi đi để tự đối chiếu.
 - Không muốn dùng token: mở Story → **Add a child issue** → dán từng Summary.
+
+### 3) Lỗi thường gặp
+
+| Mã | Nguyên nhân | Cách xử lý |
+|---|---|---|
+| **401** | Token sai / đã revoke / hết hạn, hoặc `$env:JIRA_EMAIL` không khớp tài khoản | Tạo token mới, set lại biến trong **đúng cửa sổ** |
+| **401 ở `api.atlassian.com`** | Token **classic** (không scopes) không dùng được gateway | Dùng domain site, hoặc tạo token **có scopes** |
+| **403** | Tài khoản không có quyền tạo/sửa issue trong project | Kiểm tra quyền trong project `MD` |
+| **404** | Không thấy project/issue: sai key, hoặc token thuộc **tài khoản khác** | Lấy key thật (Cách A/B); kiểm tra tài khoản của token |
+| **400** *"target project doesn't exist…"* | `issuetype` id sai (project-scoped) | Bản v2 đã tự lấy id từ `createmeta` |
+| **Token có scopes** | Phải gọi qua `api.atlassian.com/ex/jira/{cloudId}` | Thêm `-BaseUrl https://api.atlassian.com/ex/jira/<cloudId>` |
 
 ## Spike — khi nào dùng
 

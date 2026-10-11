@@ -9,11 +9,17 @@
     the sinh epic trung. Chay lai se SKIP cac subtask da co (so theo Summary).
 
 .PARAMETER ParentKey
-    Key that cua Story/Spike cha, vi du MD-53. Lay key bang:
+    Key that cua Story/Spike cha, vi du MD-24. Lay key bang:
     ./docs/jira/jira-link-parent.ps1 -Csv ./docs/jira/04-stories-batch1.csv -DryRun
+
+.PARAMETER ParentSummary
+    Summary cua Story/Spike cha; script se tu tra key (khop chinh xac).
 
 .PARAMETER Csv
     CSV danh sach subtask (can cot Summary; tuy chon Description, Labels, Priority).
+
+.PARAMETER ShowPayload
+    In JSON se gui cho Jira truoc moi lan tao.
 
 .PARAMETER DryRun
     Chi in ke hoach, khong tao.
@@ -28,9 +34,12 @@ param(
     [string]$Email      = $env:JIRA_EMAIL,
     [string]$Token      = $env:JIRA_API_TOKEN,
     [string]$BaseUrl    = 'https://huynhmai2755.atlassian.net',
-    [Parameter(Mandatory = $true)][string]$ParentKey,
+    [string]$ParentKey,
+    [string]$ParentSummary,
     [Parameter(Mandatory = $true)][string]$Csv,
     [string]$ProjectKey = 'MD',
+    [int]$SearchLimit   = 50,
+    [switch]$ShowPayload,
     [switch]$DryRun
 )
 
@@ -41,6 +50,8 @@ $ErrorActionPreference = 'Stop'
 if (-not $Email) { throw 'Thieu email. Dat $env:JIRA_EMAIL hoac truyen -Email.' }
 if (-not $Token) { throw 'Thieu API token. Dat $env:JIRA_API_TOKEN hoac truyen -Token.' }
 if (-not (Test-Path -LiteralPath $Csv)) { throw "Khong tim thay CSV: $Csv" }
+if (-not $ParentKey -and -not $ParentSummary) { throw 'Thieu parent: truyen -ParentKey MD-xx hoac -ParentSummary "..."' }
+if ($ParentKey -and $ParentSummary) { throw 'Chi truyen mot trong -ParentKey hoac -ParentSummary.' }
 
 $BaseUrl = $BaseUrl.TrimEnd('/')
 $auth = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${Email}:${Token}"))
@@ -48,9 +59,52 @@ $Headers = @{ Authorization = "Basic $auth"; Accept = 'application/json' }
 
 function Invoke-Jira {
     param([string]$Method, [string]$Path, $Body)
-    $p = @{ Method = $Method; Uri = "$BaseUrl$Path"; Headers = $Headers; ContentType = 'application/json' }
-    if ($null -ne $Body) { $p.Body = ($Body | ConvertTo-Json -Depth 20 -Compress) }
+    $p = @{ Method = $Method; Uri = "$BaseUrl$Path"; Headers = $Headers; ContentType = 'application/json; charset=utf-8' }
+    if ($null -ne $Body) {
+        # Gui bytes UTF-8: tranh PowerShell 5.1 ma hoa sai tieng Viet trong body.
+        $p.Body = [Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json -Depth 20 -Compress))
+    }
     Invoke-RestMethod @p
+}
+
+# Jira tra than loi JSON nhung Invoke-RestMethod thuong nuot mat -> doc lai.
+function Get-ApiErrorBody {
+    param($ErrorRecord)
+    $msg = ''
+    try { if ($ErrorRecord.ErrorDetails -and $ErrorRecord.ErrorDetails.Message) { $msg = "$($ErrorRecord.ErrorDetails.Message)" } } catch { }
+    if (-not $msg) {
+        try {
+            $resp = $ErrorRecord.Exception.Response
+            if ($resp) {
+                $sr = New-Object System.IO.StreamReader($resp.GetResponseStream())
+                $msg = $sr.ReadToEnd()
+                $sr.Dispose()
+            }
+        } catch { }
+    }
+    if (-not $msg) { $msg = "$($ErrorRecord.Exception.Message)" }
+    return $msg
+}
+
+function Get-ApiStatusCode {
+    param($ErrorRecord)
+    try { if ($ErrorRecord.Exception.Response) { return [int]$ErrorRecord.Exception.Response.StatusCode } } catch { }
+    return 0
+}
+
+function Find-IssuesBySummary {
+    param([string]$Summary)
+    $esc = '"' + ($Summary -replace '\\', '\\' -replace '"', '\"') + '"'
+    $jql = "project = $ProjectKey AND summary ~ $esc"
+    $enc = [uri]::EscapeDataString($jql)
+    $fld = 'summary'
+    try {
+        $r = Invoke-Jira -Method Get -Path "/rest/api/3/search/jql?jql=$enc&fields=$fld&maxResults=$SearchLimit"
+    } catch {
+        $r = Invoke-Jira -Method Get -Path "/rest/api/3/search?jql=$enc&fields=$fld&maxResults=$SearchLimit"
+    }
+    if ($r.issues) { return @($r.issues) }
+    return @()
 }
 
 # Jira REST v3 yeu cau description theo ADF (khong nhan chuoi thuong).
@@ -77,8 +131,40 @@ $hasPriority = $cols -contains 'Priority'
 Write-Host "CSV : $Csv ($($rows.Count) dong)" -ForegroundColor Cyan
 Write-Host "Jira: $BaseUrl  project=$ProjectKey  DryRun=$([bool]$DryRun)`n" -ForegroundColor Cyan
 
-# --- 2. Xac minh parent ton tai ---
-$parent = Invoke-Jira -Method Get -Path "/rest/api/3/issue/${ParentKey}?fields=summary,issuetype,subtasks"
+# --- 2. Xac dinh parent (ho tro -ParentSummary) ---
+if (-not $ParentKey) {
+    $want = $ParentSummary.Trim()
+    $hits = @()
+    try { $hits = @(Find-IssuesBySummary -Summary $want) } catch { $hits = @() }
+    $exact = @($hits | Where-Object { "$($_.fields.summary)".Trim() -eq $want })
+    if ($exact.Count -eq 0) {
+        Write-Host "LOI: Khong tim thay issue nao co Summary = '$want' trong project $ProjectKey." -ForegroundColor Red
+        Write-Host "  -> Story/Spike chua duoc import? Import ./docs/jira/04-stories-batch1.noparent.csv truoc." -ForegroundColor Yellow
+        exit 2
+    }
+    if ($exact.Count -gt 1) {
+        Write-Host ("LOI: Co {0} issue trung Summary '{1}': {2}" -f $exact.Count, $want, (@($exact | ForEach-Object { $_.key }) -join ', ')) -ForegroundColor Red
+        Write-Host "  -> Dung -ParentKey <key> de chi ro." -ForegroundColor Yellow
+        exit 2
+    }
+    $ParentKey = "$($exact[0].key)"
+    Write-Host ("Resolve: Summary -> {0}" -f $ParentKey) -ForegroundColor Cyan
+}
+
+# --- 2b. Xac minh parent ton tai ---
+try {
+    $parent = Invoke-Jira -Method Get -Path "/rest/api/3/issue/${ParentKey}?fields=summary,issuetype,subtasks"
+} catch {
+    $status = Get-ApiStatusCode $_
+    if ($status -eq 404) {
+        Write-Host "LOI: Parent '$ParentKey' khong ton tai hoac ban khong co quyen xem (404)." -ForegroundColor Red
+        Write-Host "  -> Kiem tra lai -ParentKey. Lay key that bang:" -ForegroundColor Yellow
+        Write-Host "     ./docs/jira/jira-link-parent.ps1 -Csv ./docs/jira/04-stories-batch1.csv -DryRun" -ForegroundColor Yellow
+        exit 2
+    }
+    Write-Host ("LOI goi Jira ({0}): {1}" -f $status, (Get-ApiErrorBody $_)) -ForegroundColor Red
+    exit 2
+}
 if ($parent.fields.issuetype.subtask) { throw "Parent $ParentKey la Subtask - khong the long subtask." }
 Write-Host ("Parent: {0} [{1}] {2}" -f $ParentKey, $parent.fields.issuetype.name, $parent.fields.summary) -ForegroundColor DarkGreen
 
@@ -90,14 +176,26 @@ if ($parent.fields.subtasks) {
 }
 Write-Host ("Da co : {0} subtask" -f $existing.Count) -ForegroundColor Cyan
 
-# --- 3. Tim issue type subtask cua project (khong hardcode ten) ---
-$proj = Invoke-Jira -Method Get -Path "/rest/api/3/project/$ProjectKey"
-$subTypes = @($proj.issueTypes | Where-Object { $_.subtask -eq $true })
-if ($subTypes.Count -eq 0) {
+# --- 3. Issue type subtask: uu tien createmeta (id dung cho API create) ---
+$subType = $null
+$src = ''
+try {
+    $meta = Invoke-Jira -Method Get -Path "/rest/api/3/issue/createmeta/$ProjectKey/issuetypes"
+    $subTypes = @($meta.values | Where-Object { $_.subtask -eq $true })
+    if ($subTypes.Count -gt 0) { $subType = $subTypes[0]; $src = 'createmeta' }
+} catch { }
+if (-not $subType) {
+    $proj = Invoke-Jira -Method Get -Path "/rest/api/3/project/$ProjectKey"
+    $subTypes = @($proj.issueTypes | Where-Object { $_.subtask -eq $true })
+    if ($subTypes.Count -gt 0) { $subType = $subTypes[0]; $src = 'project' }
+}
+if (-not $subType) {
     throw "Project $ProjectKey chua bat Sub-Tasks. Bat tai Settings > Work items > Sub-Tasks."
 }
-$subType = $subTypes[0]
-Write-Host ("Type  : {0} (id {1})`n" -f $subType.name, $subType.id) -ForegroundColor DarkGreen
+if ($src -ne 'createmeta') {
+    Write-Warning "createmeta khong tra subtask type; fallback ve /project (id co the sai voi project team-managed)."
+}
+Write-Host ("Type  : {0} (id {1}, nguon {2})`n" -f $subType.name, $subType.id, $src) -ForegroundColor DarkGreen
 
 # --- 4. Tao subtask ---
 $results = New-Object System.Collections.Generic.List[object]
@@ -131,12 +229,38 @@ foreach ($row in $rows) {
     }
     if ($hasPriority) { $pr = "$($row.Priority)".Trim(); if ($pr) { $fields.priority = @{ name = $pr } } }
 
-    try {
-        $created = Invoke-Jira -Method Post -Path '/rest/api/3/issue' -Body @{ fields = $fields }
-        $item.Action = 'OK'; $item.Key = "$($created.key)"
-        $existing += $summary
-    } catch {
-        $item.Action = 'ERROR'; $item.Note = $_.Exception.Message
+    if ($ShowPayload) {
+        Write-Host ("  payload: " + ($fields | ConvertTo-Json -Depth 20 -Compress)) -ForegroundColor DarkGray
+    }
+
+    $attempt = 0
+    while ($true) {
+        try {
+            $created = Invoke-Jira -Method Post -Path '/rest/api/3/issue' -Body @{ fields = $fields }
+            $item.Action = 'OK'; $item.Key = "$($created.key)"
+            $existing += $summary
+            break
+        } catch {
+            $body = Get-ApiErrorBody $_
+            $badField = $null
+            try {
+                $parsed = $body | ConvertFrom-Json
+                if ($parsed.errors) {
+                    foreach ($p in $parsed.errors.PSObject.Properties.Name) {
+                        if ($fields.ContainsKey($p)) { $badField = $p; break }
+                    }
+                }
+            } catch { }
+
+            if ($badField -and $attempt -lt 3) {
+                Write-Warning ("  bo field '$badField' roi thu lai. Jira noi: {0}" -f $body)
+                $fields.Remove($badField) | Out-Null
+                $attempt++
+                continue
+            }
+            $item.Action = 'ERROR'; $item.Note = $body
+            break
+        }
     }
     $results.Add([pscustomobject]$item)
 }
@@ -150,6 +274,13 @@ $results | Group-Object Action | Sort-Object Name | ForEach-Object {
 }
 if ($DryRun) { Write-Host "`n(DRY RUN - chua tao gi. Bo -DryRun de tao that.)" -ForegroundColor Yellow }
 
-$errors = @($results | Where-Object { $_.Action -eq 'ERROR' }).Count
-if ($errors -gt 0) { exit 1 }
+$errorRows = @($results | Where-Object { $_.Action -eq 'ERROR' })
+if ($errorRows.Count -gt 0) {
+    Write-Host "`nChi tiet loi (Jira tra ve):" -ForegroundColor Red
+    foreach ($e in $errorRows) {
+        Write-Host ("  - {0}" -f $e.Summary) -ForegroundColor Red
+        Write-Host ("    {0}" -f $e.Note) -ForegroundColor DarkRed
+    }
+    exit 1
+}
 
