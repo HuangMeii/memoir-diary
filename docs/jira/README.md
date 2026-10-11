@@ -10,7 +10,8 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 | `00-conventions.md` | *(sẽ thêm)* issue types, workflow, DoR/DoD, naming, labels |
 | `01-epics.md` | *(sẽ thêm)* epic + link thật sau khi tạo |
 | `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) |
-| `04-stories-batch1.csv` | 19 Story/Spike của Batch 1, cột `Parent` trỏ tới epic |
+| `04-stories-batch1.csv` | 19 Story/Spike của Batch 1, có `Issue Id` + `Parent` (Cách 1) |
+| `04-stories-batch1.noparent.csv` | Bản không có `Parent`/`Issue Id` (Cách 2 — chắc ăn nhất) |
 
 ## Import CSV vào Jira Cloud
 
@@ -45,6 +46,19 @@ Bảng map cột:
 Import thử `03-backlog-import.min.csv` — chỉ có `Summary,Issue Type` và **không
 chứa dấu phẩy nào trong Summary**. Nếu file này chạy được thì lỗi nằm ở 3 thiết
 lập delimiter/header/encoding, không phải ở dữ liệu.
+
+## Liên kết Story vào Epic khi import
+
+Jira chỉ hiểu cột `Parent` khi có mapping **`Issue Id`** ("You have to define which
+CSV column maps to Issue Id if you want to import parents"). Vì vậy có 3 cách:
+
+- **Cách 1 (thử trước):** dùng `04-stories-batch1.csv` — map `Issue Id` → Issue Id
+  và `Parent` → Parent. Nếu Jira báo không tìm thấy parent thì chuyển Cách 2.
+- **Cách 2 (chắc ăn nhất):** dùng `04-stories-batch1.noparent.csv` (không có
+  `Parent`/`Issue Id`). Import xong thì gắn story vào epic trong Jira: mở epic →
+  *Issues in epic* → **Add issues**, hoặc kéo story vào nhóm epic ở Backlog view.
+- **Cách 3:** project *company-managed* cũ có thể dùng cột `Epic Link` = `MD-9`
+  (nhận key của epic đã tồn tại, không cần `Issue Id`).
 
 ## Lưu ý
 

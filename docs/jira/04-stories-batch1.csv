@@ -1,20 +1,20 @@
-Summary,Issue Type,Description,Parent,Labels,Priority,Story Points
-[CI] Lint + test cho backend (FastAPI),Story,"Chạy ruff + pytest cho backend trong PR.","MD-9","ci,area:infra",Highest,3
-[CI] dart analyze + flutter test + build web,Story,"CI cho flutter_app: analyze, test, build web release.","MD-9","ci,area:flutter",High,5
-[CI] Serverpod: analyze + generate + test,Story,"CI cho memoir_server: generate, analyze, dart test.","MD-9","ci,area:serverpod",Medium,3
-[Repo] Bảo vệ nhánh main và develop,Story,"Branch protection: bắt buộc PR + 1 approve + CI xanh, chặn force-push.","MD-9","ci,area:infra",High,2
-[Repo] Chuẩn hoá commit + PR,Story,"Conventional Commits và checklist PR.","MD-9","ci,docs",Low,1
-[Serverpod] Tạo parity fixtures từ response FastAPI,Story,"Sinh fixture tự động từ test FastAPI cho mọi domain.","MD-20","area:serverpod,quality",Highest,5
-[Serverpod] Parity test cho auth,Story,"register/login/me/logout đạt parity; token sai hoặc hết hạn bị từ chối.","MD-20","area:serverpod,quality",Highest,5
-[Serverpod] Cut over domain journal sau feature flag,Story,"Chuyển journal (entry + image) sang Serverpod sau cờ BACKEND; rollback 1 bước.","MD-20","area:serverpod,risk:high",Highest,5
-[Serverpod] Cut over planner + notes + health,Story,"Chuyển planner, notes, health sang Serverpod.","MD-20","area:serverpod",High,5
-[Serverpod] Cut over quotes + stats,Story,"Chuyển quotes, daily quotes, stats; daily pair idempotent.","MD-20","area:serverpod",High,5
-[Serverpod] Chạy dart test + smoke BACKEND=serverpod,Story,"dart test xanh và smoke 5 luồng chính trên web và mobile.","MD-20","area:serverpod,quality",High,3
-[Serverpod] Runbook rollback + đổi mặc định,Story,"Runbook rollback; đổi mặc định sau parity.","MD-20","area:serverpod,docs",Medium,2
-[Serverpod] Gỡ FastAPI sau parity report,Story,"Xoá FastAPI sau parity report và backup.","MD-20","area:serverpod",Medium,3
-[Test] Unit test cho models + repositories,Story,"Test parse model và repository cho cả FastAPI và Serverpod.","MD-22","quality,area:flutter",High,5
-[Test] Widget test cho màn hình chính,Story,"Widget test Login/Home/Editor/Planner và footer Tiện ích.","MD-22","quality,area:flutter",High,5
-[Test] Integration test: đăng nhập - ghi nhật ký - lưới tháng,Story,"E2E luồng chính, không flaky qua 3 lần chạy.","MD-22","quality,area:flutter",High,8
-[A11y] Rà a11y + responsive web/mobile/dark mode,Story,"Kiểm Semantics, 3 viewport, tương phản dark mode.","MD-22","quality,a11y",Medium,3
-[Perf] Performance budget bundle web + Home/gallery,Story,"Đặt baseline và ngưỡng cảnh báo; báo cáo Lighthouse.","MD-22","quality,perf",Medium,3
-[i18n] Spike: tách chuỗi hay không?,Spike,"Timebox 2 ngày: kết luận làm hoặc không + chi phí + ADR ngắn.","MD-22","quality,type:spike",Low,2
+Summary,Issue Type,Description,Issue Id,Parent,Labels,Priority,Story Points
+[CI] Lint + test cho backend (FastAPI),Story,"Chạy ruff + pytest cho backend trong PR.",S01,MD-9,"ci,area:infra",Highest,3
+[CI] dart analyze + flutter test + build web,Story,"CI cho flutter_app: analyze, test, build web release.",S02,MD-9,"ci,area:flutter",High,5
+[CI] Serverpod: analyze + generate + test,Story,"CI cho memoir_server: generate, analyze, dart test.",S03,MD-9,"ci,area:serverpod",Medium,3
+[Repo] Bảo vệ nhánh main và develop,Story,"Branch protection: bắt buộc PR + 1 approve + CI xanh, chặn force-push.",S04,MD-9,"ci,area:infra",High,2
+[Repo] Chuẩn hoá commit + PR,Story,"Conventional Commits và checklist PR.",S05,MD-9,"ci,docs",Low,1
+[Serverpod] Tạo parity fixtures từ response FastAPI,Story,"Sinh fixture tự động từ test FastAPI cho mọi domain.",S06,MD-20,"area:serverpod,quality",Highest,5
+[Serverpod] Parity test cho auth,Story,"register/login/me/logout đạt parity; token sai hoặc hết hạn bị từ chối.",S07,MD-20,"area:serverpod,quality",Highest,5
+[Serverpod] Cut over domain journal sau feature flag,Story,"Chuyển journal (entry + image) sang Serverpod sau cờ BACKEND; rollback 1 bước.",S08,MD-20,"area:serverpod,risk:high",Highest,5
+[Serverpod] Cut over planner + notes + health,Story,"Chuyển planner, notes, health sang Serverpod.",S09,MD-20,"area:serverpod",High,5
+[Serverpod] Cut over quotes + stats,Story,"Chuyển quotes, daily quotes, stats; daily pair idempotent.",S10,MD-20,"area:serverpod",High,5
+[Serverpod] Chạy dart test + smoke BACKEND=serverpod,Story,"dart test xanh và smoke 5 luồng chính trên web và mobile.",S11,MD-20,"area:serverpod,quality",High,3
+[Serverpod] Runbook rollback + đổi mặc định,Story,"Runbook rollback; đổi mặc định sau parity.",S12,MD-20,"area:serverpod,docs",Medium,2
+[Serverpod] Gỡ FastAPI sau parity report,Story,"Xoá FastAPI sau parity report và backup.",S13,MD-20,"area:serverpod",Medium,3
+[Test] Unit test cho models + repositories,Story,"Test parse model và repository cho cả FastAPI và Serverpod.",S14,MD-22,"quality,area:flutter",High,5
+[Test] Widget test cho màn hình chính,Story,"Widget test Login/Home/Editor/Planner và footer Tiện ích.",S15,MD-22,"quality,area:flutter",High,5
+[Test] Integration test: đăng nhập - ghi nhật ký - lưới tháng,Story,"E2E luồng chính, không flaky qua 3 lần chạy.",S16,MD-22,"quality,area:flutter",High,8
+[A11y] Rà a11y + responsive web/mobile/dark mode,Story,"Kiểm Semantics, 3 viewport, tương phản dark mode.",S17,MD-22,"quality,a11y",Medium,3
+[Perf] Performance budget bundle web + Home/gallery,Story,"Đặt baseline và ngưỡng cảnh báo; báo cáo Lighthouse.",S18,MD-22,"quality,perf",Medium,3
+[i18n] Spike: tách chuỗi hay không?,Spike,"Timebox 2 ngày: kết luận làm hoặc không + chi phí + ADR ngắn.",S19,MD-22,"quality,type:spike",Low,2
