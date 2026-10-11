@@ -13,6 +13,7 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 | `04-stories-batch1.csv` | 19 Story/Spike của Batch 1, có `Issue Id` + `Parent` (Cách 1) |
 | `04-stories-batch1.noparent.csv` | Bản không có `Parent`/`Issue Id` (Cách 2 — chắc ăn nhất) |
 | `05-spikes.csv` | 10 Spike cho các epic sắp làm (MD-11/17/18/19/20/21/23) |
+| `05-spikes.noparent.csv` | Bản spike không có `Parent`/`Issue Id` (Cách 2 — chắc ăn nhất) |
 
 ## Import CSV vào Jira Cloud
 
@@ -50,11 +51,15 @@ lập delimiter/header/encoding, không phải ở dữ liệu.
 
 ## Liên kết Story vào Epic khi import
 
-Jira chỉ hiểu cột `Parent` khi có mapping **`Issue Id`** ("You have to define which
-CSV column maps to Issue Id if you want to import parents"). Vì vậy có 3 cách:
+Jira chỉ hiểu cột `Parent` khi có một cột CSV được gán cho field **External issue
+ID** (chính là "mapping Issue Id" mà Jira nói tới). Câu *"You have to define which
+CSV column maps to Issue Id if you want to import parents"* là **nhắc nhở thường
+trực** của wizard (hiện cạnh field `Parent`), **không phải lỗi chặn** — gán đúng
+`External issue ID` rồi bấm **Next** là được. Vì vậy có 3 cách:
 
-- **Cách 1 (thử trước):** dùng `04-stories-batch1.csv` — map `Issue Id` → Issue Id
-  và `Parent` → Parent. Nếu Jira báo không tìm thấy parent thì chuyển Cách 2.
+- **Cách 1 (thử trước):** dùng `04-stories-batch1.csv` — map `Issue Id` →
+  **External issue ID** và `Parent` → **Parent**. Nếu Jira báo không tìm thấy
+  parent thì chuyển Cách 2.
 - **Cách 2 (chắc ăn nhất):** dùng `04-stories-batch1.noparent.csv` (không có
   `Parent`/`Issue Id`). Import xong thì gắn story vào epic trong Jira: mở epic →
   *Issues in epic* → **Add issues**, hoặc kéo story vào nhóm epic ở Backlog view.
@@ -85,11 +90,14 @@ Lưu ý khi quản lý:
 
 File dùng **Cách 1**: có cột `Issue Id` (`SP01…SP10`) và `Parent` (key epic).
 
-1. Import như bảng ở trên, thêm 2 mapping: `Issue Id` → **Issue Id**,
+1. Import như bảng ở trên, thêm 2 mapping: `Issue Id` → **External issue ID**,
    `Parent` → **Parent**.
-2. Nếu Jira báo không tìm thấy parent: import **không** map `Parent`/`Issue Id`
-   rồi gắn thủ công vào epic trong Backlog view (giống Cách 2 của batch 1).
-3. File **không** có `Story Points` — spike không tính vào velocity.
+2. Thấy dòng *"You have to define which CSV column maps to Issue Id…"* thì cứ bấm
+   **Next** — đó là **nhắc nhở**, không phải lỗi (miễn `Issue Id` đã gán
+   `External issue ID` và `Parent` đã gán `Parent`).
+3. Nếu Jira báo không tìm thấy parent: dùng `05-spikes.noparent.csv` (không có
+   `Parent`/`Issue Id`) rồi gắn thủ công vào epic trong Backlog view.
+4. File **không** có `Story Points` — spike không tính vào velocity.
 
 ## Lưu ý
 
@@ -97,8 +105,8 @@ File dùng **Cách 1**: có cột `Issue Id` (`SP01…SP10`) và `Parent` (key e
   Labels, Priority`. **Không** có `Project Key` (Jira lấy project từ wizard) và
   **không** có `Epic Name` (bản Jira Cloud hiện tại dùng `Summary` làm tên epic).
 - `04-stories-batch1.csv` thêm `Issue Id`, `Parent`, `Story Points`;
-  `05-spikes.csv` thêm `Issue Id`, `Parent`. Cả hai theo Cách 1 (map `Issue Id` +
-  `Parent`).
+  `05-spikes.csv` thêm `Issue Id`, `Parent`. Cả hai theo Cách 1, với 2 mapping
+  bắt buộc: `Issue Id` → **External issue ID** và `Parent` → **Parent**.
 - Số issue thật do Jira sinh; nếu project `MD` đã có issue khác thì epic mới
   **không** bắt đầu ở `MD-1`. Sau khi import, cập nhật lại link thật vào
   `01-epics.md`.
