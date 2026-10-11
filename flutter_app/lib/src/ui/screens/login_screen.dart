@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth_provider.dart';
-import '../../core/config.dart';
+import '../auth/auth_widgets.dart';
+import '../theme.dart';
+import '../tokens.dart';
 
-/// Login / Register screen. A single screen with a toggle keeps the flow short.
+/// Login / register screen (Figma `AUTH-01` / `AUTH-02`).
+///
+/// The five frames of the design map onto states this screen already had:
+/// default, loading, invalid-credentials, network-error and session-expired.
+/// Wording, type and colour come from the design tokens.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -49,6 +55,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  String? _validateEmail(String? v) {
+    final value = v?.trim() ?? '';
+    if (!_isRegister) return null;
+    if (value.isEmpty) return 'Nhập email';
+    return value.contains('@') ? null : 'Email không hợp lệ';
+  }
+
   String? _validateUsername(String? v) {
     final value = v?.trim() ?? '';
     if (value.isEmpty) return 'Nhập tên đăng nhập';
@@ -61,125 +74,114 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_isRegister && v.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
     return null;
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isLoading = ref.watch(authProvider).isLoading;
+    final serif = TextStyle(fontFamily: serifFamily, color: theme.colorScheme.onSurface);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Memoir',
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Nhật ký mỗi ngày, nhìn lại chính mình',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    if (_isRegister) ...[
-                      TextFormField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.mail_outline),
-                        ),
-                        validator: (v) => (v == null || !v.contains('@'))
-                            ? 'Email không hợp lệ'
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    TextFormField(
-                      controller: _username,
-                      decoration: const InputDecoration(
-                        labelText: 'Tên đăng nhập',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: _validateUsername,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _password,
-                      obscureText: _obscure,
-                      decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                        ),
-                      ),
-                      validator: _validatePassword,
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _error!,
-                          style: TextStyle(
-                              color: theme.colorScheme.onErrorContainer),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 22),
-                    FilledButton(
-                      onPressed: isLoading ? null : _submit,
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_isRegister ? 'Đăng ký' : 'Đăng nhập'),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: isLoading
-                          ? null
-                          : () => setState(() {
-                                _isRegister = !_isRegister;
-                                _error = null;
-                              }),
-                      child: Text(_isRegister
-                          ? 'Đã có tài khoản? Đăng nhập'
-                          : 'Chưa có tài khoản? Đăng ký'),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Server: ${AppConfig.serverpodUrl}',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    return AuthScaffold(
+      card: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(MemoirSpace.s6),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _isRegister ? 'Tạo tài khoản' : 'Chào bạn trở lại',
+                  style: serif.copyWith(
+                    fontSize: MemoirType.heading1,
+                    height: MemoirType.heading12LineHeight / MemoirType.heading1,
+                  ),
                 ),
-              ),
+                const SizedBox(height: MemoirSpace.s2),
+                Text(
+                  _isRegister
+                      ? 'Bắt đầu cuốn nhật ký của bạn.'
+                      : 'Đăng nhập để tiếp tục câu chuyện của bạn.',
+                  style: TextStyle(
+                    fontSize: MemoirType.bodyMeta,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: MemoirSpace.s6),
+                if (_isRegister) ...[
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'ban@example.com',
+                    ),
+                    validator: _validateEmail,
+                  ),
+                  const SizedBox(height: MemoirSpace.s3),
+                ],
+                TextFormField(
+                  controller: _username,
+                  decoration: const InputDecoration(
+                    labelText: 'Tên đăng nhập',
+                    hintText: 'Tên đăng nhập của bạn',
+                  ),
+                  validator: _validateUsername,
+                ),
+                const SizedBox(height: MemoirSpace.s3),
+                TextFormField(
+                  controller: _password,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu',
+                    hintText: 'Nhập mật khẩu',
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                  validator: _validatePassword,
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: MemoirSpace.s4),
+                  AuthErrorBanner(message: _error!),
+                ],
+                const SizedBox(height: MemoirSpace.s6),
+                FilledButton(
+                  onPressed: isLoading ? null : _submit,
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(_isRegister ? 'Đăng ký' : 'Đăng nhập'),
+                ),
+                const SizedBox(height: MemoirSpace.s2),
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () => setState(() {
+                            _isRegister = !_isRegister;
+                            _error = null;
+                          }),
+                  child: Text(_isRegister
+                      ? 'Đã có tài khoản? Đăng nhập'
+                      : 'Chưa có tài khoản? Đăng ký'),
+                ),
+                const SizedBox(height: MemoirSpace.s2),
+                Text(
+                  'Một không gian riêng, dành cho bạn.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: MemoirType.caption,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -187,3 +189,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+

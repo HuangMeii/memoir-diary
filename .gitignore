@@ -40,6 +40,9 @@ server.log
 server.err
 *.err
 
+# Design exports (large; tokens/ is the checked-in source of truth)
+design/figma-file.json
+
 # --- OS / IDE ---
 .vscode/*
 !.vscode/extensions.json

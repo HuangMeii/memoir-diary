@@ -1,0 +1,39 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "version": "2025.10",
+  "name": "Figma variables export",
+  "sets": {
+    "memoir-foundation": {
+      "sources": [
+        {
+          "$ref": "memoir-foundation.tokens.json"
+        }
+      ]
+    }
+  },
+  "modifiers": {
+    "memoir-colors": {
+      "contexts": {
+        "Light": [
+          {
+            "$ref": "memoir-colors-light.tokens.json"
+          }
+        ],
+        "Dark": [
+          {
+            "$ref": "memoir-colors-dark.tokens.json"
+          }
+        ]
+      },
+      "default": "Light"
+    }
+  },
+  "resolutionOrder": [
+    {
+      "$ref": "#/sets/memoir-foundation"
+    },
+    {
+      "$ref": "#/modifiers/memoir-colors"
+    }
+  ]
+}
