@@ -1,16 +1,20 @@
 # Story · Subtask · Acceptance Criteria
 
 Batch 1 — cho 3 epic ưu tiên: **MD-9** (Tooling/CI), **MD-20** (Serverpod), **MD-22** (Quality).
-Bản CSV để import: `04-stories-batch1.csv`.
+Bản CSV để import: **`04-stories-batch1.noparent.csv`**. Quy ước chi tiết: `00-conventions.md`.
 
 ## Quy ước chung
 
 - **Issue type:** Story (có Subtask). Điều tra → **Spike** (timebox 1–2 ngày, output = kết luận + quyết định).
+  **Không** dùng issue type `Task` ở cấp riêng.
 - **Acceptance Criteria (AC):** dạng Given/When/Then, đánh số, kiểm chứng được.
 - **Estimate:** Fibonacci; Story ≤ 5 điểm; Subtask ≤ 4 giờ.
 - **Definition of Done:** code + test + `analyze` sạch + PR review 1 người + docs cập nhật
   (nếu đổi API/schema) + verify web & mobile + có rollback nếu đổi hạ tầng.
-- **Liên kết epic:** Cloud *team-managed* dùng cột `Parent`; *company-managed* dùng `Epic Link`.
+- **Liên kết epic:** import bản `.noparent` rồi gắn parent bằng `jira-link-parent.ps1`;
+  cột `Issue Id`/`Parent` trong CSV **không** auto-link được (xem `README.md`).
+- **Subtask = just-in-time:** chỉ tạo khi Story bắt đầu làm; bắt đầu từ **MD-9-S1**
+  → danh sách ở `06-subtasks-md-9-s1.csv` (Subtask bắt buộc có parent nên tạo từ trang Story).
 
 ---
 
