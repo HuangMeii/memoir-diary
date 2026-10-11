@@ -12,8 +12,9 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 | `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) |
 | `04-stories-batch1.noparent.csv` | ✅ **Mặc định** — 19 Story/Spike Batch 1 (không `Issue Id`/`Parent`) |
 | `05-spikes.noparent.csv` | ✅ **Mặc định** — 10 Spike cho epic sắp làm (MD-11/17/18/19/20/21/23) |
-| `06-subtasks-md-9-s1.csv` | 4 Subtask của `MD-9-S1` (tạo just-in-time, **không** import) |
-| `jira-link-parent.ps1` | Script REST gắn `Parent` theo **key** (có `-DryRun`, không tạo issue) |
+| `06-subtasks-md-9-s1.csv` | 4 Subtask của `MD-9-S1` (tạo just-in-time bằng script bên dưới) |
+| `jira-link-parent.ps1` | Script REST gắn `Parent` theo **key** (có `-DryRun`, **không** tạo issue) |
+| `jira-create-subtasks.ps1` | Script REST tạo Subtask dưới 1 Story (có `-DryRun`, chống trùng) |
 | `04-stories-batch1.csv` | ⚠️ Không khuyến nghị — có `Issue Id`/`Parent` để thử auto-link |
 | `05-spikes.csv` | ⚠️ Không khuyến nghị — có `Issue Id`/`Parent` để thử auto-link |
 
@@ -98,6 +99,35 @@ Lấy API token: https://id.atlassian.com/manage-profile/security/api-tokens
 - Mở epic → **Issues in epic → Add issues** (chọn nhiều), hoặc
 - JQL `project = MD AND labels = "type:spike"` → **Bulk change** (nếu field `Parent`
   cho bulk edit).
+
+## Tạo Subtask (just-in-time)
+
+**Vì sao không import CSV:** Subtask **bắt buộc có parent**, nên file
+`06-subtasks-*.csv` **không** import trực tiếp được (khác Story/Spike) — import kiểu
+`.noparent` sẽ bị Jira từ chối. Dùng script REST bên dưới.
+
+### 1) Lấy key thật của Story
+
+`02-stories.md` dùng id nội bộ (`MD-9-S1`); Jira cấp key thật (`MD-53`…). Lấy key:
+
+```powershell
+./docs/jira/jira-link-parent.ps1 -Csv ./docs/jira/04-stories-batch1.csv -DryRun
+# -> xem cột Key của story "[CI] Lint + test cho backend (FastAPI)"
+```
+
+### 2) Tạo Subtask — ⚠️ script này **CÓ tạo issue**
+
+```powershell
+$env:JIRA_EMAIL     = 'you@example.com'
+$env:JIRA_API_TOKEN = '***'
+./docs/jira/jira-create-subtasks.ps1 -ParentKey MD-53 -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
+./docs/jira/jira-create-subtasks.ps1 -ParentKey MD-53 -Csv ./docs/jira/06-subtasks-md-9-s1.csv
+```
+
+- Script verify parent tồn tại, tự tìm issue type có `subtask = true` (không hardcode
+  `Subtask` vs `Sub-task`), **chống trùng** theo `Summary` ⇒ chạy lại ra `SKIP`.
+- Chỉ tạo `Subtask` dưới parent đã tồn tại ⇒ **không thể sinh epic trùng**.
+- Không muốn dùng token: mở Story → **Add a child issue** → dán từng Summary.
 
 ## Spike — khi nào dùng
 
