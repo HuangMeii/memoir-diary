@@ -27,7 +27,7 @@
 .EXAMPLE
     $env:JIRA_EMAIL = 'you@example.com'
     $env:JIRA_API_TOKEN = '***'
-    ./docs/jira/jira-create-subtasks.ps1 -ParentKey MD-53 -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
+    ./docs/jira/jira-create-subtasks.ps1 -ParentSummary '[CI] Lint + test cho backend (FastAPI)' -Csv ./docs/jira/06-subtasks-md-9-s1.csv -DryRun
 #>
 [CmdletBinding()]
 param(
