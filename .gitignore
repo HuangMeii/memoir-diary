@@ -3,15 +3,12 @@
 *.env
 !.env.example
 
-# --- Python (backend) ---
+# --- Python tooling (local scripts only; the backend is Dart now) ---
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.egg-info/
 
 # --- Local database ---
 *.db
@@ -33,6 +30,10 @@ pubspec.lock
 analyze.txt
 test.txt
 build.log
+backend_run.log
+web_server.log
+build_web.log
+*.status
 
 # Server runtime logs (uvicorn stdout/stderr, không commit)
 server.log

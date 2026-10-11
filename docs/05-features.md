@@ -1,5 +1,9 @@
 # 05 — Đặc tả tính năng (Features)
 
+> ⚠️ **Cập nhật 2026-10-11:** backend FastAPI đã bị gỡ; backend hiện tại là
+> **Serverpod/Dart**. Đặc tả hành vi/UI vẫn đúng, chỉ phần gọi API là đã đổi —
+> xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
+
 Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widget trong Flutter.
 
 ---

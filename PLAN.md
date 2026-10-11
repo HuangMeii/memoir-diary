@@ -1,6 +1,10 @@
 # 🗺️ PLAN — Kế hoạch triển khai Memoir
 
-Tài liệu này mô tả lộ trình xây dựng ứng dụng nhật ký **Memoir** (Flutter App + Web, FastAPI, Neon Object Storage, PostgreSQL).
+Tài liệu này mô tả lộ trình xây dựng ứng dụng nhật ký **Memoir** (Flutter App + Web, backend **Serverpod/Dart**, Neon Object Storage, PostgreSQL).
+
+> ⚠️ **Cập nhật 2026-10-11:** backend FastAPI đã bị gỡ; backend hiện tại là
+> **Serverpod/Dart** (`memoir_server/`). Các mục nhắc FastAPI/uvicorn bên dưới là
+> tham chiếu lịch sử — xem [docs/convert/09-remove-fastapi.md](docs/convert/09-remove-fastapi.md).
 
 ---
 

@@ -1,5 +1,10 @@
 # 04 — API Reference
 
+> ⚠️ **Cập nhật 2026-10-11:** tài liệu này mô tả **API FastAPI cũ đã bị gỡ**.
+> API hiện tại là các endpoint Serverpod trong
+> `memoir_server/memoir_server_server/lib/src/<domain>/<domain>_endpoint.dart`
+> (xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md)).
+
 ## 1. Quy ước chung
 
 - **Base URL (dev)**: `http://127.0.0.1:8000`

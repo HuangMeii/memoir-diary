@@ -4,14 +4,15 @@
 
 | Thành phần | Phiên bản đề nghị | Ghi chú |
 |---|---|---|
-| Python | 3.12 (khuyến nghị) | Tránh 3.14 để đủ wheel psycopg/pydantic-core |
-| FastAPI / Uvicorn | mới nhất | |
-| PostgreSQL | Neon serverless | Cloud, không cần cài local |
-| Neon Object Storage | — | S3-compatible, cần bật trong Neon project |
+| Dart SDK | 3.12+ | `memoir_server` khai báo `sdk: ^3.12.2` |
+| Serverpod CLI | 4.0.4 | `dart pub global activate serverpod_cli` |
+| PostgreSQL | tự quản (dev) / Neon serverless (prod) | Dev: PostgreSQL nhúng qua `database.dataPath`; Prod: Neon |
+| Object Storage riêng tư | — | S3-compatible cho ảnh (Neon Object Storage) |
 | Flutter SDK | 3.22+ | Bắt buộc để build app/web |
 | Git | 2.40+ | |
 
-> ⚠️ Trên máy hiện tại **chưa có Flutter SDK**. Cài bằng `winget install --id Google.Flutter` hoặc tải zip Flutter ổn định và thêm `flutter\bin` vào PATH.
+> Backend là **Serverpod/Dart** (`memoir_server/`). Backend FastAPI cũ đã bị gỡ —
+> xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
 
 ---
 
@@ -87,33 +88,35 @@ flutter pub get
 
 **Web (dev)**:
 ```powershell
-flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
+flutter run -d chrome
 ```
 
 **App (dev, có thiết bị/emulator)**:
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1   # Android emulator
+flutter run --dart-define=SERVERPOD_URL=http://10.0.2.2:8080   # Android emulator
 ```
 
 **Build phát hành**:
 ```powershell
-flutter build web --release --dart-define=API_BASE_URL=https://api.example.com/api/v1
-flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com/api/v1
+flutter build web --release --dart-define=SERVERPOD_URL=https://api.example.com
+flutter build apk --release --dart-define=SERVERPOD_URL=https://api.example.com
 # iOS (cần macOS): flutter build ios --release
 ```
 
-> `API_BASE_URL` phải **kết thúc bằng `/api/v1`** (code nối tiếp `/{endpoint}`).
-> Khi chạy web/emulator dev thì **không cần** `--dart-define` — `AppConfig` tự chọn theo nền tảng (`kIsWeb`).
-> Chỉ **bắt buộc** `--dart-define` khi deploy production hoặc chạy trên thiết bị thật.
+> Web dev và Android emulator **không cần** `--dart-define` — `AppConfig` tự chọn
+> theo nền tảng (`kIsWeb` → `http://127.0.0.1:8080`, Android → `10.0.2.2:8080`).
+> Chỉ **bắt buộc** khi deploy production hoặc chạy trên thiết bị thật.
 
 ---
 
 ## 7. Triển khai (production)
 
 ### Backend
-- Chạy `gunicorn -k uvicorn.workers.UvicornWorker app.main:app` (Render/Fly/VPS).
-- Đặt biến môi trường giống `.env` trên nền tảng host.
-- Bật HTTPS, cấu hình `CORS_ORIGINS` = domain web thật.
+- Chạy server Serverpod sau reverse proxy có HTTPS: `dart bin/main.dart` trong
+  `memoir_server_server` (hoặc `serverpod start` khi phát triển).
+- Cấu hình `config/production.yaml` + `config/passwords.yaml` (hoặc biến môi trường
+  tương ứng) trên host.
+- Bật HTTPS; giới hạn `allowedOrigins` nếu dùng `authCookie`.
 
 ### Web
 - `flutter build web --release` → upload thư mục `build/web` lên Netlify/Vercel/Firebase Hosting.
@@ -125,10 +128,10 @@ flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com/a
 
 ## 8. Checklist Go-live
 
-- [ ] `.env` đã điền đủ DATABASE_URL, S3_*, JWT_SECRET
-- [ ] Bucket `diary-images` đã tạo, access level đúng
-- [ ] `alembic upgrade head` thành công
-- [ ] Seed xong 5 moods, 5 weathers, 100 quotes
-- [ ] `/health` trả `ok`
+- [ ] `config/production.yaml` + `passwords.yaml` đã điền (DB, storage)
+- [ ] Bucket ảnh đã tạo, access level đúng
+- [ ] Migration đã apply (server tự apply khi boot)
+- [ ] Seed xong moods, weathers, 100 quotes (endpoint `seed`)
+- [ ] Health endpoint trả OK
 - [ ] Đăng ký/đăng nhập/upload ảnh smoke test OK
-- [ ] Web build chạy, gọi được API (CORS đúng)
+- [ ] Web build chạy, gọi được API Serverpod (`SERVERPOD_URL` đúng)

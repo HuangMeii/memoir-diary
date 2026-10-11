@@ -35,7 +35,7 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 
 ```
 Flutter App (Android/iOS) ─┐
-                           ├──(HTTPS: JSON + multipart upload)──▶ FastAPI
+                           ├──(HTTPS: Serverpod RPC + binary upload)──▶ Serverpod/Dart
 Flutter Web (build web)   ─┘                                      │
                                                        ┌──────────┴───────────┐
                                                        ▼                      ▼
@@ -65,7 +65,7 @@ Flutter Web (build web)   ─┘                                      │
 | Tầng | Công nghệ |
 |---|---|
 | Frontend | Flutter 3.47 (Material 3), Riverpod, go_router, dio, image_picker, flutter_secure_storage, fl_chart |
-| Backend | Python 3.14 (Miniconda), FastAPI, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic v2, boto3, psycopg 3 |
+| Backend | Dart 3.13, Serverpod 4.0 (RPC sinh sẵn), PostgreSQL, storage gateway cho ảnh |
 | Auth | JWT (HS256) + bcrypt, OAuth2 password flow, phân quyền `role` (`user` / `admin`) |
 | Database | PostgreSQL (Neon serverless) |
 | Object Storage | Neon Object Storage (S3-compatible) |
@@ -113,11 +113,11 @@ Memoir/
 │  ├─ 09-focus-garden.md
 │  ├─ 10-calendar.md
 │  └─ 11-weather-forecast.md
-├─ backend/        # FastAPI (Phase 1)
+├─ memoir_server/  # Backend Serverpod/Dart (client + server)
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend FastAPI đầy đủ 13 bảng + 13 router, seed 100 câu, Flutter app + web có đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18), dự báo thời tiết (Phase 19–20) và UI thời tiết/cảm xúc một hàng (Phase 21) đã có đặc tả nhưng chưa viết code.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18), dự báo thời tiết (Phase 19–20) và UI thời tiết/cảm xúc một hàng (Phase 21) đã có đặc tả nhưng chưa viết code.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -134,7 +134,7 @@ Memoir/
 | [docs/07-ui-design.md](docs/07-ui-design.md) | Wireframe, bảng màu mood/weather |
 | [docs/UI/README.md](docs/UI/README.md) | Bộ đặc tả giao diện Figma: IA, màn hình, flow, wireframe, design system, handoff |
 | [docs/UI-design/README.md](docs/UI-design/README.md) | Brief riêng cho từng trang/màn hình để dựng Figma |
-| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch chuyển backend sang Serverpod/Dart (FastAPI giữ làm reference/parity) |
+| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch chuyển backend sang Serverpod/Dart — **đã cutover**, FastAPI đã gỡ |
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
 | [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |
