@@ -12,6 +12,7 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 | `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) |
 | `04-stories-batch1.csv` | 19 Story/Spike của Batch 1, có `Issue Id` + `Parent` (Cách 1) |
 | `04-stories-batch1.noparent.csv` | Bản không có `Parent`/`Issue Id` (Cách 2 — chắc ăn nhất) |
+| `05-spikes.csv` | 10 Spike cho các epic sắp làm (MD-11/17/18/19/20/21/23) |
 
 ## Import CSV vào Jira Cloud
 
@@ -60,11 +61,44 @@ CSV column maps to Issue Id if you want to import parents"). Vì vậy có 3 cá
 - **Cách 3:** project *company-managed* cũ có thể dùng cột `Epic Link` = `MD-9`
   (nhận key của epic đã tồn tại, không cần `Issue Id`).
 
+## Spike — khi nào dùng
+
+- **Story** = giao được **giá trị cho người dùng** (có AC dạng Given/When/Then).
+- **Spike** = việc **điều tra**, có **timebox**, kết quả là **quyết định/kiến thức**
+  (ADR, POC vứt đi, ước lượng) — *không* tạo ra hành vi mới cho người dùng.
+
+Quy tắc nhanh: nếu **không viết được AC Given/When/Then** mà chỉ viết được
+*“trả lời câu hỏi X / chọn phương án Y”* → đó là **Spike**.
+
+Lưu ý khi quản lý:
+
+- Spike **không tính vào velocity** — lọc theo label `type:spike` để loại khỏi báo cáo.
+- Hết timebox **phải kết luận** dù chưa xong.
+- Kết quả của mỗi spike thường **sinh ra 1 Story mới** kèm ước lượng.
+- Dòng `[i18n] Spike: tách chuỗi hay không?` trong `04-stories-batch1.csv` đã là
+  `Issue Type = Spike` → map thẳng `Spike → Spike` (issue type `Spike` đã được tạo
+  trong project).
+- `05-spikes.csv` chứa 10 spike cho các epic sắp làm; import **sau** khi epic đã
+  tồn tại (vì cột `Parent` trỏ tới `MD-11/17/18/19/20/21/23`).
+
+### Import `05-spikes.csv`
+
+File dùng **Cách 1**: có cột `Issue Id` (`SP01…SP10`) và `Parent` (key epic).
+
+1. Import như bảng ở trên, thêm 2 mapping: `Issue Id` → **Issue Id**,
+   `Parent` → **Parent**.
+2. Nếu Jira báo không tìm thấy parent: import **không** map `Parent`/`Issue Id`
+   rồi gắn thủ công vào epic trong Backlog view (giống Cách 2 của batch 1).
+3. File **không** có `Story Points` — spike không tính vào velocity.
+
 ## Lưu ý
 
-- CSV chỉ có 5 cột: `Summary, Issue Type, Description, Labels, Priority`.
-  **Không** có `Project Key` (Jira lấy project từ wizard) và **không** có
-  `Epic Name` (bản Jira Cloud hiện tại dùng `Summary` làm tên epic).
+- `03-backlog-import.csv` (epic) chỉ có 5 cột: `Summary, Issue Type, Description,
+  Labels, Priority`. **Không** có `Project Key` (Jira lấy project từ wizard) và
+  **không** có `Epic Name` (bản Jira Cloud hiện tại dùng `Summary` làm tên epic).
+- `04-stories-batch1.csv` thêm `Issue Id`, `Parent`, `Story Points`;
+  `05-spikes.csv` thêm `Issue Id`, `Parent`. Cả hai theo Cách 1 (map `Issue Id` +
+  `Parent`).
 - Số issue thật do Jira sinh; nếu project `MD` đã có issue khác thì epic mới
   **không** bắt đầu ở `MD-1`. Sau khi import, cập nhật lại link thật vào
   `01-epics.md`.
