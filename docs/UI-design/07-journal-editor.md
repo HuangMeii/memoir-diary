@@ -48,6 +48,28 @@ token/style của các frame có sẵn: app bar hợp nhất 84 px, `surface.car
 
 Mốc version trước khi dựng: `trước JOURNAL-02` (id `2409390243730878959`).
 
+### Đã dựng trong app
+
+`flutter_app/lib/src/ui/screens/entry_editor.dart` đã được dựng lại theo các
+frame trên:
+
+- `PopScope` chặn back + dialog `Rời màn khi chưa lưu?` (Tiếp tục / Bỏ thay đổi /
+  Lưu bản nháp) — frame `99:232`.
+- Save-bar sticky trên cùng: trạng thái (`Chưa lưu / Có thay đổi chưa lưu /
+  Đang lưu... / Đã lưu lúc HH:mm`) + `Huỷ` + nút `Lưu nhật ký` — `99:460`.
+- Banner inline `Đã lưu nhật ký` + `Xem lưới tháng`, và banner lỗi
+  `Chưa lưu được: ...` + `Thử lại` — `99:574` / `99:688`.
+- Breadcrumb `← Lưới tháng`, overline `TRANG NHẬT KÝ · dd.MM`, tiêu đề
+  `Thứ, dd.MM` — `97:3`.
+- 2 cột: trái 700 (9 field đúng thứ tự Figma + block `2 câu hôm nay` trước ô
+  phản tư), phải 300 (card `Ngày đang ghi`, card `Thời tiết`, card `Cảm xúc`,
+  card `Ảnh kèm theo` với `+ Thêm ảnh`) — `99:152` / `99:189`.
+- `_Field` theo spec: label 13 có icon 18, input radius 10, viền `border.default`,
+  nền `surface.input`, nhật ký chính ~10 dòng.
+- Responsive: dưới ngưỡng 2 cột (main + gap + side + 32, đã scale) chuyển 1 cột
+  với `AppHeader(showUtilities: false)`; mobile giữ thanh lưu trên theo brief
+  `Nút lưu sticky trên web, AppBar/bottom action trên mobile`.
+
 ### Còn lại của bản "gọn" (chi tiết sau)
 
 - **Chưa dựng**: state ảnh `JOURNAL-03` (thumbnail 104, upload progress, lỗi
