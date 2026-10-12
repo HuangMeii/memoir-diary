@@ -46,7 +46,11 @@ server.err
 *.err
 
 # Design exports (large; tokens/ is the checked-in source of truth)
-design/figma-file.json
+design/
+# Raw Figma frame exports and the token zip: kept on disk only, so `git clean`
+# without -x cannot wipe them.
+ui-figma/
+tokens.zip
 
 # --- OS / IDE ---
 .vscode/*

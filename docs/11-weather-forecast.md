@@ -175,9 +175,11 @@ Cần thêm `httpx` vào `requirements.txt` (hiện chỉ nằm trong `requireme
 
 | Màn hình | Nội dung |
 |---|---|
-| `weather_card.dart` | Nhiệt độ hôm nay + 5 ngày tới, icon + nhiệt min/max |
-| `weather_settings_screen.dart` | Đổi vị trí (nhập tên → geocode, hoặc nhập tọa độ) |
+| `weather_card.dart` → `WeatherForecastView` | Nhiệt độ hôm nay + các ngày tới, icon + nhiệt min/max |
+| `weather_screen.dart` | Màn hình **Tiện ích → Thời tiết**: dự báo + đổi vị trí |
 | — Tích hợp | Thêm nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor |
+
+> **Vị trí hiển thị (chốt theo Figma HOME-01):** Home chỉ có phần **chọn nhanh** thời tiết/cảm xúc (`WeatherMoodRow` với hai `PickerCard`); **dự báo thời tiết không lặp lại trên Home** mà nằm trong mục **Tiện ích** (thanh footer trên web, khối "Tiện ích" trên mobile) → mở `weather_screen.dart`.
 
 State: `weatherProvider` (Riverpod `AsyncNotifier`); lỗi → hiện giá trị cache kèm nhãn "cập nhật lúc HH:mm".
 

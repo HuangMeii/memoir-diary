@@ -441,6 +441,117 @@
           "alpha": 0.0314
         }
       }
+    },
+    "heatmap": {
+      "mood": {
+        "very-sad": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.956863,
+              0.956863,
+              0.933333
+            ],
+            "hex": "#f4f4ee"
+          }
+        },
+        "sad": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.92549,
+              0.933333,
+              0.905882
+            ],
+            "hex": "#eceee7"
+          }
+        },
+        "neutral": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.913725,
+              0.929412,
+              0.890196
+            ],
+            "hex": "#e9ede3"
+          }
+        },
+        "happy": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.835294,
+              0.882353,
+              0.803922
+            ],
+            "hex": "#d5e1cd"
+          }
+        },
+        "very-happy": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.658824,
+              0.745098,
+              0.611765
+            ],
+            "hex": "#a8be9c"
+          }
+        }
+      },
+      "weather": {
+        "sunny": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.968627,
+              0.901961,
+              0.701961
+            ],
+            "hex": "#f7e6b3"
+          }
+        },
+        "cloudy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.border.default}"
+        },
+        "rainy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.botanical}"
+        },
+        "windy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.bookmark}"
+        },
+        "storm": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}"
+        }
+      }
+    },
+    "chart": {
+      "weather": {
+        "rain-accumulation": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.486275,
+              0.588235,
+              0.576471
+            ],
+            "hex": "#7c9693"
+          },
+          "$description": "Weather semantic color extracted from existing design."
+        }
+      }
     }
   }
 }

@@ -441,6 +441,61 @@
           "alpha": 0.0314
         }
       }
+    },
+    "heatmap": {
+      "mood": {
+        "very-sad": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.background.page}"
+        },
+        "sad": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.border.default}"
+        },
+        "neutral": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.surface.brand-subtle}"
+        },
+        "happy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.botanical}"
+        },
+        "very-happy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}"
+        }
+      },
+      "weather": {
+        "sunny": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.feedback.warning}"
+        },
+        "cloudy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.border.default}"
+        },
+        "rainy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.botanical}"
+        },
+        "windy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.bookmark}"
+        },
+        "storm": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}"
+        }
+      }
+    },
+    "chart": {
+      "weather": {
+        "rain-accumulation": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}",
+          "$description": "Weather semantic color extracted from existing design."
+        }
+      }
     }
   }
 }

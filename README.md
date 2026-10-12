@@ -117,7 +117,7 @@ Memoir/
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18), dự báo thời tiết (Phase 19–20) và UI thời tiết/cảm xúc một hàng (Phase 21) đã có đặc tả nhưng chưa viết code.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18) và phần còn lại của dự báo thời tiết (Phase 19–20) đã có đặc tả nhưng chưa viết code; riêng Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng xong cùng màn hình Home theo Figma, và dự báo thời tiết chỉ nằm trong mục Tiện ích.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -193,9 +193,9 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 - [ ] Phase 18 — Calendar: liên kết Study + Journal
 - [ ] Phase 19 — Backend: API thời tiết Open-Meteo *(đặc tả xong, chưa code)*
 - [ ] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí
-- [ ] Phase 21 — UI: thời tiết & cảm xúc cùng một hàng
+- [x] Phase 21 — UI: thời tiết & cảm xúc cùng một hàng *(đã dựng ở `home/picker_card.dart`; dự báo thời tiết chỉ nằm trong Tiện ích)*
 
-> Các phase 8–21 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md) và [docs/11-weather-forecast.md](docs/11-weather-forecast.md).
+> Các phase 8–20 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md) và [docs/11-weather-forecast.md](docs/11-weather-forecast.md).
 
 ---
 

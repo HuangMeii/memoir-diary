@@ -44,6 +44,9 @@ void flatten(Map<String, dynamic> node, String prefix, Map<String, Map<String, d
     final path = prefix.isEmpty ? e.key : '$prefix.${e.key}';
     if (v.containsKey('\$value')) {
       out[path] = v;
+      // A node may also carry child tokens (a type style holds its font size
+      // *and* its weight / line-height / letter-spacing).
+      flatten(v, path, out);
     } else {
       flatten(v, path, out);
     }
@@ -68,9 +71,9 @@ String? colorExpr(Map<String, dynamic> token) {
 String numLiteral(String raw, Map<String, Map<String, dynamic>> source) {
   final t = raw.trim();
   if (!t.startsWith('{')) return t;
-  final path = t.replaceAll(RegExp(r'^\{|\}$'), '').split('.').skip(1).join('.');
+  final path = t.replaceAll(RegExp(r'^\{|\}$'), '').trim();
   final token = source[path];
-  final v = token?['\$value'];
+  final v = token?[r'$value'];
   if (v is num) return v % 1 == 0 ? v.toInt().toString() : v.toString();
   if (v is String) return numLiteral(v, source);
   return t;
@@ -124,9 +127,17 @@ void main() {
     for (final k in keys) {
       var name = camel(strip == null ? k : k.substring(base.length));
       if (RegExp(r'^\d').hasMatch(name)) name = 's$name';
-      final v = src[k]!['\$value'];
-      final literal = v is num ? (v % 1 == 0 ? v.toInt().toString() : v.toString()) : numLiteral('$v', src);
-      buf.writeln('  static const double $name = $literal;');
+      final v = src[k]![r'$value'];
+      if (v is num) {
+        final literal = v % 1 == 0 ? v.toInt().toString() : v.toString();
+        buf.writeln('  static const double $name = $literal;');
+      } else if (v is String && v.startsWith('{')) {
+        // A token reference such as "{space.4}"; resolve it to its number.
+        buf.writeln('  static const double $name = ${numLiteral(v, src)};');
+      } else if (v is String) {
+        // A literal string token, e.g. a font family ("Inter", "Lora").
+        buf.writeln('  static const String $name = ${jsonEncode(v)};');
+      }
     }
     buf.writeln('}');
     buf.writeln();
@@ -135,6 +146,12 @@ void main() {
   numbers('Type scale', 'MemoirType', foundation, strip: 'type');
   numbers('Spacing', 'MemoirSpace', foundation, strip: 'space');
   numbers('Corner radius', 'MemoirRadius', foundation, strip: 'radius');
+  numbers('Size', 'MemoirSize', foundation, strip: 'size');
+  numbers('Stroke', 'MemoirStroke', foundation, strip: 'stroke');
+  numbers('Opacity', 'MemoirOpacity', foundation, strip: 'opacity');
+  numbers('Component', 'MemoirComponent', foundation, strip: 'component');
+  numbers('Elevation', 'MemoirElevation', foundation, strip: 'elevation');
+  numbers('Position', 'MemoirPosition', foundation, strip: 'position');
 
   final out = File('${Directory.current.path}/flutter_app/lib/src/ui/tokens.dart');
   out.writeAsStringSync(buf.toString());

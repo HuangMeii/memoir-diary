@@ -166,10 +166,11 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
 - [ ] Lỗi mạng → hiện dữ liệu cache kèm nhãn "cập nhật lúc HH:mm"
 
-### ⬜ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (CHƯA TRIỂN KHAI)
-- [ ] `IconPickerStrip` — gộp 2 nhóm (5 thời tiết + 5 cảm xúc) thành **1 hàng ngang** trên web
-- [ ] `LayoutBuilder` chọn `Row` khi đủ rộng, `Wrap` khi hẹp (mobile không tràn)
-- [ ] Giữ nguyên: `Semantics`, màu chọn, tap bỏ chọn, hiện tên đã chọn
+### ✅ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (ĐÃ TRIỂN KHAI)
+- [x] `WeatherMoodRow` (`flutter_app/lib/src/ui/home/picker_card.dart`) — hai thẻ `PickerCard` ("Thời tiết hôm nay" + "Cảm xúc hôm nay") nằm **cùng một dòng**, đúng frame `HOME-01 · Weather and mood row`
+- [x] `LayoutBuilder` + `kPickerRowBreakpoint = 700`: `Row` khi đủ rộng (mỗi thẻ ~342 px như thiết kế), `Column` khi hẹp (mobile không tràn, giống frame Mobile)
+- [x] Giữ nguyên: `Semantics`, màu chọn, tap bỏ chọn, nhãn nút
+- [x] **Dự báo thời tiết không nằm trên Home**: chỉ hiện trong mục **Tiện ích → Thời tiết** (`weather_screen.dart` dùng `WeatherForecastView`); Home chỉ còn phần chọn nhanh, không lặp lại dự báo
 
 ---
 
