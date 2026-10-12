@@ -16,7 +16,6 @@ import '../home/month_activity_card.dart';
 import '../home/picker_card.dart';
 import '../home/saved_bar.dart';
 import '../home/shortcut_cards.dart';
-import '../home/utility_navigation.dart';
 import '../icons.dart';
 import '../tokens.dart';
 import '../widgets/app_footer.dart';
@@ -31,10 +30,11 @@ const double kHomeContentWidth = 1024;
 
 /// Home = today's overview, laid out like the design's `HOME-01 · Web` frames.
 ///
-/// A wide screen gets the utility bar, the header and two dashboard columns:
-/// the main column records today (quick picks, quote, writing rhythm) and the
-/// secondary one holds everything that navigates away (the journal invitation
-/// and the shortcuts). Narrow screens stack the same blocks in one column.
+/// A wide screen gets the header — which carries the utilities — and two
+/// dashboard columns: the main column records today (quick picks, quote,
+/// writing rhythm) and the secondary one holds everything that navigates away
+/// (the journal invitation and the shortcuts). Narrow screens stack the same
+/// blocks in one column.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -87,9 +87,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Zoom the design so the 1120 px Figma frame fills the window. At
-          // 1536 px that is 1.37, which removes the wide empty gutters and
-          // lifts the mobile-sized type to a readable desktop size.
+          // 1536 px that is 1.37, which removes the wide empty gutters.
           final scale = homeScaleFor(constraints.maxWidth);
+          // The type only follows part of the way (1.1x cap), so the same
+          // window does not render a 17.8 px body and a 49 px greeting.
+          final textScale = homeTextScaleFor(constraints.maxWidth);
           final horizontal = math.max(
             16.0,
             (constraints.maxWidth - kHomeContentWidth * scale) / 2,
@@ -100,21 +102,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           return MediaQuery(
             data: media.copyWith(
-              textScaler: scale == 1
+              textScaler: textScale == 1
                   ? media.textScaler
-                  : HomeTextScaler(base: media.textScaler, factor: scale),
+                  : HomeTextScaler(base: media.textScaler, factor: textScale),
             ),
             child: HomeScale(
               factor: scale,
+              textFactor: textScale,
               child: SafeArea(
                 bottom: false,
                 child: Column(
                   children: [
-                    if (wide) const UtilityNavigation(),
                     HomeHeader(
                       date: today,
                       initials: initialsOf(displayName),
                       name: displayName,
+                      showUtilities: wide,
+                      gutter: horizontal,
                       onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
                     Expanded(
@@ -146,6 +150,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             if (!wide) ...[
                               SizedBox(height: MemoirSpace.s8 * scale),
+                              // The header only carries the utilities on a wide
+                              // screen; the narrow layout keeps them here.
                               const UtilitiesSection(),
                             ],
                             SizedBox(height: MemoirSpace.s6 * scale),

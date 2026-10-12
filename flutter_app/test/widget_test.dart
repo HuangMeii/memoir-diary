@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/ui/theme.dart';
 import 'package:memoir_app/src/ui/home/activity_heatmap.dart';
+import 'package:memoir_app/src/ui/home/home_header.dart';
 import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
 import 'package:memoir_app/src/ui/widgets/icon_picker_row.dart';
@@ -350,29 +351,60 @@ void main() {
     });
   });
 
+  group('homeTextScaleFor', () {
+    test('follows the layout factor while it is still small', () {
+      expect(homeTextScaleFor(390), 1);
+      expect(homeTextScaleFor(kHomeDesignWidth), 1);
+      expect(homeTextScaleFor(kHomeDesignWidth * 1.05), closeTo(1.05, 0.001));
+    });
+
+    test('stops at the text cap on a desktop window', () {
+      expect(homeTextScaleFor(1536), kHomeTextMaxScale);
+      expect(homeTextScaleFor(2560), kHomeTextMaxScale);
+    });
+
+    test('lags the boxes once the layout starts zooming', () {
+      // 13 px body must not become 17.8 px just because the window is wide.
+      expect(homeTextScaleFor(1536), lessThan(homeScaleFor(1536)));
+      expect(13 * homeTextScaleFor(1536), lessThan(15));
+    });
+
+    test('survives a width that cannot be laid out', () {
+      expect(homeTextScaleFor(0), 1);
+      expect(homeTextScaleFor(-100), 1);
+      expect(homeTextScaleFor(double.infinity), 1);
+    });
+  });
+
   testWidgets('HomeScale answers 1 when no ancestor provides a factor',
       (tester) async {
     late double factor;
+    late double textFactor;
     await tester.pumpWidget(MaterialApp(
       home: Builder(
         builder: (context) {
           factor = HomeScale.of(context);
+          textFactor = HomeScale.textOf(context);
           return const SizedBox();
         },
       ),
     ));
 
     expect(factor, 1);
+    expect(textFactor, 1);
   });
 
-  testWidgets('HomeScale publishes its factor to descendants', (tester) async {
+  testWidgets('HomeScale publishes both factors to descendants', (tester) async {
     late double factor;
+    late double textFactor;
     await tester.pumpWidget(MaterialApp(
       home: HomeScale(
         factor: 1.4,
+        textFactor: 1.1,
         child: Builder(
           builder: (context) {
             factor = HomeScale.of(context);
+            textFactor = HomeScale.textOf(context);
             return const SizedBox();
           },
         ),
@@ -380,5 +412,89 @@ void main() {
     ));
 
     expect(factor, 1.4);
+    expect(textFactor, 1.1);
+  });
+
+  group('HomeHeader', () {
+    Future<void> pumpHeader(
+      WidgetTester tester,
+      Size size, {
+      String? name = 'Minh An',
+      bool showUtilities = true,
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        home: HomeScale(
+          factor: 1.4,
+          textFactor: 1.1,
+          child: Scaffold(
+            body: HomeHeader(
+              date: DateTime(2026, 10, 11),
+              initials: 'MA',
+              name: name,
+              showUtilities: showUtilities,
+              onLogout: () {},
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('folds the utilities in without zooming the bar itself',
+        (tester) async {
+      await pumpHeader(tester, const Size(1400, 800));
+
+      expect(find.text('Xem thời tiết'), findsOneWidget);
+      expect(find.text('Minh An'), findsOneWidget);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+      // Chrome: the 1.4 layout zoom must not stretch the 84 px bar.
+      expect(tester.getSize(find.byType(HomeHeader)).height, kHomeHeaderHeight);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('keeps everything the Figma frame shows at the design width',
+        (tester) async {
+      await pumpHeader(tester, const Size(1120, 800));
+
+      expect(find.text('Xem thời tiết'), findsOneWidget);
+      expect(find.text('Minh An'), findsOneWidget);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('hides the utilities when the page carries them instead',
+        (tester) async {
+      await pumpHeader(tester, const Size(900, 800), showUtilities: false);
+
+      expect(find.text('Xem thời tiết'), findsNothing);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('drops the display name before the row can overflow',
+        (tester) async {
+      await pumpHeader(tester, const Size(900, 800));
+
+      expect(find.text('Minh An'), findsNothing);
+      expect(find.text('Xem thời tiết'), findsOneWidget);
+    });
+
+    testWidgets('holds a narrow window with no name and no utilities',
+        (tester) async {
+      // 640 rather than a 390 px phone: the widget-test font gives every glyph
+      // the width of its own size, so the 34 px wordmark alone measures 204 px
+      // here where the real font needs about half of that.
+      await pumpHeader(tester, const Size(640, 844));
+
+      expect(find.text('Memoir'), findsOneWidget);
+      expect(find.text('Xem thời tiết'), findsNothing);
+      expect(find.text('Minh An'), findsNothing);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

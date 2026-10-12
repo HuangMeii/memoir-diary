@@ -4,7 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import '../utilities.dart';
 import 'home_scale.dart';
+import 'utility_pill.dart';
 
 /// Weekday names in the order [DateTime.weekday] uses them.
 const List<String> _weekdays = [
@@ -43,14 +45,23 @@ String initialsOf(String? displayName) {
   return words.take(2).map((word) => word[0].toUpperCase()).join();
 }
 
-/// Height of the home header, matching the design's 80 px app bar.
-const double kHomeHeaderHeight = 80;
-
-/// Home header: the Memoir wordmark, today's date, the account initials, the
-/// display name and the logout action.
+/// Height of the home header.
 ///
-/// It is a plain container rather than a [Scaffold] app bar so the utility bar
-/// can sit directly above it and both span the full width.
+/// Fixed on purpose: the header carries the wordmark, the utilities and the
+/// account actions, but as chrome on top of the page it does not zoom with the
+/// content.
+const double kHomeHeaderHeight = 84;
+
+/// Home header: the Memoir wordmark, today's date, the utility pills and the
+/// account actions, all on one row.
+///
+/// The design splits this into a "Utility navigation" bar plus an app bar; on
+/// the web they are merged into a single bar so the page starts higher up — and
+/// so the navigation links the other frames put in the app bar have a slot to
+/// grow into.
+///
+/// It is a plain container rather than a [Scaffold] app bar so it can span the
+/// full width.
 class HomeHeader extends StatelessWidget {
   const HomeHeader({
     super.key,
@@ -58,6 +69,8 @@ class HomeHeader extends StatelessWidget {
     required this.initials,
     required this.onLogout,
     this.name,
+    this.showUtilities = true,
+    this.gutter = MemoirSpace.s5,
   });
 
   final DateTime date;
@@ -70,6 +83,25 @@ class HomeHeader extends StatelessWidget {
 
   final VoidCallback onLogout;
 
+  /// Whether the utility pills belong in the header.
+  ///
+  /// The screen decides this from the dashboard layout, so the header never
+  /// shows an entry that `UtilitiesSection` also shows at the end of the page.
+  final bool showUtilities;
+
+  /// Horizontal padding, normally the content gutter so the wordmark lines up
+  /// with the dashboard below it.
+  final double gutter;
+
+  /// Header widths at which the least important pieces drop out, so the row
+  /// sheds content instead of overflowing.
+  ///
+  /// Both are the width *inside* the gutter. The design's own frame leaves 1024
+  /// px inside its 48 px gutters and shows the name, so the threshold sits
+  /// below that.
+  static const double _utilitiesFrom = 720;
+  static const double _nameFrom = 960;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -77,86 +109,105 @@ class HomeHeader extends StatelessWidget {
     final muted = theme.colorScheme.onSurfaceVariant;
     final brand = theme.colorScheme.primary;
     final palette = MemoirPalette.of(context);
-    final scale = HomeScale.of(context);
+    final scale = HomeScale.textOf(context);
 
     return Container(
-      height: kHomeHeaderHeight * scale,
+      height: kHomeHeaderHeight,
       color: palette.surfaceCard,
-      padding: EdgeInsets.symmetric(horizontal: MemoirSpace.s5 * scale),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            // The mark already carries the design's own colours (light tile +
-            // brand-green book); tinting it would flatten both into one solid
-            // shape.
-            'assets/illustrations/brand-mark.svg',
-            height: MemoirComponent.mobileBrandMarkHeight * scale,
-          ),
-          SizedBox(width: MemoirSpace.s2 * scale),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+      padding: EdgeInsets.symmetric(horizontal: gutter),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final showPills = showUtilities && width >= _utilitiesFrom;
+          final showName = width >= _nameFrom;
+
+          return Row(
             children: [
-              Text(
-                'Memoir',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: on,
-                  fontSize: MemoirType.brand,
+              SvgPicture.asset(
+                // The mark already carries the design's own colours (light tile
+                // + brand-green book); tinting it would flatten both into one
+                // solid shape.
+                'assets/illustrations/brand-mark.svg',
+                height: MemoirComponent.mobileBrandMarkHeight * scale,
+              ),
+              SizedBox(width: MemoirSpace.s2 * scale),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Memoir',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: on,
+                      fontSize: MemoirType.brand,
+                    ),
+                  ),
+                  Text(
+                    shortDate(date),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: muted,
+                      fontSize: MemoirType.caption,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Utilities: the same entries the phone layout keeps at the end
+              // of the page, folded into the header on wider screens.
+              if (showPills)
+                for (final item in utilityItems) ...[
+                  UtilityPill(item: item),
+                  SizedBox(width: MemoirSpace.s2 * scale),
+                ],
+              // Account bubble: the signed-in user's initials.
+              Semantics(
+                label: 'Tài khoản $initials',
+                child: Container(
+                  width: _profileSize * scale,
+                  height: _profileSize * scale,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    initials,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: on,
+                      fontSize: MemoirType.caption,
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                shortDate(date),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: muted,
-                  fontSize: MemoirType.caption,
+              if (showName && name != null && name!.trim().isNotEmpty) ...[
+                SizedBox(width: MemoirSpace.s2 * scale),
+                Text(
+                  name!.trim(),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: on,
+                    fontSize: MemoirType.label,
+                  ),
+                ),
+              ],
+              SizedBox(width: MemoirSpace.s4 * scale),
+              TextButton.icon(
+                onPressed: onLogout,
+                icon: MemoirIcon(
+                  'log-out',
+                  size: _iconSize * scale,
+                  color: brand,
+                ),
+                label: Text(
+                  'Đăng xuất',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: muted,
+                    fontSize: MemoirType.caption,
+                  ),
                 ),
               ),
             ],
-          ),
-          const Spacer(),
-          // Account bubble: the signed-in user's initials.
-          Semantics(
-            label: 'Tài khoản $initials',
-            child: Container(
-              width: _profileSize * scale,
-              height: _profileSize * scale,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                initials,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: on,
-                  fontSize: MemoirType.caption,
-                ),
-              ),
-            ),
-          ),
-          if (name != null && name!.trim().isNotEmpty) ...[
-            SizedBox(width: MemoirSpace.s2 * scale),
-            Text(
-              name!.trim(),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: on,
-                fontSize: MemoirType.label,
-              ),
-            ),
-          ],
-          SizedBox(width: MemoirSpace.s4 * scale),
-          TextButton.icon(
-            onPressed: onLogout,
-            icon: MemoirIcon('log-out', size: _iconSize * scale, color: brand),
-            label: Text(
-              'Đăng xuất',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: muted,
-                fontSize: MemoirType.caption,
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

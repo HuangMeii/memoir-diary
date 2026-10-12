@@ -12,6 +12,11 @@ const double kHomeDesignWidth = 1120;
 /// does not turn into one giant card on an ultrawide monitor.
 const double kHomeMaxScale = 1.5;
 
+/// Ceiling for [homeTextScaleFor]. The layout may zoom up to [kHomeMaxScale]
+/// to fill a wide window, but the type stops well before that: past ~1.1 a
+/// desktop page reads like a blown-up phone screen.
+const double kHomeTextMaxScale = 1.1;
+
 /// Scale factor that makes the 1120 px design fill a [viewportWidth] window.
 ///
 /// Below the design width the factor stays 1, so phones keep the mobile layout
@@ -21,20 +26,43 @@ double homeScaleFor(double viewportWidth) {
   return (viewportWidth / kHomeDesignWidth).clamp(1.0, kHomeMaxScale);
 }
 
-/// Publishes the home scale factor to the widgets below it.
+/// Factor the home's type and header chrome grow by.
 ///
-/// [of] answers 1 when there is no ancestor, so widgets shared with the phone
-/// layout — and the widget tests that pump them bare — keep their 1:1 sizes.
-class HomeScale extends InheritedWidget {
-  const HomeScale({super.key, required this.factor, required super.child});
+/// The boxes keep [homeScaleFor] so the design still fills the window; only
+/// the text is calmed down, otherwise a 1536 px screen renders a 17.8 px body
+/// and a 49 px greeting.
+double homeTextScaleFor(double viewportWidth) =>
+    homeScaleFor(viewportWidth).clamp(1.0, kHomeTextMaxScale);
 
+/// Publishes the home scale factors to the widgets below it.
+///
+/// Both getters answer 1 when there is no ancestor, so widgets shared with the
+/// phone layout — and the widget tests that pump them bare — keep their 1:1
+/// sizes.
+class HomeScale extends InheritedWidget {
+  const HomeScale({
+    super.key,
+    required this.factor,
+    required this.textFactor,
+    required super.child,
+  });
+
+  /// Grows boxes, paddings and the spacing between blocks.
   final double factor;
+
+  /// Grows type and everything inside the header.
+  final double textFactor;
 
   static double of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<HomeScale>()?.factor ?? 1;
 
+  /// The text and header factor.
+  static double textOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<HomeScale>()?.textFactor ?? 1;
+
   @override
-  bool updateShouldNotify(HomeScale oldWidget) => oldWidget.factor != factor;
+  bool updateShouldNotify(HomeScale oldWidget) =>
+      oldWidget.factor != factor || oldWidget.textFactor != textFactor;
 }
 
 /// Scales the fonts of the home on top of the platform's text scaling.
