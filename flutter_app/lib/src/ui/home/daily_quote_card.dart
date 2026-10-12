@@ -106,9 +106,50 @@ class _QuoteBody extends StatelessWidget {
       );
     }
 
+    // When the user has fewer than 10 self messages the server pairs two
+    // library quotes (quote + quote2). Show them as 1 large + 1 small so
+    // the second line is never hidden.
+    final secondQuote = data.hasQuote2
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Divider(height: 24),
+              Text(
+                'Câu thứ hai dành cho bạn',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontSize: MemoirType.caption,
+                  letterSpacing: MemoirType.overlineEditorialLetterSpacing,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '“${data.quote2Text}”',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: MemoirType.body,
+                  height: 1.5,
+                ),
+              ),
+              if ((data.quote2Author ?? '').isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '— ${data.quote2Author}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: MemoirType.caption,
+                  ),
+                ),
+              ],
+            ],
+          )
+        : null;
+
     final note = data.hasSelfMessage
         ? 'Lời nhắn của bạn: “${data.selfMessageContent}”'
-        : 'Một lời nhắn dành cho hôm nay';
+        : data.hasQuote2
+            ? 'Cả hai câu đều từ kho — viết thêm lời nhắn để ngày mai ghép câu của bạn'
+            : 'Một lời nhắn dành cho hôm nay';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,6 +171,10 @@ class _QuoteBody extends StatelessWidget {
             fontSize: MemoirType.body,
           ),
         ),
+        if (secondQuote != null) ...[
+          SizedBox(height: MemoirSpace.s2 * scale),
+          secondQuote,
+        ],
       ],
     );
   }
