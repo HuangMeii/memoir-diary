@@ -68,7 +68,7 @@ class EditorialMoment extends StatelessWidget {
         Text(
           'VIẾT CHO MÌNH. GIỮ CHO MÌNH.',
           style: TextStyle(
-            fontSize: MemoirType.overline2Editorial,
+            fontSize: MemoirType.overlineEditorial,
             letterSpacing: 3,
             fontWeight: FontWeight.w500,
             color: theme.colorScheme.primary,

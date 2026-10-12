@@ -44,19 +44,19 @@ ThemeData buildTheme(Brightness brightness) {
       displaySmall: TextStyle(
         fontFamily: serifFamily,
         fontSize: MemoirType.headingPage,
-        height: MemoirType.headingPage2LineHeight / MemoirType.headingPage,
+        height: MemoirType.headingPageLineHeight / MemoirType.headingPage,
         color: on,
       ),
       headlineMedium: TextStyle(
         fontFamily: serifFamily,
         fontSize: MemoirType.heading1,
-        height: MemoirType.heading12LineHeight / MemoirType.heading1,
+        height: MemoirType.heading1LineHeight / MemoirType.heading1,
         color: on,
       ),
       headlineSmall: TextStyle(
         fontFamily: serifFamily,
         fontSize: MemoirType.headingEditorial,
-        height: MemoirType.headingEditorial2LineHeight / MemoirType.headingEditorial,
+        height: MemoirType.headingEditorialLineHeight / MemoirType.headingEditorial,
         color: on,
       ),
       titleLarge: TextStyle(fontFamily: serifFamily, fontSize: MemoirType.heading1, color: on),
@@ -68,7 +68,7 @@ ThemeData buildTheme(Brightness brightness) {
         fontWeight: FontWeight.w500,
         color: on,
       ),
-      labelSmall: TextStyle(fontSize: MemoirType.overline2Editorial, color: muted),
+      labelSmall: TextStyle(fontSize: MemoirType.overlineEditorial, color: muted),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.surface,
@@ -124,4 +124,74 @@ Color colorFromHex(String? hex, {Color fallback = const Color(0xFFEEEEEE)}) {
   if (cleaned.length != 6) return fallback;
   final value = int.tryParse(cleaned, radix: 16);
   return value == null ? fallback : Color(0xFF000000 | value);
+}
+
+/// Raw Figma palette values that the Material [ColorScheme] does not carry.
+///
+/// Most widgets should read colours off `Theme.of(context).colorScheme`; this
+/// helper is only for the tokens that have no Material equivalent (the
+/// brand-tinted surfaces and the heatmap ramp).
+class MemoirPalette {
+  const MemoirPalette._(this._dark);
+
+  factory MemoirPalette.of(BuildContext context) =>
+      MemoirPalette._(Theme.of(context).brightness == Brightness.dark);
+
+  final bool _dark;
+
+  /// Card background tinted with the brand colour (`surface.brand-subtle`).
+  Color get surfaceBrandSubtle => _dark
+      ? MemoirColorsDark.surfaceBrandSubtle
+      : MemoirColorsLight.surfaceBrandSubtle;
+
+  /// Colour of the botanical sprig in the quote card.
+  Color get botanical => _dark
+      ? MemoirColorsDark.illustrationBotanical
+      : MemoirColorsLight.illustrationBotanical;
+
+  /// Panel background (`surface.card`).
+  Color get surfaceCard =>
+      _dark ? MemoirColorsDark.surfaceCard : MemoirColorsLight.surfaceCard;
+
+  /// Page background behind the panels (`background.page`).
+  Color get pageBackground => _dark
+      ? MemoirColorsDark.backgroundPage
+      : MemoirColorsLight.backgroundPage;
+
+  /// Hairline between the top bars and the page (`border.default`).
+  Color get borderDefault => _dark
+      ? MemoirColorsDark.borderDefault
+      : MemoirColorsLight.borderDefault;
+
+  /// Watermark colour for numbers outside the current period.
+  Color get textDisabled =>
+      _dark ? MemoirColorsDark.textDisabled : MemoirColorsLight.textDisabled;
+
+  /// Soft brand-tinted panel used by the "Câu nói hôm nay" card
+  /// (`surface.illustration`).
+  Color get surfaceIllustration => _dark
+      ? MemoirColorsDark.surfaceInput
+      : MemoirColorsLight.surfaceIllustration;
+}
+
+/// Five-step green ramp for the journal heatmap ("Nhịp viết của bạn").
+///
+/// Light mode reuses the mood heatmap tokens from Figma, which are already a
+/// light-to-dark green scale. There are no dark-mode heatmap tokens yet, so
+/// dark mode ramps the brand colour by opacity instead.
+List<Color> journalHeatmapScale(BuildContext context) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  if (dark) {
+    final base = Theme.of(context).colorScheme.primary;
+    return [0.12, 0.28, 0.46, 0.66, 0.92]
+        .map((o) => base.withValues(alpha: o))
+        .toList(growable: false);
+  }
+  return const [
+    MemoirColorsLight.heatmapMoodVerySad,
+    MemoirColorsLight.heatmapMoodSad,
+    MemoirColorsLight.heatmapMoodNeutral,
+    MemoirColorsLight.heatmapMoodHappy,
+    MemoirColorsLight.heatmapMoodVeryHappy,
+  ];
 }

@@ -24,6 +24,17 @@ class EntryRepository {
   Future<void> update(String id, Map<String, dynamic> body) =>
       _source.put('/entries/$id', data: body);
 
+  /// Every entry of one month (`YYYY-MM`), newest first.
+  ///
+  /// The server already exposes `entries.list(month:)`, so this needs no
+  /// backend change; the home heatmap uses it to score each day.
+  Future<List<DiaryEntry>> list(String month) async {
+    final data = await _source.get('/entries', query: {'month': month});
+    return (data as List)
+        .map((item) => DiaryEntry.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<GridCell>> moodGrid(String month) =>
       _grid('/stats/mood-grid', month);
 

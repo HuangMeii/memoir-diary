@@ -347,4 +347,121 @@ class DiaryEntry {
         gratitude: json['gratitude'] as String?,
         dream: json['dream'] as String?,
       );
+
+  /// Every content slot of a day, in the order the editor asks for them.
+  static const int contentFieldCount = 9;
+
+  /// How many of the [contentFieldCount] slots this day actually fills.
+  ///
+  /// The home heatmap colours a day by completeness: a day where only the
+  /// weather and the mood were tapped scores 2, a fully written page scores 9.
+  int get filledFields {
+    var filled = 0;
+    if (moodId != null) filled++;
+    if (weatherId != null) filled++;
+    if (_filled(diaryText)) filled++;
+    if (_filled(otherPerspective)) filled++;
+    if (_filled(futureMessage)) filled++;
+    if (_filled(selfCare)) filled++;
+    if (_filled(tomorrowHope)) filled++;
+    if (_filled(gratitude)) filled++;
+    if (_filled(dream)) filled++;
+    return filled;
+  }
+
+  static bool _filled(String? value) => value != null && value.trim().isNotEmpty;
+}
+
+/// The "now" reading from `/weather/current`.
+class WeatherCurrent {
+  const WeatherCurrent({
+    required this.weatherCode,
+    required this.condition,
+    required this.icon,
+    this.time,
+    this.temperature,
+    this.updatedAt,
+  });
+
+  final String? time;
+  final double? temperature;
+  final int weatherCode;
+  final String condition;
+  final String icon;
+
+  /// When the server fetched this reading, so a cached answer can be labelled
+  /// with the time it was actually taken.
+  final String? updatedAt;
+
+  factory WeatherCurrent.fromJson(Map<String, dynamic> json) => WeatherCurrent(
+        time: json['time'] as String?,
+        temperature: (json['temperature'] as num?)?.toDouble(),
+        weatherCode: json['weather_code'] as int? ?? 0,
+        condition: json['condition'] as String? ?? '',
+        icon: json['icon'] as String? ?? '',
+        updatedAt: json['updated_at'] as String?,
+      );
+}
+
+/// One forecast day.
+class WeatherDay {
+  const WeatherDay({
+    required this.date,
+    required this.weatherCode,
+    required this.condition,
+    required this.icon,
+    this.weatherId,
+    this.tempMin,
+    this.tempMax,
+  });
+
+  final DateTime date;
+  final int weatherCode;
+  final String condition;
+  final String icon;
+  final int? weatherId;
+  final double? tempMin;
+  final double? tempMax;
+
+  factory WeatherDay.fromJson(Map<String, dynamic> json) => WeatherDay(
+        date: DateTime.parse(json['date'] as String),
+        weatherCode: json['weather_code'] as int? ?? 0,
+        condition: json['condition'] as String? ?? '',
+        icon: json['icon'] as String? ?? '',
+        weatherId: json['weather_id'] as int?,
+        tempMin: (json['temp_min'] as num?)?.toDouble(),
+        tempMax: (json['temp_max'] as num?)?.toDouble(),
+      );
+}
+
+/// Current weather plus the multi-day forecast.
+///
+/// [source] is `open-meteo` for a live reading and `cache` when the upstream
+/// was unreachable and the server answered from its stored snapshots.
+class WeatherForecast {
+  const WeatherForecast({
+    required this.locationName,
+    required this.current,
+    required this.daily,
+    required this.source,
+  });
+
+  final String locationName;
+  final WeatherCurrent current;
+  final List<WeatherDay> daily;
+  final String source;
+
+  bool get isStale => source == 'cache';
+
+  factory WeatherForecast.fromJson(Map<String, dynamic> json) =>
+      WeatherForecast(
+        locationName: json['location_name'] as String? ?? '',
+        current: WeatherCurrent.fromJson(
+          (json['current'] as Map?)?.cast<String, dynamic>() ?? const {},
+        ),
+        daily: ((json['daily'] as List?) ?? const [])
+            .map((e) => WeatherDay.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        source: json['source'] as String? ?? 'open-meteo',
+      );
 }

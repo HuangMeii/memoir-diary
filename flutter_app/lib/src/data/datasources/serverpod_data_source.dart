@@ -69,6 +69,17 @@ class ServerpodDataSource implements BackendDataSource {
           to: _parseDate(query['to'])!,
         );
         return logs.map(_healthMap).toList();
+      case '/weather/current':
+        return _weatherForecastMap(await _client.weather.current());
+      case '/weather/history':
+        final days = await _client.weather.history(
+          from: _parseDate(query?['from']),
+          to: _parseDate(query?['to']),
+        );
+        return {'days': days.map(_weatherDayMap).toList()};
+      case '/weather/daily':
+        final day = await _client.weather.daily(_parseDate(query?['date'])!);
+        return day == null ? null : _weatherDayMap(day);
     }
 
     if (path.startsWith('/entries/by-date/')) {
@@ -184,6 +195,11 @@ class ServerpodDataSource implements BackendDataSource {
     throw ApiException('ServerpodDataSource: unsupported POST $path');
   }
 
+  /// Replaces the whole row behind [path].
+  ///
+  /// Every field below is read from [data] and forwarded, so a caller that
+  /// omits a key sends `null` for it and the server clears that column. Always
+  /// send the complete object (`HomeScreen._pick`, `EntryEditorScreen._save`).
   @override
   Future<dynamic> put(String path, {Object? data}) async {
     final body = (data as Map?)?.cast<String, dynamic>() ?? const {};
@@ -245,6 +261,14 @@ class ServerpodDataSource implements BackendDataSource {
         recurrenceRule: body['recurrence_rule'] as String?,
         reminderMinutes: body['reminder_minutes'] as int?,
       ));
+    }
+    if (path == '/weather/location') {
+      await _client.weather.setLocation(
+        lat: (body['lat'] as num).toDouble(),
+        lon: (body['lon'] as num).toDouble(),
+        name: body['name'] as String?,
+      );
+      return null;
     }
     throw ApiException('ServerpodDataSource: unsupported PUT $path');
   }
@@ -461,4 +485,28 @@ Map<String, dynamic> _imageMap(sp.EntryImage i) => {
       'size_bytes': i.sizeBytes,
       'caption': i.caption,
       'created_at': i.createdAt.toIso8601String(),
+    };
+
+Map<String, dynamic> _weatherDayMap(sp.WeatherDay d) => {
+      'date': _dateOnly(d.date),
+      'weather_code': d.weatherCode,
+      'condition': d.condition,
+      'icon': d.icon,
+      'weather_id': d.weatherId,
+      'temp_min': d.tempMin,
+      'temp_max': d.tempMax,
+    };
+
+Map<String, dynamic> _weatherForecastMap(sp.WeatherForecast f) => {
+      'location_name': f.locationName,
+      'current': {
+        'time': f.currentTime?.toIso8601String(),
+        'temperature': f.currentTemperature,
+        'weather_code': f.currentWeatherCode,
+        'condition': f.condition,
+        'icon': f.icon,
+      },
+      'daily': f.daily.map(_weatherDayMap).toList(),
+      // The client treats anything but "cache" as a live Open-Meteo reading.
+      'source': f.source == 'cache' ? 'cache' : 'open-meteo',
     };

@@ -28,6 +28,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   final _gratitude = TextEditingController();
   final _dream = TextEditingController();
   final _reflection = TextEditingController();
+  final _selfMessage = TextEditingController();
 
   int? _moodId;
   int? _weatherId;
@@ -47,7 +48,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   void dispose() {
     for (final c in [
       _diary, _perspective, _future, _selfCare,
-      _hope, _gratitude, _dream, _reflection,
+      _hope, _gratitude, _dream, _reflection, _selfMessage,
     ]) {
       c.dispose();
     }
@@ -105,6 +106,13 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
         await ref.read(quoteRepositoryProvider).saveReflection(
           _reflection.text.trim(),
         );
+      }
+
+      // "Câu hỏi gửi gắm tương lai" moved here from the home quote card: it
+      // fills the library the daily pairing draws from, so it is stored as a
+      // self message rather than on the entry.
+      if (_selfMessage.text.trim().isNotEmpty) {
+        await saveSelfMessage(ref, _selfMessage.text);
       }
 
       refreshEntryData(ref);
@@ -260,6 +268,12 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                   icon: Icons.nightlight_outlined,
                   label: 'Giấc mơ đã trải qua',
                   controller: _dream,
+                ),
+                _Field(
+                  icon: Icons.send_rounded,
+                  label: 'Câu hỏi gửi gắm tương lai của bạn?',
+                  controller: _selfMessage,
+                  hint: 'Ví dụ: Một năm nữa mình đã dám nói chưa?',
                 ),
                 _Field(
                   icon: Icons.psychology_outlined,

@@ -95,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   _isRegister ? 'Tạo tài khoản' : 'Chào bạn trở lại',
                   style: serif.copyWith(
                     fontSize: MemoirType.heading1,
-                    height: MemoirType.heading12LineHeight / MemoirType.heading1,
+                    height: MemoirType.heading1LineHeight / MemoirType.heading1,
                   ),
                 ),
                 const SizedBox(height: MemoirSpace.s2),

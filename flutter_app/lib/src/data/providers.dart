@@ -12,6 +12,7 @@ import 'repositories/lookup_repository.dart';
 import 'repositories/notes_repository.dart';
 import 'repositories/planner_repository.dart';
 import 'repositories/quote_repository.dart';
+import 'repositories/weather_repository.dart';
 
 /// The backend the whole app talks to: the Dart Serverpod server.
 ///
@@ -72,6 +73,17 @@ final weathersProvider = FutureProvider<List<LookupItem>>(
   (ref) => ref.read(lookupRepositoryProvider).weathers(),
 );
 
+final weatherRepositoryProvider = Provider<WeatherRepository>(
+  (ref) => WeatherRepository(ref.watch(backendDataSourceProvider)),
+);
+
+/// Live forecast plus the multi-day outlook. The server falls back to stored
+/// snapshots when Open-Meteo is unreachable, so this rarely errors.
+final weatherProvider = FutureProvider<WeatherForecast>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(weatherRepositoryProvider).current();
+});
+
 /// The month currently being browsed, as the first day of that month.
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
@@ -113,6 +125,20 @@ final entryByDateProvider =
     FutureProvider.family<DiaryEntry?, String>((ref, isoDate) async {
   await ref.watch(authReadyProvider.future);
   return ref.read(entryRepositoryProvider).byDate(isoDate);
+});
+
+/// Every entry of one month (`YYYY-MM`), keyed by day.
+///
+/// The home heatmap ("Nhịp viết của bạn") needs the whole month to score each
+/// day by how much of it was filled in, so it reads this instead of asking the
+/// server for a separate aggregate.
+final monthEntriesProvider =
+    FutureProvider.family<Map<String, DiaryEntry>, String>((ref, month) async {
+  await ref.watch(authReadyProvider.future);
+  final entries = await ref.read(entryRepositoryProvider).list(month);
+  return {
+    for (final entry in entries) dayKey(entry.entryDate): entry,
+  };
 });
 
 /// The pair shown today, stored server-side so it stays the same for the day.
@@ -239,6 +265,7 @@ void refreshEntryData(WidgetRef ref) {
   ref.invalidate(weatherGridProvider);
   ref.invalidate(monthSummaryProvider);
   ref.invalidate(entryByDateProvider);
+  ref.invalidate(monthEntriesProvider);
   ref.invalidate(todayQuoteProvider);
   ref.invalidate(entryImagesProvider);
 }
