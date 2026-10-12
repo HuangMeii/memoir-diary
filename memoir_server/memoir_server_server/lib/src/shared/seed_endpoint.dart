@@ -5,13 +5,15 @@ import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
 
-/// Static lookup rows, matching `backend/app/seed/lookups.py`.
+/// Static lookup rows, matching the five-level mood scale of the Figma design
+/// (`heatmap.mood.*` tokens). The retired `bored` / `angry` rows are remapped by
+/// the mood migration, not seeded again.
 const List<List<String>> _moodRows = [
-  ['happy', 'Vui', '#FFD93D', '😀', '1'],
-  ['sad', 'Buồn', '#4A90D9', '😢', '2'],
-  ['bored', 'Chán', '#9E9E9E', '😑', '3'],
-  ['neutral', 'Bình thường', '#A8D5BA', '😐', '4'],
-  ['angry', 'Giận', '#E74C3C', '😠', '5'],
+  ['very-sad', 'Rất buồn', '#F4F4EE', '😢', '1'],
+  ['sad', 'Buồn', '#ECEEE7', '🙁', '2'],
+  ['neutral', 'Bình thường', '#E9EDE3', '😐', '3'],
+  ['happy', 'Vui', '#D5E1CD', '🙂', '4'],
+  ['very-happy', 'Rất vui', '#A8BE9C', '😄', '5'],
 ];
 
 const List<List<String>> _weatherRows = [
