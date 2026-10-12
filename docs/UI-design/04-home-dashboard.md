@@ -49,6 +49,11 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
   Dữ liệu lấy từ `GET /entries?month=` (không cần đổi backend).
 - **Hai ô nhập đã chuyển sang `JOURNAL-02`** (`entry_editor.dart`): “Câu hỏi
   gửi gắm tương lai” (lưu thành self message) và “Suy nghĩ về 2 câu hôm nay”.
+- **Zoom theo bề rộng cửa sổ** (`ui/home/home_scale.dart`): hệ số
+  `viewportWidth / 1120` kẹp trong `[1, 1.5]`, truyền qua `HomeScale` và nhân
+  vào `MediaQuery.textScaler` nên chữ và khối cùng lớn lên; dưới 1120 px giữ
+  1:1 cho mobile, `HomeScale.of` không có ancestor cũng trả 1. Ô heatmap dùng
+  gap 6 px nên lưới đúng frame `176×223`.
 
 ### Còn thiếu so với Figma
 

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/ui/theme.dart';
 import 'package:memoir_app/src/ui/home/activity_heatmap.dart';
+import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
 import 'package:memoir_app/src/ui/widgets/icon_picker_row.dart';
 import 'package:memoir_app/src/ui/widgets/month_grid.dart';
@@ -324,5 +325,60 @@ void main() {
       expect(level(7), 4);
       expect(level(9), 5);
     });
+  });
+
+  group('homeScaleFor', () {
+    test('keeps a phone at 1:1', () {
+      expect(homeScaleFor(390), 1);
+      expect(homeScaleFor(kHomeDesignWidth), 1);
+      expect(homeScaleFor(kHomeDesignWidth - 1), 1);
+    });
+
+    test('fills a 1536 px desktop window', () {
+      expect(homeScaleFor(1536), closeTo(1.3714, 0.001));
+    });
+
+    test('stops at the cap on an ultrawide monitor', () {
+      expect(homeScaleFor(2560), kHomeMaxScale);
+      expect(homeScaleFor(3840), kHomeMaxScale);
+    });
+
+    test('survives a width that cannot be laid out', () {
+      expect(homeScaleFor(0), 1);
+      expect(homeScaleFor(-100), 1);
+      expect(homeScaleFor(double.infinity), 1);
+    });
+  });
+
+  testWidgets('HomeScale answers 1 when no ancestor provides a factor',
+      (tester) async {
+    late double factor;
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) {
+          factor = HomeScale.of(context);
+          return const SizedBox();
+        },
+      ),
+    ));
+
+    expect(factor, 1);
+  });
+
+  testWidgets('HomeScale publishes its factor to descendants', (tester) async {
+    late double factor;
+    await tester.pumpWidget(MaterialApp(
+      home: HomeScale(
+        factor: 1.4,
+        child: Builder(
+          builder: (context) {
+            factor = HomeScale.of(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    ));
+
+    expect(factor, 1.4);
   });
 }

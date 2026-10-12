@@ -7,6 +7,7 @@ import '../screens/month_grids_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/planner_screen.dart';
 import '../screens/quote_history_screen.dart';
+import 'home_scale.dart';
 
 /// One shortcut tile in the "GÓC NHỎ CỦA BẠN" grid.
 class _Shortcut {
@@ -38,16 +39,15 @@ const List<_Shortcut> _shortcuts = [
 class ShortcutCards extends StatelessWidget {
   const ShortcutCards({super.key});
 
-  /// One tile's width: two per 300 px column with a 10 px gap.
-  static const double _tileWidth = 145;
-
-  /// One tile's height, from the design.
+  /// One tile's height in design pixels; the design's `Shortcut` frame is
+  /// 145×92, and the width is derived from the column so two always fit.
   static const double _tileHeight = 92;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
+    final scale = HomeScale.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,14 +60,28 @@ class ShortcutCards extends StatelessWidget {
             letterSpacing: MemoirType.overlineEditorialLetterSpacing,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s3),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final shortcut in _shortcuts)
-              _ShortcutTile(shortcut: shortcut, palette: palette),
-          ],
+        SizedBox(height: MemoirSpace.s3 * scale),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Derived from the column instead of `145 * scale`: at 1.3714 the
+            // two products land within a float ulp of each other, and a hair
+            // over would drop the second tile onto its own row.
+            final gap = 10 * scale;
+            final tileWidth = (constraints.maxWidth - gap) / 2;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final shortcut in _shortcuts)
+                  _ShortcutTile(
+                    shortcut: shortcut,
+                    palette: palette,
+                    width: tileWidth,
+                    height: _tileHeight * scale,
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -75,18 +89,26 @@ class ShortcutCards extends StatelessWidget {
 }
 
 class _ShortcutTile extends StatelessWidget {
-  const _ShortcutTile({required this.shortcut, required this.palette});
+  const _ShortcutTile({
+    required this.shortcut,
+    required this.palette,
+    required this.width,
+    required this.height,
+  });
 
   final _Shortcut shortcut;
   final MemoirPalette palette;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     return SizedBox(
-      width: ShortcutCards._tileWidth,
-      height: ShortcutCards._tileHeight,
+      width: width,
+      height: height,
       child: Material(
         color: palette.surfaceBrandSubtle,
         borderRadius: BorderRadius.circular(MemoirRadius.page),
@@ -96,12 +118,16 @@ class _ShortcutTile extends StatelessWidget {
             MaterialPageRoute<void>(builder: (_) => shortcut.builder()),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(MemoirSpace.s3),
+            padding: EdgeInsets.all(MemoirSpace.s3 * scale),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(shortcut.icon, size: 20, color: theme.colorScheme.primary),
+                Icon(
+                  shortcut.icon,
+                  size: 20 * scale,
+                  color: theme.colorScheme.primary,
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

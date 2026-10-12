@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../icons.dart';
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// The design's "saved" bar: a dark pill with a check, the confirmation and a
 /// close button.
@@ -19,18 +20,19 @@ class SavedBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final onPrimary = theme.colorScheme.onPrimary;
+    final scale = HomeScale.of(context);
 
     return Container(
-      height: 45,
-      padding: const EdgeInsets.symmetric(horizontal: MemoirSpace.s4),
+      height: 45 * scale,
+      padding: EdgeInsets.symmetric(horizontal: MemoirSpace.s4 * scale),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(MemoirRadius.feedback),
+        borderRadius: BorderRadius.circular(MemoirRadius.feedback * scale),
       ),
       child: Row(
         children: [
-          MemoirIcon('circle-check', size: 18, color: onPrimary),
-          const SizedBox(width: MemoirSpace.s3),
+          MemoirIcon('circle-check', size: 18 * scale, color: onPrimary),
+          SizedBox(width: MemoirSpace.s3 * scale),
           Expanded(
             child: Text(
               message,
@@ -40,7 +42,7 @@ class SavedBar extends StatelessWidget {
           IconButton(
             tooltip: 'Đóng',
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.close, size: 16, color: onPrimary),
+            icon: Icon(Icons.close, size: 16 * scale, color: onPrimary),
             onPressed: onClose,
           ),
         ],

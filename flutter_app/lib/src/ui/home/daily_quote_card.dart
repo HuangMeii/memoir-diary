@@ -7,6 +7,7 @@ import '../../data/providers.dart';
 import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// The design's "Câu nói hôm nay" card.
 ///
@@ -24,11 +25,12 @@ class DailyQuoteCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
     final pair = ref.watch(todayQuoteProvider);
+    final scale = HomeScale.of(context);
 
     return Card(
       color: palette.surfaceIllustration,
       child: Padding(
-        padding: const EdgeInsets.all(MemoirSpace.s6),
+        padding: EdgeInsets.all(MemoirSpace.s6 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -49,7 +51,7 @@ class DailyQuoteCard extends ConsumerWidget {
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
                     Icons.refresh,
-                    size: 18,
+                    size: 18 * scale,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   onPressed: () async {
@@ -65,11 +67,11 @@ class DailyQuoteCard extends ConsumerWidget {
                 const MemoirIcon('quote', size: 18),
               ],
             ),
-            const SizedBox(height: MemoirSpace.s2),
+            SizedBox(height: MemoirSpace.s2 * scale),
             pair.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: MemoirSpace.s5),
-                child: LinearProgressIndicator(),
+              loading: () => Padding(
+                padding: EdgeInsets.symmetric(vertical: MemoirSpace.s5 * scale),
+                child: const LinearProgressIndicator(),
               ),
               error: (e, _) => _ErrorState(ref: ref),
               data: (data) => _QuoteBody(data: data),
@@ -89,10 +91,11 @@ class _QuoteBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     if (!data.hasQuote) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: MemoirSpace.s5),
+        padding: EdgeInsets.symmetric(vertical: MemoirSpace.s5 * scale),
         child: Text(
           'Chưa có câu nào hôm nay. Bấm nút đổi câu để lấy một câu mới.',
           style: theme.textTheme.bodySmall?.copyWith(
@@ -119,7 +122,7 @@ class _QuoteBody extends StatelessWidget {
             color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s3),
+        SizedBox(height: MemoirSpace.s3 * scale),
         Text(
           note,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -142,6 +145,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,7 +157,7 @@ class _ErrorState extends StatelessWidget {
             fontSize: MemoirType.body,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s2),
+        SizedBox(height: MemoirSpace.s2 * scale),
         Text(
           'Một chút gián đoạn thôi. Bạn vẫn có thể viết và lưu ngày của mình.',
           style: theme.textTheme.bodySmall?.copyWith(
@@ -161,7 +165,7 @@ class _ErrorState extends StatelessWidget {
             fontSize: MemoirType.body,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s4),
+        SizedBox(height: MemoirSpace.s4 * scale),
         OutlinedButton(
           onPressed: () => ref.invalidate(todayQuoteProvider),
           child: const Text('Thử lại'),

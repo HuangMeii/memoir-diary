@@ -6,6 +6,7 @@ import '../../data/providers.dart';
 import '../theme.dart';
 import '../tokens.dart';
 import 'activity_heatmap.dart';
+import 'home_scale.dart';
 
 /// "Nhịp viết của bạn": this month's writing rhythm as a shaded month grid.
 ///
@@ -22,10 +23,11 @@ class MonthActivityCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final entries = ref.watch(monthEntriesProvider(monthKey(month)));
+    final scale = HomeScale.of(context);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(MemoirSpace.s6),
+        padding: EdgeInsets.all(MemoirSpace.s6 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -42,7 +44,7 @@ class MonthActivityCard extends ConsumerWidget {
                         fontSize: MemoirType.label,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2 * scale),
                     Text(
                       'Tháng ${month.month}, ${month.year}',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -56,14 +58,16 @@ class MonthActivityCard extends ConsumerWidget {
                 const _PeriodControl(),
               ],
             ),
-            const SizedBox(height: MemoirSpace.s5),
+            SizedBox(height: MemoirSpace.s5 * scale),
             entries.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: MemoirSpace.s6),
-                child: LinearProgressIndicator(),
+              loading: () => Padding(
+                padding:
+                    EdgeInsets.symmetric(vertical: MemoirSpace.s6 * scale),
+                child: const LinearProgressIndicator(),
               ),
               error: (e, _) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: MemoirSpace.s6),
+                padding:
+                    EdgeInsets.symmetric(vertical: MemoirSpace.s6 * scale),
                 child: Text(
                   'Chưa tải được nhịp viết. $e',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -80,6 +84,7 @@ class MonthActivityCard extends ConsumerWidget {
     );
   }
 }
+
 class _ActivityBody extends StatelessWidget {
   const _ActivityBody({required this.month, required this.byDate});
 
@@ -89,7 +94,8 @@ class _ActivityBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scale = journalHeatmapScale(context);
+    final scale = HomeScale.of(context);
+    final shades = journalHeatmapScale(context);
 
     final days = <String, ActivityDay>{
       for (final entry in byDate.entries)
@@ -114,7 +120,7 @@ class _ActivityBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ActivityHeatmap(month: month, days: days, monthLabel: 'Tuần'),
-            const SizedBox(width: MemoirSpace.s6),
+            SizedBox(width: MemoirSpace.s6 * scale),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +134,7 @@ class _ActivityBody extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: MemoirSpace.custom6),
+                  SizedBox(height: MemoirSpace.custom6 * scale),
                   Text(
                     'đã viết trong tháng này. Mỗi ô nhỏ là một lần dành thời gian cho mình.',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -136,7 +142,7 @@ class _ActivityBody extends StatelessWidget {
                       fontSize: MemoirType.body,
                     ),
                   ),
-                  const SizedBox(height: MemoirSpace.s3),
+                  SizedBox(height: MemoirSpace.s3 * scale),
                   Text(
                     '${now.day.toString().padLeft(2, '0')}.'
                     '${now.month.toString().padLeft(2, '0')} · '
@@ -148,25 +154,25 @@ class _ActivityBody extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: MemoirSpace.s5),
+        SizedBox(height: MemoirSpace.s5 * scale),
         Row(
           children: [
             Expanded(
               child: Text('Ô viền: hôm nay · Ô nhạt: ngày tới', style: muted),
             ),
             Text('Ít', style: muted),
-            const SizedBox(width: MemoirSpace.custom6),
-            for (final color in scale)
+            SizedBox(width: MemoirSpace.custom6 * scale),
+            for (final color in shades)
               Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                width: 10 * scale,
+                height: 10 * scale,
+                margin: EdgeInsets.symmetric(horizontal: 1.5 * scale),
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(2 * scale),
                 ),
               ),
-            const SizedBox(width: MemoirSpace.custom6),
+            SizedBox(width: MemoirSpace.custom6 * scale),
             Text('Nhiều', style: muted),
           ],
         ),
@@ -184,16 +190,17 @@ class _PeriodControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     Widget segment(String label, {required bool selected}) {
       return Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MemoirSpace.s3,
-          vertical: MemoirSpace.custom7,
+        padding: EdgeInsets.symmetric(
+          horizontal: MemoirSpace.s3 * scale,
+          vertical: MemoirSpace.custom7 * scale,
         ),
         decoration: BoxDecoration(
           color: selected ? theme.colorScheme.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(MemoirRadius.control),
+          borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
         ),
         child: Text(
           label,
@@ -211,10 +218,11 @@ class _PeriodControl extends StatelessWidget {
     return Tooltip(
       message: 'Chế độ Tuần và Năm sẽ có sau',
       child: Container(
-        padding: const EdgeInsets.all(3),
+        padding: EdgeInsets.all(3 * scale),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(MemoirRadius.control + 3),
+          borderRadius:
+              BorderRadius.circular(MemoirRadius.control * scale + 3),
           border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Row(

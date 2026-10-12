@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// Weekday names in the order [DateTime.weekday] uses them.
 const List<String> _weekdays = [
@@ -76,11 +77,12 @@ class HomeHeader extends StatelessWidget {
     final muted = theme.colorScheme.onSurfaceVariant;
     final brand = theme.colorScheme.primary;
     final palette = MemoirPalette.of(context);
+    final scale = HomeScale.of(context);
 
     return Container(
-      height: kHomeHeaderHeight,
+      height: kHomeHeaderHeight * scale,
       color: palette.surfaceCard,
-      padding: const EdgeInsets.symmetric(horizontal: MemoirSpace.s5),
+      padding: EdgeInsets.symmetric(horizontal: MemoirSpace.s5 * scale),
       child: Row(
         children: [
           SvgPicture.asset(
@@ -88,9 +90,9 @@ class HomeHeader extends StatelessWidget {
             // brand-green book); tinting it would flatten both into one solid
             // shape.
             'assets/illustrations/brand-mark.svg',
-            height: MemoirComponent.mobileBrandMarkHeight,
+            height: MemoirComponent.mobileBrandMarkHeight * scale,
           ),
-          const SizedBox(width: MemoirSpace.s2),
+          SizedBox(width: MemoirSpace.s2 * scale),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -116,8 +118,8 @@ class HomeHeader extends StatelessWidget {
           Semantics(
             label: 'Tài khoản $initials',
             child: Container(
-              width: _profileSize,
-              height: _profileSize,
+              width: _profileSize * scale,
+              height: _profileSize * scale,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
@@ -133,7 +135,7 @@ class HomeHeader extends StatelessWidget {
             ),
           ),
           if (name != null && name!.trim().isNotEmpty) ...[
-            const SizedBox(width: MemoirSpace.s2),
+            SizedBox(width: MemoirSpace.s2 * scale),
             Text(
               name!.trim(),
               style: theme.textTheme.labelLarge?.copyWith(
@@ -142,10 +144,10 @@ class HomeHeader extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(width: MemoirSpace.s4),
+          SizedBox(width: MemoirSpace.s4 * scale),
           TextButton.icon(
             onPressed: onLogout,
-            icon: MemoirIcon('log-out', size: _iconSize, color: brand),
+            icon: MemoirIcon('log-out', size: _iconSize * scale, color: brand),
             label: Text(
               'Đăng xuất',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -182,6 +184,7 @@ class HomeGreeting extends StatelessWidget {
     final theme = Theme.of(context);
     final on = theme.colorScheme.onSurface;
     final muted = theme.colorScheme.onSurfaceVariant;
+    final scale = HomeScale.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,24 +201,25 @@ class HomeGreeting extends StatelessWidget {
             const Spacer(),
             OutlinedButton.icon(
               onPressed: onRefresh,
-              icon: const Icon(Icons.refresh, size: 16),
+              icon: Icon(Icons.refresh, size: 16 * scale),
               label: const Text('Làm mới'),
             ),
           ],
         ),
-        const SizedBox(height: MemoirSpace.s3),
+        SizedBox(height: MemoirSpace.s3 * scale),
         Text(
           userName == null || userName!.isEmpty
               ? 'Chào bạn,'
               : 'Chào $userName,',
+          // The design's "Friendly greeting" frame is 1024×46, which is the
+          // page heading step (36/46) rather than the editorial one.
           style: theme.textTheme.headlineSmall?.copyWith(
             color: on,
-            fontSize: MemoirType.headingEditorial,
-            height: MemoirType.headingEditorialLineHeight /
-                MemoirType.headingEditorial,
+            fontSize: MemoirType.headingPage,
+            height: MemoirType.headingPageLineHeight / MemoirType.headingPage,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s1),
+        SizedBox(height: MemoirSpace.s1 * scale),
         Text(
           'Một ngày mới, một chút thời gian cho mình.',
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -223,7 +227,7 @@ class HomeGreeting extends StatelessWidget {
             fontSize: MemoirType.body,
           ),
         ),
-        const SizedBox(height: MemoirSpace.s1),
+        SizedBox(height: MemoirSpace.s1 * scale),
         Text(
           longDate(date),
           style: theme.textTheme.bodySmall?.copyWith(

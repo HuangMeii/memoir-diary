@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// Width of the main column in the Figma `HOME-01 · Web` frames.
 const double kMainColumnWidth = 700;
@@ -13,6 +14,9 @@ const double kColumnGap = 24;
 
 /// Below this width the dashboard drops to a single column: the design's two
 /// columns no longer fit, so the side content stacks under the main one.
+///
+/// These are design pixels; the width the layout actually needs is
+/// `kDashboardBreakpoint * HomeScale.of(context)`.
 const double kDashboardBreakpoint =
     kMainColumnWidth + kColumnGap + kSideColumnWidth;
 
@@ -37,20 +41,26 @@ class DashboardColumns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = HomeScale.of(context);
+    final gap = kColumnGap * scale;
+    final needed = kDashboardBreakpoint * scale;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < kDashboardBreakpoint) {
+        // One pixel of slack: the parent sizes the content from the same scaled
+        // numbers, and floating point can leave it a hair under.
+        if (constraints.maxWidth + 1 < needed) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [main, SizedBox(height: stackGap), side],
+            children: [main, SizedBox(height: stackGap * scale), side],
           );
         }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: kMainColumnWidth, child: main),
-            const SizedBox(width: kColumnGap),
-            SizedBox(width: kSideColumnWidth, child: side),
+            SizedBox(width: kMainColumnWidth * scale, child: main),
+            SizedBox(width: gap),
+            SizedBox(width: kSideColumnWidth * scale, child: side),
           ],
         );
       },

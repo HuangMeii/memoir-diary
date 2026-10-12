@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../data/providers.dart';
 import '../home/daily_quote_card.dart';
 import '../home/dashboard_columns.dart';
 import '../home/home_header.dart';
+import '../home/home_scale.dart';
 import '../home/journal_prompt_card.dart';
 import '../home/month_activity_card.dart';
 import '../home/picker_card.dart';
@@ -22,6 +24,9 @@ import 'entry_editor.dart';
 
 /// Content width of the web layout: the design's 1024 px dashboard centred on
 /// an 1120 px page with 48 px gutters.
+///
+/// Every size here is in design pixels; [homeScaleFor] decides how far the
+/// whole thing is zoomed up to fill the window.
 const double kHomeContentWidth = 1024;
 
 /// Home = today's overview, laid out like the design's `HOME-01 · Web` frames.
@@ -81,63 +86,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Centre the 1024 px dashboard, keeping a 16 px gutter when there is
-          // not enough room for the full design.
-          final horizontal = constraints.maxWidth > kHomeContentWidth + 32
-              ? (constraints.maxWidth - kHomeContentWidth) / 2
-              : 16.0;
-          final wide = constraints.maxWidth - 2 * horizontal >=
-              kDashboardBreakpoint;
+          // Zoom the design so the 1120 px Figma frame fills the window. At
+          // 1536 px that is 1.37, which removes the wide empty gutters and
+          // lifts the mobile-sized type to a readable desktop size.
+          final scale = homeScaleFor(constraints.maxWidth);
+          final horizontal = math.max(
+            16.0,
+            (constraints.maxWidth - kHomeContentWidth * scale) / 2,
+          );
+          final contentWidth = constraints.maxWidth - 2 * horizontal;
+          final wide = contentWidth >= kDashboardBreakpoint * scale;
+          final media = MediaQuery.of(context);
 
-          return SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                if (wide) const UtilityNavigation(),
-                HomeHeader(
-                  date: today,
-                  initials: initialsOf(displayName),
-                  name: displayName,
-                  onLogout: () => ref.read(authProvider.notifier).logout(),
-                ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () async => refreshEntryData(ref),
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        horizontal,
-                        MemoirSpace.s6,
-                        horizontal,
-                        MemoirSpace.s8,
-                      ),
-                      children: [
-                        HomeGreeting(
-                          date: today,
-                          userName: displayName,
-                          onRefresh: () => refreshEntryData(ref),
-                        ),
-                        const SizedBox(height: MemoirSpace.s5),
-                        DashboardColumns(
-                          main: _mainColumn(
-                            context,
-                            today,
-                            entry,
-                            weathers,
-                            moods,
-                          ),
-                          side: _sideColumn(context, today, entry),
-                        ),
-                        if (!wide) ...[
-                          const SizedBox(height: MemoirSpace.s8),
-                          const UtilitiesSection(),
-                        ],
-                        const SizedBox(height: MemoirSpace.s6),
-                        const HomeTagline(),
-                      ],
+          return MediaQuery(
+            data: media.copyWith(
+              textScaler: scale == 1
+                  ? media.textScaler
+                  : HomeTextScaler(base: media.textScaler, factor: scale),
+            ),
+            child: HomeScale(
+              factor: scale,
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    if (wide) const UtilityNavigation(),
+                    HomeHeader(
+                      date: today,
+                      initials: initialsOf(displayName),
+                      name: displayName,
+                      onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
-                  ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async => refreshEntryData(ref),
+                        child: ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontal,
+                            MemoirSpace.s6 * scale,
+                            horizontal,
+                            MemoirSpace.s8 * scale,
+                          ),
+                          children: [
+                            HomeGreeting(
+                              date: today,
+                              userName: displayName,
+                              onRefresh: () => refreshEntryData(ref),
+                            ),
+                            SizedBox(height: MemoirSpace.s5 * scale),
+                            DashboardColumns(
+                              main: _mainColumn(
+                                context,
+                                today,
+                                entry,
+                                weathers,
+                                moods,
+                              ),
+                              side: _sideColumn(context, today, entry),
+                            ),
+                            if (!wide) ...[
+                              SizedBox(height: MemoirSpace.s8 * scale),
+                              const UtilitiesSection(),
+                            ],
+                            SizedBox(height: MemoirSpace.s6 * scale),
+                            const HomeTagline(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -153,6 +172,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AsyncValue<List<LookupItem>> weathers,
     AsyncValue<List<LookupItem>> moods,
   ) {
+    final scale = HomeScale.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -181,12 +202,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         if (_saved != null) ...[
-          const SizedBox(height: MemoirSpace.s3),
+          SizedBox(height: MemoirSpace.s3 * scale),
           SavedBar(message: _saved!, onClose: _hideSaved),
         ],
-        const SizedBox(height: MemoirSpace.s4),
+        SizedBox(height: MemoirSpace.s4 * scale),
         const DailyQuoteCard(),
-        const SizedBox(height: MemoirSpace.s4),
+        SizedBox(height: MemoirSpace.s4 * scale),
         MonthActivityCard(month: DateTime(today.year, today.month)),
       ],
     );
@@ -198,6 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DateTime today,
     AsyncValue<DiaryEntry?> entry,
   ) {
+    final scale = HomeScale.of(context);
     final written = (entry.valueOrNull?.diaryText ?? '').trim().isNotEmpty;
 
     return Column(
@@ -212,7 +234,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-        const SizedBox(height: MemoirSpace.s6),
+        SizedBox(height: MemoirSpace.s6 * scale),
         const ShortcutCards(),
       ],
     );
@@ -273,12 +295,13 @@ class HomeTagline extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
+    final scale = HomeScale.of(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.lock_outline, size: 14, color: muted),
-        const SizedBox(width: MemoirSpace.custom6),
+        Icon(Icons.lock_outline, size: 14 * scale, color: muted),
+        SizedBox(width: MemoirSpace.custom6 * scale),
         Text(
           'Một không gian riêng, dành cho bạn.',
           style: theme.textTheme.bodySmall?.copyWith(

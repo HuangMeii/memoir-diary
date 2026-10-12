@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../tokens.dart';
 import '../utilities.dart';
 import '../widgets/app_footer.dart' show openUtility;
+import 'home_scale.dart';
 
 /// Height of the web utility bar, matching Figma `Utility navigation` (58 px).
 const double kUtilityNavHeight = 58;
@@ -21,10 +22,11 @@ class UtilityNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
+    final scale = HomeScale.of(context);
 
     return Container(
-      height: kUtilityNavHeight,
-      padding: const EdgeInsets.symmetric(horizontal: MemoirSpace.s5),
+      height: kUtilityNavHeight * scale,
+      padding: EdgeInsets.symmetric(horizontal: MemoirSpace.s5 * scale),
       decoration: BoxDecoration(
         color: palette.surfaceCard,
         border: Border(bottom: BorderSide(color: palette.borderDefault)),
@@ -32,16 +34,16 @@ class UtilityNavigation extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 28 * scale,
+            height: 28 * scale,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: palette.surfaceBrandSubtle,
-              borderRadius: BorderRadius.circular(MemoirRadius.control),
+              borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
             ),
-            child: const MemoirIcon('weather', size: 18),
+            child: MemoirIcon('weather', size: 18 * scale),
           ),
-          const SizedBox(width: MemoirSpace.s2),
+          SizedBox(width: MemoirSpace.s2 * scale),
           Text(
             'Tiện ích',
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -67,15 +69,16 @@ class _UtilityPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
+    final scale = HomeScale.of(context);
     final brand = theme.colorScheme.primary;
 
     return InkWell(
       borderRadius: BorderRadius.circular(MemoirRadius.pill),
       onTap: () => openUtility(context, item),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MemoirSpace.s3,
-          vertical: MemoirSpace.custom7,
+        padding: EdgeInsets.symmetric(
+          horizontal: MemoirSpace.s3 * scale,
+          vertical: MemoirSpace.custom7 * scale,
         ),
         decoration: BoxDecoration(
           color: palette.surfaceBrandSubtle,
@@ -85,10 +88,10 @@ class _UtilityPill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (item.iconAsset != null)
-              MemoirIcon(item.iconAsset!, size: 18)
+              MemoirIcon(item.iconAsset!, size: 18 * scale)
             else
-              Icon(item.icon, size: 18, color: brand),
-            const SizedBox(width: MemoirSpace.custom6),
+              Icon(item.icon, size: 18 * scale, color: brand),
+            SizedBox(width: MemoirSpace.custom6 * scale),
             Text(
               item.label,
               style: theme.textTheme.bodySmall?.copyWith(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// One day of the journal heatmap: how many content slots it fills.
 class ActivityDay {
@@ -44,7 +45,12 @@ class ActivityHeatmap extends StatelessWidget {
   final String? monthLabel;
 
   static const double _cell = 24;
-  static const double _gap = 2;
+
+  /// Gap around every cell. The design's `Contribution heatmap` is 176 wide:
+  /// a 26 px weekday column plus five `24 + 6` columns, and 223 tall: a 13 px
+  /// header plus seven `24 + 6` rows.
+  static const double _gap = 6;
+
   static const double _labelWidth = 26;
 
   /// Weekday names starting on Sunday, matching `DateTime.weekday % 7`.
@@ -54,7 +60,8 @@ class ActivityHeatmap extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
-    final scale = journalHeatmapScale(context);
+    final shades = journalHeatmapScale(context);
+    final scale = HomeScale.of(context);
     final caption = theme.textTheme.labelSmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
       fontSize: MemoirType.overlineEditorial,
@@ -86,12 +93,12 @@ class ActivityHeatmap extends StatelessWidget {
         Row(
           children: [
             SizedBox(
-              width: _labelWidth,
+              width: _labelWidth * scale,
               child: Text(monthLabel ?? '', style: caption),
             ),
             for (var week = 0; week < weekCount; week++)
               SizedBox(
-                width: _cell + _gap,
+                width: (_cell + _gap) * scale,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(weekRange(week), style: caption),
@@ -99,12 +106,12 @@ class ActivityHeatmap extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: MemoirSpace.custom6),
+        SizedBox(height: MemoirSpace.custom6 * scale),
         for (var row = 0; row < 7; row++)
           Row(
             children: [
               SizedBox(
-                width: _labelWidth,
+                width: _labelWidth * scale,
                 child: Text(_weekdays[row], style: caption),
               ),
               for (var week = 0; week < weekCount; week++)
@@ -115,7 +122,7 @@ class ActivityHeatmap extends StatelessWidget {
                   daysInMonth: daysInMonth,
                   today: today,
                   palette: palette,
-                  scale: scale,
+                  shades: shades,
                 ),
             ],
           ),
@@ -129,14 +136,18 @@ class ActivityHeatmap extends StatelessWidget {
     required int daysInMonth,
     required DateTime today,
     required MemoirPalette palette,
-    required List<Color> scale,
+    required List<Color> shades,
   }) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     // Days belonging to the neighbouring months keep their slot so the rows
     // stay level, but draw nothing.
     if (date.month != first.month || date.year != first.year) {
-      return const SizedBox(width: _cell + _gap, height: _cell + _gap);
+      return SizedBox(
+        width: (_cell + _gap) * scale,
+        height: (_cell + _gap) * scale,
+      );
     }
 
     final day = days[_dayKey(date)];
@@ -147,7 +158,7 @@ class ActivityHeatmap extends StatelessWidget {
     final Color background;
     final Color foreground;
     if (level > 0) {
-      background = scale[level - 1];
+      background = shades[level - 1];
       foreground = level >= 4
           ? theme.colorScheme.onPrimary
           : theme.colorScheme.onSurface;
@@ -160,20 +171,24 @@ class ActivityHeatmap extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(_gap / 2),
+      padding: EdgeInsets.all(_gap / 2 * scale),
       child: Tooltip(
         message: day == null
             ? '${date.day}.${date.month} · chưa ghi'
             : '${date.day}.${date.month} · ${day.filled}/${day.total} mục',
         child: Container(
-          width: _cell,
-          height: _cell,
+          width: _cell * scale,
+          height: _cell * scale,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(MemoirRadius.weather6),
+            borderRadius:
+                BorderRadius.circular(MemoirRadius.weather6 * scale),
             border: isToday
-                ? Border.all(color: theme.colorScheme.primary, width: 2)
+                ? Border.all(
+                    color: theme.colorScheme.primary,
+                    width: 2 * scale,
+                  )
                 : null,
           ),
           child: Text(

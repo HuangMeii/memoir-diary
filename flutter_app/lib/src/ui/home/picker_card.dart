@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../icons.dart';
 import '../tokens.dart';
+import 'home_scale.dart';
 
 /// Choice tile width; the design's `Choice` frame is 57×69 and the tokens only
 /// carry the height.
@@ -42,37 +43,39 @@ class ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brand = theme.colorScheme.primary;
+    final scale = HomeScale.of(context);
 
     return Semantics(
       button: true,
       selected: isSelected,
       label: item.label,
       child: InkWell(
-        borderRadius: BorderRadius.circular(MemoirComponent.choiceRadius),
+        borderRadius: BorderRadius.circular(MemoirComponent.choiceRadius * scale),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: _choiceWidth,
-          height: MemoirComponent.choiceHeight,
-          padding: const EdgeInsets.symmetric(
-            vertical: MemoirComponent.choicePadding,
+          width: _choiceWidth * scale,
+          height: MemoirComponent.choiceHeight * scale,
+          padding: EdgeInsets.symmetric(
+            vertical: MemoirComponent.choicePadding * scale,
           ),
           decoration: BoxDecoration(
             color: isSelected
                 ? brand.withValues(alpha: MemoirOpacity.weather0p25)
                 : theme.colorScheme.surfaceContainerHighest
                     .withValues(alpha: MemoirOpacity.weather0p25),
-            borderRadius: BorderRadius.circular(MemoirComponent.choiceRadius),
+            borderRadius:
+                BorderRadius.circular(MemoirComponent.choiceRadius * scale),
             border: Border.all(
               color: isSelected ? brand : Colors.transparent,
-              width: MemoirStroke.weather1p5,
+              width: MemoirStroke.weather1p5 * scale,
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              MemoirIcon(iconName, size: _choiceIconSize),
-              const SizedBox(height: MemoirSpace.s1),
+              MemoirIcon(iconName, size: _choiceIconSize * scale),
+              SizedBox(height: MemoirSpace.s1 * scale),
               Text(
                 item.label,
                 maxLines: 2,
@@ -119,6 +122,7 @@ class PickerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
 
     // The card carries the chosen label and a tick once a value is set; before
     // that it reads as an invitation instead.
@@ -132,7 +136,7 @@ class PickerCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(MemoirSpace.s4),
+        padding: EdgeInsets.all(MemoirSpace.s4 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -153,7 +157,7 @@ class PickerCard extends StatelessWidget {
                   Icon(Icons.check, size: 15, color: theme.colorScheme.primary),
               ],
             ),
-            const SizedBox(height: MemoirSpace.s1),
+            SizedBox(height: MemoirSpace.s1 * scale),
             Text(
               selected == null
                   ? 'Chọn điều gần với bạn nhất'
@@ -165,7 +169,7 @@ class PickerCard extends StatelessWidget {
                 fontSize: MemoirType.caption,
               ),
             ),
-            const SizedBox(height: MemoirSpace.s3),
+            SizedBox(height: MemoirSpace.s3 * scale),
             Row(
               children: [
                 for (final item in items) ...[
@@ -181,11 +185,11 @@ class PickerCard extends StatelessWidget {
                     ),
                   ),
                   if (item != items.last)
-                    const SizedBox(width: MemoirComponent.choiceGap),
+                    SizedBox(width: MemoirComponent.choiceGap * scale),
                 ],
               ],
             ),
-            const SizedBox(height: MemoirSpace.s2),
+            SizedBox(height: MemoirSpace.s2 * scale),
             Text(
               'Chạm để chọn · Tự động lưu',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -221,13 +225,17 @@ class WeatherMoodRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = HomeScale.of(context);
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < kPickerRowBreakpoint) {
+        // One pixel of slack, as in [DashboardColumns]: the breakpoint is a
+        // scaled number too.
+        if (constraints.maxWidth + 1 < kPickerRowBreakpoint * scale) {
           return Column(
             children: [
               weather,
-              const SizedBox(height: MemoirSpace.s3),
+              SizedBox(height: MemoirSpace.s3 * scale),
               mood,
             ],
           );
@@ -240,7 +248,7 @@ class WeatherMoodRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: weather),
-              const SizedBox(width: MemoirSpace.s4),
+              SizedBox(width: MemoirSpace.s4 * scale),
               Expanded(child: mood),
             ],
           ),
