@@ -9,7 +9,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../home/daily_quote_card.dart';
 import '../home/dashboard_columns.dart';
-import '../home/home_header.dart';
+import '../home/home_greeting.dart';
 import '../home/home_scale.dart';
 import '../home/journal_prompt_card.dart';
 import '../home/month_activity_card.dart';
@@ -19,7 +19,9 @@ import '../home/shortcut_cards.dart';
 import '../icons.dart';
 import '../tokens.dart';
 import '../widgets/app_footer.dart';
+import '../widgets/app_header.dart';
 import 'entry_editor.dart';
+import 'month_grids_screen.dart';
 
 /// Content width of the web layout: the design's 1024 px dashboard centred on
 /// an 1120 px page with 48 px gutters.
@@ -113,10 +115,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 bottom: false,
                 child: Column(
                   children: [
-                    HomeHeader(
+                    AppHeader(
                       date: today,
                       initials: initialsOf(displayName),
                       name: displayName,
+                      destination: AppDestination.home,
+                      onNavigate: (destination) {
+                        if (destination == AppDestination.monthGrid) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const MonthGridsScreen(),
+                            ),
+                          );
+                        }
+                      },
                       showUtilities: wide,
                       gutter: horizontal,
                       onLogout: () => ref.read(authProvider.notifier).logout(),
@@ -155,7 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const UtilitiesSection(),
                             ],
                             SizedBox(height: MemoirSpace.s6 * scale),
-                            const HomeTagline(),
+                            const PrivacyNote(),
                           ],
                         ),
                       ),
@@ -290,33 +302,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             .showSnackBar(SnackBar(content: Text('$e')));
       }
     }
-  }
-}
-
-/// The muted line that closes the page.
-class HomeTagline extends StatelessWidget {
-  const HomeTagline({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
-    final scale = HomeScale.of(context);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.lock_outline, size: 14 * scale, color: muted),
-        SizedBox(width: MemoirSpace.custom6 * scale),
-        Text(
-          'Một không gian riêng, dành cho bạn.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: muted,
-            fontSize: MemoirType.caption,
-          ),
-        ),
-      ],
-    );
   }
 }
 

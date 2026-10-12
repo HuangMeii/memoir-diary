@@ -17,13 +17,22 @@ const double kHomeMaxScale = 1.5;
 /// desktop page reads like a blown-up phone screen.
 const double kHomeTextMaxScale = 1.1;
 
-/// Scale factor that makes the 1120 px design fill a [viewportWidth] window.
+/// Width of the `Lưới tháng · Web` frame. It is 1280 wide with 36 px gutters,
+/// so that screen scales from there instead of the home's 1120.
+const double kMonthDesignWidth = 1280;
+
+/// Scale factor that makes a [designWidth]-wide frame fill a [viewportWidth]
+/// window.
 ///
 /// Below the design width the factor stays 1, so phones keep the mobile layout
-/// untouched, and it never exceeds [kHomeMaxScale].
-double homeScaleFor(double viewportWidth) {
+/// untouched, and it never exceeds [kHomeMaxScale]. [designWidth] only differs
+/// on the screens whose Figma frame is a different width.
+double homeScaleFor(
+  double viewportWidth, {
+  double designWidth = kHomeDesignWidth,
+}) {
   if (!viewportWidth.isFinite || viewportWidth <= 0) return 1;
-  return (viewportWidth / kHomeDesignWidth).clamp(1.0, kHomeMaxScale);
+  return (viewportWidth / designWidth).clamp(1.0, kHomeMaxScale);
 }
 
 /// Factor the home's type and header chrome grow by.
@@ -31,8 +40,12 @@ double homeScaleFor(double viewportWidth) {
 /// The boxes keep [homeScaleFor] so the design still fills the window; only
 /// the text is calmed down, otherwise a 1536 px screen renders a 17.8 px body
 /// and a 49 px greeting.
-double homeTextScaleFor(double viewportWidth) =>
-    homeScaleFor(viewportWidth).clamp(1.0, kHomeTextMaxScale);
+double homeTextScaleFor(
+  double viewportWidth, {
+  double designWidth = kHomeDesignWidth,
+}) =>
+    homeScaleFor(viewportWidth, designWidth: designWidth)
+        .clamp(1.0, kHomeTextMaxScale);
 
 /// Publishes the home scale factors to the widgets below it.
 ///

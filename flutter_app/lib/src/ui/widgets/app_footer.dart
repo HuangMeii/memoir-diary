@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../home/home_scale.dart';
+import '../tokens.dart';
 import '../utilities.dart';
 
 /// Below this width the footer renders as an in-page section instead of a
@@ -96,6 +98,37 @@ class UtilitiesSection extends StatelessWidget {
                 ),
               )
               .toList(),
+        ),
+      ],
+    );
+  }
+}
+
+/// The muted line that closes the page: a lock and a privacy note
+/// (`Privacy footer` in the design).
+class PrivacyNote extends StatelessWidget {
+  const PrivacyNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scale = HomeScale.of(context);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.lock_outline,
+          size: 14 * scale,
+          color: theme.colorScheme.primary,
+        ),
+        SizedBox(width: MemoirSpace.custom6 * scale),
+        Text(
+          'Một không gian riêng, dành cho bạn.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: MemoirType.caption,
+          ),
         ),
       ],
     );

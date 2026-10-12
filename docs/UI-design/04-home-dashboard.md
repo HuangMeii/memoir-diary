@@ -30,9 +30,11 @@ grid 2×N.
 
 Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
 
-- **Home header** (84 px, `ui/home/home_header.dart`): brand mark (SVG đã có sẵn
-  màu, **không** tint `srcIn`), tên + ngày, pill tiện ích, avatar chữ cái, tên
-  hiển thị, Đăng xuất — **tất cả trên một hàng**.
+- **App header** (84 px, `ui/widgets/app_header.dart`): brand mark (SVG đã có sẵn
+  màu, **không** tint `srcIn`), tên + ngày, nav `Trang chủ · Lưới tháng ·
+  Lịch sử kiện` (thêm theo frame `Lưới tháng · Web`; chỉ hiện khi header đủ rộng,
+  `Lịch sử kiện` còn mờ), pill tiện ích, avatar chữ cái, tên hiển thị, Đăng xuất —
+  **tất cả trên một hàng**.
 - **Tiện ích nằm trong header** (`ui/home/utility_pill.dart`): pill “Xem thời
   tiết” ngay trước phần tài khoản, hiện khi content ≥ 1024 px; bề rộng hẹp hơn
   thì bỏ tên hiển thị trước (≥ 1040 px mới có), rồi tới pill. Mobile vẫn để
@@ -46,7 +48,8 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
 - **Câu nói hôm nay** (`ui/home/daily_quote_card.dart`): 3 state — có câu,
   chưa có câu, lỗi (nút “Thử lại”).
 - **Nhịp viết của bạn** (`ui/home/month_activity_card.dart` +
-  `ui/home/activity_heatmap.dart`): lưới tháng kiểu contribution, cột = tuần
+  `ui/home/activity_heatmap.dart` trên lưới dùng chung
+  `ui/widgets/month_heatmap.dart`): lưới tháng kiểu contribution, cột = tuần
   (Chủ nhật đầu tuần), hàng = thứ; độ đậm = số mục đã điền
   (`DiaryEntry.filledFields` / 9), ô hôm nay viền, ngày tương lai nhạt.
   Dữ liệu lấy từ `GET /entries?month=` (không cần đổi backend).
@@ -68,8 +71,8 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
   `calendar-days`, `sticky-note`, `list-checks`, `heart-pulse`.
 - Thanh “Nhịp viết” đang khoá ở chế độ `Tháng`; `Tuần`/`Năm` hiển thị mờ.
 - State Offline chưa dựng.
-- Nav `Trang chủ / Lưới tháng / Lịch sử` trong app bar chưa dựng; header đã gộp
-  sẵn thành một hàng nên chỉ còn thiếu slot ở giữa.
+- Nav `Trang chủ / Lưới tháng / Lịch sử` đã có trong header; `Lịch sử kiện` vẫn
+  mờ vì chưa có màn.
 
 ### Khác Figma (có chủ ý)
 

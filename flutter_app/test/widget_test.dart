@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/ui/theme.dart';
-import 'package:memoir_app/src/ui/home/activity_heatmap.dart';
-import 'package:memoir_app/src/ui/home/home_header.dart';
 import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
+import 'package:memoir_app/src/ui/month/day_details.dart';
+import 'package:memoir_app/src/ui/month/month_card.dart';
+import 'package:memoir_app/src/ui/widgets/app_header.dart';
 import 'package:memoir_app/src/ui/widgets/icon_picker_row.dart';
-import 'package:memoir_app/src/ui/widgets/month_grid.dart';
+import 'package:memoir_app/src/ui/widgets/month_heatmap.dart';
 import 'package:memoir_app/src/data/models.dart';
 
 void main() {
@@ -42,39 +43,76 @@ void main() {
     });
   });
 
-  testWidgets('MonthGrid renders one cell per day and colours the logged day',
+  testWidgets('MonthHeatmap draws a Sunday-first month of numbered days',
       (tester) async {
-    final month = DateTime(2026, 4);
-    final cells = [
-      GridCell(
-        date: DateTime(2026, 4, 1),
-        code: 'happy',
-        label: 'Vui',
-        color: '#FFD93D',
-      ),
-    ];
-    DateTime? tapped;
-
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: MonthGrid(
-          cells: cells,
-          selectedDate: month,
-          onDayTap: (day) => tapped = day,
+        body: MonthHeatmap(
+          month: DateTime(2026, 4),
+          style: const MonthHeatmapStyle(),
+          colorOf: (date) => date.day == 1 ? const Color(0xFFFFD93D) : null,
+          numberOf: (date) => '${date.day}',
+          tooltipOf: (date) => '${date.day}.${date.month}',
         ),
       ),
     ));
 
-    // April 2026 has 30 days. The grid keeps a slot for each of them and no
-    // longer prints the day numbers, so the date lives in the tooltip.
+    // The design's grid runs Sunday first, so the weekday column opens on CN.
+    expect(find.text('CN'), findsOneWidget);
+    expect(find.text('T7'), findsOneWidget);
+    // April 2026 opens on a Wednesday, so the first column is 1–4.
+    expect(find.text('1–4'), findsOneWidget);
+    // One cell per day, each carrying its number, and the range header is drawn
+    // once per column.
+    expect(find.text('30'), findsOneWidget);
     expect(find.byType(Tooltip), findsNWidgets(30));
-    expect(find.byTooltip('1 · Vui'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
-    await tester.tap(find.byTooltip('1 · Vui'));
+  testWidgets('MonthHeatmap taps only the days that carry a value',
+      (tester) async {
+    DateTime? tapped;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: MonthHeatmap(
+          month: DateTime(2026, 4),
+          style: const MonthHeatmapStyle(),
+          colorOf: (date) => date.day == 1 ? const Color(0xFFFFD93D) : null,
+          numberOf: (date) => '${date.day}',
+          tooltipOf: (date) => '${date.day}.4',
+          onDayTap: (date) => tapped = date,
+        ),
+      ),
+    ));
+
+    await tester.tap(find.byTooltip('1.4'));
+    expect(tapped, DateTime(2026, 4, 1));
+
+    // A day with nothing stored has nothing to point at.
+    await tester.tap(find.byTooltip('2.4'));
     expect(tapped, DateTime(2026, 4, 1));
   });
 
-  testWidgets('GridLegend shows icon and label text', (tester) async {
+  testWidgets('MonthHeatmap hands every in-month day a slot when asked',
+      (tester) async {
+    DateTime? tapped;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: MonthHeatmap(
+          month: DateTime(2026, 4),
+          style: const MonthHeatmapStyle(),
+          tooltipOf: (date) => '${date.day}.4',
+          clickableWhenEmpty: true,
+          onDayTap: (date) => tapped = date,
+        ),
+      ),
+    ));
+
+    await tester.tap(find.byTooltip('2.4'));
+    expect(tapped, DateTime(2026, 4, 2));
+  });
+
+  testWidgets('CategoryLegend names every mood or weather', (tester) async {
     final items = [
       const LookupItem(
         id: 1,
@@ -83,13 +121,21 @@ void main() {
         colorHex: '#FFD93D',
         icon: '😀',
       ),
+      const LookupItem(
+        id: 2,
+        code: 'sad',
+        label: 'Buồn',
+        colorHex: '#9BB8D3',
+        icon: '😔',
+      ),
     ];
 
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: GridLegend(items: items)),
+      home: Scaffold(body: CategoryLegend(items: items)),
     ));
 
-    expect(find.text('😀 Vui'), findsOneWidget);
+    expect(find.text('Vui'), findsOneWidget);
+    expect(find.text('Buồn'), findsOneWidget);
   });
   group('WeatherMoodRow', () {
     // Stand-ins keep the test on the layout contract - where the row puts the
@@ -415,12 +461,14 @@ void main() {
     expect(textFactor, 1.1);
   });
 
-  group('HomeHeader', () {
+  group('AppHeader', () {
     Future<void> pumpHeader(
       WidgetTester tester,
       Size size, {
       String? name = 'Minh An',
       bool showUtilities = true,
+      AppDestination destination = AppDestination.home,
+      ValueChanged<AppDestination>? onNavigate,
     }) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1.0;
@@ -431,10 +479,12 @@ void main() {
           factor: 1.4,
           textFactor: 1.1,
           child: Scaffold(
-            body: HomeHeader(
+            body: AppHeader(
               date: DateTime(2026, 10, 11),
               initials: 'MA',
               name: name,
+              destination: destination,
+              onNavigate: onNavigate,
               showUtilities: showUtilities,
               onLogout: () {},
             ),
@@ -452,7 +502,44 @@ void main() {
       expect(find.text('Minh An'), findsOneWidget);
       expect(find.text('Đăng xuất'), findsOneWidget);
       // Chrome: the 1.4 layout zoom must not stretch the 84 px bar.
-      expect(tester.getSize(find.byType(HomeHeader)).height, kHomeHeaderHeight);
+      expect(tester.getSize(find.byType(AppHeader)).height, kAppHeaderHeight);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('marks the current destination and opens the others',
+        (tester) async {
+      final tapped = <AppDestination>[];
+      await pumpHeader(
+        tester,
+        const Size(1400, 800),
+        destination: AppDestination.monthGrid,
+        onNavigate: tapped.add,
+      );
+
+      expect(find.text('Trang chủ'), findsOneWidget);
+      // The screen the user is already on is not a link.
+      await tester.tap(find.text('Lưới tháng'));
+      expect(tapped, isEmpty);
+
+      await tester.tap(find.text('Trang chủ'));
+      expect(tapped, [AppDestination.home]);
+    });
+
+    testWidgets('leaves the destination without a screen dimmed',
+        (tester) async {
+      final tapped = <AppDestination>[];
+      await pumpHeader(tester, const Size(1400, 800), onNavigate: tapped.add);
+
+      await tester.tap(find.text('Lịch sử kiện'));
+      expect(tapped, isEmpty);
+    });
+
+    testWidgets('hides the navigation when the header is narrow',
+        (tester) async {
+      await pumpHeader(tester, const Size(640, 844));
+
+      expect(find.text('Trang chủ'), findsNothing);
+      expect(find.text('Lưới tháng'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -495,6 +582,91 @@ void main() {
       expect(find.text('Minh An'), findsNothing);
       expect(find.text('Đăng xuất'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('Lưới tháng scale', () {
+    test('scales from its own frame width, not the home one', () {
+      expect(
+        homeScaleFor(kMonthDesignWidth, designWidth: kMonthDesignWidth),
+        1,
+      );
+      // 1536 / 1280 = 1.2, a wider layout factor than the home's 1536/1120.
+      expect(
+        homeScaleFor(1536, designWidth: kMonthDesignWidth),
+        closeTo(1.2, 0.001),
+      );
+      // The type still stops at the same cap.
+      expect(
+        homeTextScaleFor(1920, designWidth: kMonthDesignWidth),
+        kHomeTextMaxScale,
+      );
+    });
+  });
+
+  group('SelectedDayDetails', () {
+    const mood = LookupItem(
+      id: 1,
+      code: 'happy',
+      label: 'Vui',
+      colorHex: '#FFD93D',
+      icon: '😀',
+    );
+    const weather = LookupItem(
+      id: 2,
+      code: 'sunny',
+      label: 'Nắng',
+      colorHex: '#F7E6B3',
+      icon: '☀️',
+    );
+
+    testWidgets('names the day, what it stored and the way into the editor',
+        (tester) async {
+      var opened = false;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SelectedDayDetails(
+            date: DateTime(2026, 10, 11),
+            isToday: true,
+            mood: mood,
+            weather: weather,
+            entry: DiaryEntry(id: 'e1', entryDate: DateTime(2026, 10, 11)),
+            onWrite: () => opened = true,
+          ),
+        ),
+      ));
+
+      expect(find.text('NGÀY ĐANG CHỌN · HÔM NAY'), findsOneWidget);
+      expect(find.text('Chủ nhật, 11.10'), findsOneWidget);
+      expect(find.text('Cảm xúc và thời tiết đã được lưu.'), findsOneWidget);
+      expect(find.text('Vui'), findsOneWidget);
+      expect(find.text('Nắng'), findsOneWidget);
+
+      await tester.tap(find.text('Viết nhật ký hôm nay'));
+      expect(opened, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('leaves a day with nothing stored empty', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SelectedDayDetails(
+            date: DateTime(2026, 10, 12),
+            isToday: false,
+            mood: null,
+            weather: null,
+            entry: null,
+            onWrite: () {},
+          ),
+        ),
+      ));
+
+      expect(find.text('NGÀY ĐANG CHỌN'), findsOneWidget);
+      expect(
+        find.text('Chưa lưu cảm xúc hay thời tiết cho ngày này.'),
+        findsOneWidget,
+      );
+      expect(find.text('Viết nhật ký ngày này'), findsOneWidget);
     });
   });
 }

@@ -5,6 +5,8 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import '../widgets/month_heatmap.dart';
+import '../widgets/period_control.dart';
 import 'activity_heatmap.dart';
 import 'home_scale.dart';
 
@@ -55,7 +57,7 @@ class MonthActivityCard extends ConsumerWidget {
                   ],
                 ),
                 const Spacer(),
-                const _PeriodControl(),
+                const PeriodControl(),
               ],
             ),
             SizedBox(height: MemoirSpace.s5 * scale),
@@ -180,62 +182,4 @@ class _ActivityBody extends StatelessWidget {
     );
   }
 }
-/// The `Tuần | Tháng | Năm` segmented control.
-///
-/// Only "Tháng" has data behind it so far, so the other two render dimmed
-/// instead of pretending to switch the view.
-class _PeriodControl extends StatelessWidget {
-  const _PeriodControl();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scale = HomeScale.of(context);
-
-    Widget segment(String label, {required bool selected}) {
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: MemoirSpace.s3 * scale,
-          vertical: MemoirSpace.custom7 * scale,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? theme.colorScheme.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: selected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            fontSize: MemoirType.body,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
-      );
-    }
-
-    return Tooltip(
-      message: 'Chế độ Tuần và Năm sẽ có sau',
-      child: Container(
-        padding: EdgeInsets.all(3 * scale),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius:
-              BorderRadius.circular(MemoirRadius.control * scale + 3),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            segment('Tuần', selected: false),
-            segment('Tháng', selected: true),
-            segment('Năm', selected: false),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 
