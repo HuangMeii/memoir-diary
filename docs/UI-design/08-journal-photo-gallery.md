@@ -20,10 +20,13 @@ Empty, uploading progress, loaded, upload failed, delete confirmation.
 
 ## Thiết kế Figma — `JOURNAL-03 · …`
 
-**Trạng thái:** chưa có frame trên Figma (cùng blocker với `07-journal-editor.md`
-— bridge `figma-mcp-go` trả `plugin not connected`). Trong app, phần này nằm
-trong màn `JOURNAL-02` (`ui/widgets/entry_images_section.dart`) chứ không phải
-màn riêng, nên frame chỉ cần thể hiện 4 state của khối ảnh.
+**Trạng thái: chưa dựng** (đợt "gọn" chỉ dựng `JOURNAL-02` — xem
+`07-journal-editor.md`). Trong app, phần này nằm trong màn `JOURNAL-02`
+(`ui/widgets/entry_images_section.dart`) chứ không phải màn riêng, nên frame chỉ
+cần thể hiện 4 state của khối ảnh. Hai frame web `JOURNAL-02 · Web · Đã có nhật
+ký` (`99:118`) và mobile (`99:346`) đã có card "Ảnh kèm theo" ở trạng thái khoá;
+khi dựng `JOURNAL-03` thì nhân bản từ đó và thay khối dashed bằng grid thumbnail.
+
 
 ### Frame cần dựng
 

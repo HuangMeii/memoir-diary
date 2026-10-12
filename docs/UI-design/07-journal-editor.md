@@ -30,12 +30,46 @@ New, Existing, Saving, Saved, Validation error, Server error.
 
 ## Thiết kế Figma — `JOURNAL-02 · …`
 
-**Trạng thái:** màn này **chưa có frame nào trên Figma** (bridge `figma-mcp-go`
-đang trả `plugin not connected`). Spec dưới đây lấy số đo **trực tiếp từ các
-frame đã có** (`Page 2 — Web login states` cho ô nhập/nút, `HOME-01 · Web` cho
-lựa chọn mood-weather, `Lưới tháng · Web` cho khung/tiêu đề/card), nên dựng theo
-là khớp hệ thống hiện tại; chữ lấy đúng label/hint trong
-`flutter_app/lib/src/ui/screens/entry_editor.dart` để design ↔ app khớp 1:1.
+**Trạng thái: đã dựng trên Figma** (`Page 1`, block nằm bên phải cột thời tiết —
+web tại `x=9700…16700, y=1804`, mobile tại `x=11100, y=3700`). Bản dựng giữ đúng
+token/style của các frame có sẵn: app bar hợp nhất 84 px, `surface.card` /
+`background.page` / `border.default`, Lora 36 cho tiêu đề, Inter 13/11 cho nhãn,
+ô nhập cao 52/86/220 radius 10, `Choice` 48×69, card radius 20 padding 20.
+
+| Frame | Node id |
+| --- | --- |
+| `JOURNAL-02 · Web · Ngày chưa ghi` | `97:3` |
+| `JOURNAL-02 · Web · Đã có nhật ký` | `99:118` |
+| `JOURNAL-02 · Web · Đang lưu` | `99:460` |
+| `JOURNAL-02 · Web · Đã lưu` | `99:574` |
+| `JOURNAL-02 · Web · Lỗi lưu` | `99:688` |
+| `JOURNAL-02 · Web · Rời màn khi chưa lưu` | `99:232` (overlay `99:802`, dialog `99:803`) |
+| `JOURNAL-02 · Mobile · Ngày chưa ghi` | `99:346` (390 rộng, nav ẩn, cột dọc) |
+
+Mốc version trước khi dựng: `trước JOURNAL-02` (id `2409390243730878959`).
+
+### Còn lại của bản "gọn" (chi tiết sau)
+
+- **Chưa dựng**: state ảnh `JOURNAL-03` (thumbnail 104, upload progress, lỗi
+  upload, dialog xoá ảnh) và frame `JOURNAL-02 · Mobile · Đã có nhật ký`.
+- Mobile đang giữ thanh lưu ở **trên**; brief yêu cầu sticky **đáy** — cần đổi.
+- Ô nhập trong các field phụ đang cao 86 (1 dòng hint ở trên); bản đầy đủ nên là
+  3 dòng (~120) và có icon 18 bên trái nhãn (icon chưa có SVG nên chưa vẽ).
+- Card cột phải rộng 300 trong cột 358 trên mobile; nên cho card dãn theo cột.
+- Dialog chưa có nút dạng khối (hiện là nhãn chữ) và chưa có elevation.
+
+### Ghi chú kỹ thuật khi dựng bằng MCP
+
+- `batch_execute_pipeline` hỏng với plugin build này (`'commitUndo' is read-only`)
+  → phải gọi từng lệnh.
+- `create_node` FRAME từ chối `cornerRadius`; mọi tham số layout
+  (`HUG`/`FILL`/`layoutGrow`) bị bỏ qua lúc tạo → phải `set_auto_layout` sau.
+- `clone_node` **không giữ parent** (node nhảy ra page) → luôn truyền `parentId`
+  hoặc gọi `reparent_nodes` sau khi clone.
+- Ảnh QA xuất bằng `export_screenshots` ra thư mục làm việc của plugin
+  (`G:\MyApp\Microsoft VS Code\Microsoft VS Code\`) vì `outputPath` phải nằm
+  trong đó.
+
 
 ### Frame cần dựng (trên `Page 1`, theo lối đặt tên của file)
 
