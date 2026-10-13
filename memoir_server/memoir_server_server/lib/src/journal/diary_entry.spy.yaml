@@ -1,0 +1,19 @@
+### Diary entry (central entity). One row per user per day.
+class: DiaryEntry
+table: diary_entries
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  ### Date-only value; time component is ignored.
+  entryDate: DateTime, unique(per=userId)
+  moodId: int?
+  weatherId: int?
+  diaryText: String?
+  otherPerspective: String?
+  futureMessage: String?
+  selfCare: String?
+  tomorrowHope: String?
+  gratitude: String?
+  dream: String?
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now

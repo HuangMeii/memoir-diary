@@ -1,5 +1,9 @@
 # 07 — Thiết kế UI (Wireframe & Design System)
 
+> Bộ tài liệu chi tiết để dựng Figma đã được tách tại
+> [docs/UI/README.md](UI/README.md). File này giữ lại design notes và bảng màu
+> nền tảng để tương thích với các tài liệu cũ.
+
 ## 1. Design System
 
 - **Style**: Material 3, bo góc mềm, màu chủ đạo xanh lam dịu.
@@ -50,8 +54,8 @@ flowchart TD
 ┌───────────────────────────────┐
 │ ☰ Memoir        📅 04/04  👤  │
 ├───────────────────────────────┤
-│ THỜI TIẾT   ☀️ ⛅ 🌧️ ⛈️ ❔     │  ← IconPickerRow (weather)
-│ CẢM XÚC     😀 😢 😑 😐 😠     │  ← IconPickerRow (mood)
+│ THỜI TIẾT      CẢM XÚC            │  ← IconPickerStrip: 1 hàng khi rộng
+│ ☀️⛅🌧️⛈️❔   😀😢😑😐😠           │    (2 hàng khi hẹp)
 ├───────────────────────────────┤
 │ 💬 Câu hôm nay                │
 │  • "..." (từ kho)             │
@@ -123,6 +127,7 @@ flowchart TD
 | Thành phần | Hành vi |
 |---|---|
 | IconPickerRow | Tap 1 icon → chọn, viền highlight; tap lại icon khác → đổi |
+| IconPickerStrip | 10 icon (5 thời tiết + 5 cảm xúc) trên **1 hàng** khi ≥44dp mỗi ô; tự xuống 2 hàng khi cửa sổ hẹp |
 | MonthGrid cell | Màu theo mood/weather; tap → mở Entry Editor của ngày đó |
 | Quote card | Nút 🔄 để lấy cặp câu khác trong ngày (tùy chọn) |
 | Entry Editor | Autosave khi rời màn hình hoặc bấm 💾 |

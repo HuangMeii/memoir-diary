@@ -1,0 +1,3326 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "Memoir · Foundation": {
+    "type": {
+      "overline": {
+        "$type": "number",
+        "$value": 11,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Semi Bold"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 600,
+          "$description": "Numeric font weight; preserves existing Semi Bold"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 13,
+          "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 1.5,
+          "$description": "Letter spacing in pixels."
+        },
+        "editorial": {
+          "$type": "number",
+          "$value": 10,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 12,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 1.7999999523162842,
+            "$description": "Letter spacing in pixels."
+          }
+        }
+      },
+      "heading": {
+        "1": {
+          "$type": "number",
+          "$value": 30,
+          "family": {
+            "$type": "string",
+            "$value": "Lora"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Line height in pixels; converted from current line-height."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "page": {
+          "$type": "number",
+          "$value": 36,
+          "family": {
+            "$type": "string",
+            "$value": "Lora"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 46,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "editorial": {
+          "$type": "number",
+          "$value": 29,
+          "family": {
+            "$type": "string",
+            "$value": "Lora"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 37.70000076293945,
+            "$description": "Line height in pixels; converted from current line-height."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        }
+      },
+      "body": {
+        "$type": "number",
+        "$value": 13,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Regular"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 400,
+          "$description": "Numeric font weight; preserves existing Regular"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 20.799999237060547,
+          "$description": "Line height in pixels; converted from current line-height."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Letter spacing in pixels."
+        },
+        "meta": {
+          "$type": "number",
+          "$value": 13,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 16,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "input": {
+          "$type": "number",
+          "$value": 14,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 17,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "link": {
+          "$type": "number",
+          "$value": 13,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Semi Bold"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 600,
+            "$description": "Numeric font weight; preserves existing Semi Bold"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 20.799999237060547,
+            "$description": "Line height in pixels; converted from current line-height."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "password": {
+          "$type": "number",
+          "$value": 14,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 17,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 3,
+            "$description": "Letter spacing in pixels."
+          }
+        },
+        "editorial": {
+          "$type": "number",
+          "$value": 13,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 22.100000381469727,
+            "$description": "Line height in pixels; converted from current line-height."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        }
+      },
+      "label": {
+        "$type": "number",
+        "$value": 13,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Medium"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 500,
+          "$description": "Numeric font weight; preserves existing Medium"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 16,
+          "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Letter spacing in pixels."
+        }
+      },
+      "button": {
+        "$type": "number",
+        "$value": 14,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Semi Bold"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 600,
+          "$description": "Numeric font weight; preserves existing Semi Bold"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 17,
+          "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Letter spacing in pixels."
+        }
+      },
+      "brand": {
+        "$type": "number",
+        "$value": 34,
+        "family": {
+          "$type": "string",
+          "$value": "Lora"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Regular"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 400,
+          "$description": "Numeric font weight; preserves existing Regular"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 44,
+          "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": -1,
+          "$description": "Letter spacing in pixels."
+        }
+      },
+      "caption": {
+        "$type": "number",
+        "$value": 11,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Regular"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 400,
+          "$description": "Numeric font weight; preserves existing Regular"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 13,
+          "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Letter spacing in pixels."
+        },
+        "loading": {
+          "$type": "number",
+          "$value": 12,
+          "family": {
+            "$type": "string",
+            "$value": "Inter"
+          },
+          "style": {
+            "$type": "string",
+            "$value": "Regular"
+          },
+          "weight": {
+            "$type": "number",
+            "$value": 400,
+            "$description": "Numeric font weight; preserves existing Regular"
+          },
+          "line-height": {
+            "$type": "number",
+            "$value": 15,
+            "$description": "Line height in pixels; explicit value based on current rendered Auto line box."
+          },
+          "letter-spacing": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Letter spacing in pixels."
+          }
+        }
+      },
+      "feedback": {
+        "$type": "number",
+        "$value": 12,
+        "family": {
+          "$type": "string",
+          "$value": "Inter"
+        },
+        "style": {
+          "$type": "string",
+          "$value": "Regular"
+        },
+        "weight": {
+          "$type": "number",
+          "$value": 400,
+          "$description": "Numeric font weight; preserves existing Regular"
+        },
+        "line-height": {
+          "$type": "number",
+          "$value": 19.200000762939453,
+          "$description": "Line height in pixels; converted from current line-height."
+        },
+        "letter-spacing": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Letter spacing in pixels."
+        }
+      },
+      "weather": {
+        "date-axis-label": {
+          "10-400": {
+            "$type": "number",
+            "$value": 10,
+            "family": {
+              "$type": "string",
+              "$value": "Inter"
+            },
+            "style": {
+              "$type": "string",
+              "$value": "Regular"
+            },
+            "weight": {
+              "$type": "number",
+              "$value": 400
+            },
+            "line-height": {
+              "$type": "number",
+              "$value": 12,
+              "$description": "Explicit line height in pixels, preserving current font metrics."
+            },
+            "letter-spacing": {
+              "$type": "number",
+              "$value": 0,
+              "$description": "Letter spacing in pixels."
+            }
+          }
+        }
+      }
+    },
+    "space": {
+      "0": {
+        "$type": "number",
+        "$value": 0
+      },
+      "1": {
+        "$type": "number",
+        "$value": 4,
+        "$description": "Weather itemSpacing in pixels; extracted without changing value."
+      },
+      "2": {
+        "$type": "number",
+        "$value": 8
+      },
+      "3": {
+        "$type": "number",
+        "$value": 12
+      },
+      "4": {
+        "$type": "number",
+        "$value": 16
+      },
+      "5": {
+        "$type": "number",
+        "$value": 20
+      },
+      "6": {
+        "$type": "number",
+        "$value": 24
+      },
+      "7": {
+        "$type": "number",
+        "$value": 28
+      },
+      "8": {
+        "$type": "number",
+        "$value": 32
+      },
+      "9": {
+        "$type": "number",
+        "$value": 36,
+        "$description": "Weather paddingRight in pixels; extracted without changing value."
+      },
+      "10": {
+        "$type": "number",
+        "$value": 40
+      },
+      "12": {
+        "$type": "number",
+        "$value": 48
+      },
+      "14": {
+        "$type": "number",
+        "$value": 56
+      },
+      "custom": {
+        "3": {
+          "$type": "number",
+          "$value": 3,
+          "$description": "Weather itemSpacing in pixels; extracted without changing value."
+        },
+        "5": {
+          "$type": "number",
+          "$value": 5
+        },
+        "6": {
+          "$type": "number",
+          "$value": 6,
+          "$description": "Weather itemSpacing in pixels; extracted without changing value."
+        },
+        "7": {
+          "$type": "number",
+          "$value": 7
+        },
+        "10": {
+          "$type": "number",
+          "$value": 10
+        },
+        "14": {
+          "$type": "number",
+          "$value": 14
+        },
+        "15": {
+          "$type": "number",
+          "$value": 15,
+          "$description": "Weather paddingTop in pixels; extracted without changing value."
+        },
+        "18": {
+          "$type": "number",
+          "$value": 18,
+          "$description": "Weather paddingTop in pixels; extracted without changing value."
+        }
+      }
+    },
+    "radius": {
+      "device": {
+        "$type": "number",
+        "$value": 24
+      },
+      "brand": {
+        "$type": "number",
+        "$value": 10
+      },
+      "input": {
+        "$type": "number",
+        "$value": 10
+      },
+      "control": {
+        "$type": "number",
+        "$value": 10
+      },
+      "pill": {
+        "$type": "number",
+        "$value": 100
+      },
+      "button": {
+        "$type": "number",
+        "$value": 10
+      },
+      "feedback": {
+        "$type": "number",
+        "$value": 10
+      },
+      "page": {
+        "$type": "number",
+        "$value": 16
+      },
+      "card": {
+        "$type": "number",
+        "$value": 20
+      },
+      "weather": {
+        "0": {
+          "$type": "number",
+          "$value": 0,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "2": {
+          "$type": "number",
+          "$value": 2,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "6": {
+          "$type": "number",
+          "$value": 6,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "8": {
+          "$type": "number",
+          "$value": 8,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "10": {
+          "$type": "number",
+          "$value": 10,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "16": {
+          "$type": "number",
+          "$value": 16,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "24": {
+          "$type": "number",
+          "$value": 24,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        },
+        "100": {
+          "$type": "number",
+          "$value": 100,
+          "$description": "Weather cornerRadius in pixels; extracted without changing value."
+        }
+      }
+    },
+    "elevation": {
+      "1": {
+        "$type": "number",
+        "$value": 32,
+        "offset-x": {
+          "$type": "number",
+          "$value": 0
+        },
+        "offset-y": {
+          "$type": "number",
+          "$value": 8
+        },
+        "spread": {
+          "$type": "number",
+          "$value": 0
+        }
+      }
+    },
+    "component": {
+      "mobile": {
+        "screen": {
+          "width": {
+            "$type": "number",
+            "$value": 390,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 24,
+            "$description": "Corner radius in pixels."
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 844,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 844,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 844,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 844,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 844,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "content": {
+          "height": {
+            "$type": "number",
+            "$value": 776,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.8}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.6}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.6}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 390,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 390,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 390,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 390,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 390,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "brand-and-form": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.14}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 509,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 540,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 596,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 596,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 596,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "identity": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.3}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "wordmark": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "brand-mark": {
+          "width": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Fixed dimension in pixels."
+          },
+          "height": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          }
+        },
+        "welcome": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "credentials": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.5}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "username-field": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.2}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "field": {
+          "height": {
+            "$type": "number",
+            "$value": 52,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.4}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.4}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.3}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "password-field": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.2}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "button": {
+          "height": {
+            "$type": "number",
+            "$value": 52,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 342,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "form": {
+          "max-width": {
+            "$type": "number",
+            "$value": 420,
+            "$description": "AUTH-01 responsive form maximum width in pixels."
+          }
+        }
+      },
+      "password-toggle": {
+        "width": {
+          "$type": "number",
+          "$value": 20,
+          "$description": "Password visibility icon size in pixels."
+        },
+        "height": {
+          "$type": "number",
+          "$value": 20,
+          "$description": "Password visibility icon size in pixels."
+        }
+      },
+      "web": {
+        "screen": {
+          "width": {
+            "$type": "number",
+            "$value": 1120,
+            "$description": "Fixed dimension in pixels."
+          },
+          "height": {
+            "$type": "number",
+            "$value": 760,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 16,
+            "$description": "Corner radius in pixels."
+          }
+        },
+        "illustration-column": {
+          "width": {
+            "$type": "number",
+            "$value": 460,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "identity": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.3}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 77,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "wordmark": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 165,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 44,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "brand-mark": {
+          "width": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Fixed dimension in pixels."
+          },
+          "height": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          }
+        },
+        "illustration": {
+          "width": {
+            "$type": "number",
+            "$value": 340,
+            "$description": "Fixed dimension in pixels."
+          },
+          "height": {
+            "$type": "number",
+            "$value": 300,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          }
+        },
+        "illustration-caption": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 14,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 364,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 135,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 135,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 135,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 135,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 135,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "form-column": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.12}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.7}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 660,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 660,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 660,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 660,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 660,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 760,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "card": {
+          "width": {
+            "$type": "number",
+            "$value": 420,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.8}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.8}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.8}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.8}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 20,
+            "$description": "Corner radius in pixels."
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 440,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 471,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 527,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 527,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 508,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "welcome": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 67,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "credentials": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.5}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 172,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "username-field": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.2}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "field": {
+          "height": {
+            "$type": "number",
+            "$value": 52,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.4}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.4}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.3}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "password-field": {
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": "{space.2}",
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 0,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          },
+          "height": {
+            "default": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for default; HUG sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for loading; HUG sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for invalid-credentials; HUG sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for network-error; HUG sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 76,
+              "$description": "Reference measurement for session-expired; HUG sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "button": {
+          "height": {
+            "$type": "number",
+            "$value": 52,
+            "$description": "Fixed dimension in pixels."
+          },
+          "padding-top": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-top in pixels."
+          },
+          "padding-bottom": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-bottom in pixels."
+          },
+          "padding-left": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-left in pixels."
+          },
+          "padding-right": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout padding-right in pixels."
+          },
+          "gap": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Auto Layout gap in pixels."
+          },
+          "cross-gap": {
+            "$type": "number",
+            "$value": "{space.0}",
+            "$description": "Auto Layout cross-gap in pixels."
+          },
+          "radius": {
+            "$type": "number",
+            "$value": 10,
+            "$description": "Corner radius in pixels."
+          },
+          "width": {
+            "default": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for default; FILL sizing remains controlled by Auto Layout."
+            },
+            "loading": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for loading; FILL sizing remains controlled by Auto Layout."
+            },
+            "invalid-credentials": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for invalid-credentials; FILL sizing remains controlled by Auto Layout."
+            },
+            "network-error": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for network-error; FILL sizing remains controlled by Auto Layout."
+            },
+            "session-expired": {
+              "$type": "number",
+              "$value": 356,
+              "$description": "Reference measurement for session-expired; FILL sizing remains controlled by Auto Layout."
+            }
+          }
+        },
+        "form": {
+          "max-width": {
+            "$type": "number",
+            "$value": 420,
+            "$description": "AUTH-01 responsive form maximum width in pixels."
+          }
+        }
+      },
+      "choice": {
+        "icon-stroke": {
+          "$type": "number",
+          "$value": 1.5
+        },
+        "radius": {
+          "$type": "number",
+          "$value": 8
+        },
+        "height": {
+          "$type": "number",
+          "$value": 69
+        },
+        "padding": {
+          "$type": "number",
+          "$value": 6
+        },
+        "gap": {
+          "$type": "number",
+          "$value": 8
+        }
+      }
+    },
+    "position": {
+      "mobile": {
+        "wordmark": {
+          "x": {
+            "$type": "number",
+            "$value": 24,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+          },
+          "y": {
+            "$type": "number",
+            "$value": 92,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+          }
+        },
+        "brand-mark": {
+          "x": {
+            "$type": "number",
+            "$value": 24,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+          },
+          "y": {
+            "$type": "number",
+            "$value": 96,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+          }
+        }
+      },
+      "web": {
+        "wordmark": {
+          "x": {
+            "$type": "number",
+            "$value": 48,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+          },
+          "y": {
+            "$type": "number",
+            "$value": 48,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+          }
+        },
+        "brand-mark": {
+          "x": {
+            "$type": "number",
+            "$value": 48,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+          },
+          "y": {
+            "$type": "number",
+            "$value": 52,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+          }
+        },
+        "illustration": {
+          "x": {
+            "$type": "number",
+            "$value": 60,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+          },
+          "y": {
+            "$type": "number",
+            "$value": 179,
+            "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+          }
+        },
+        "card": {
+          "default": {
+            "x": {
+              "$type": "number",
+              "$value": 580,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+            },
+            "y": {
+              "$type": "number",
+              "$value": 139.5,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+            }
+          },
+          "loading": {
+            "x": {
+              "$type": "number",
+              "$value": 580,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+            },
+            "y": {
+              "$type": "number",
+              "$value": 124,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+            }
+          },
+          "invalid-credentials": {
+            "x": {
+              "$type": "number",
+              "$value": 580,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+            },
+            "y": {
+              "$type": "number",
+              "$value": 96,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+            }
+          },
+          "network-error": {
+            "x": {
+              "$type": "number",
+              "$value": 580,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+            },
+            "y": {
+              "$type": "number",
+              "$value": 96,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+            }
+          },
+          "session-expired": {
+            "x": {
+              "$type": "number",
+              "$value": 580,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for X."
+            },
+            "y": {
+              "$type": "number",
+              "$value": 105.5,
+              "$description": "REFERENCE ONLY — relative to screen origin; Figma does not support variable binding for Y."
+            }
+          }
+        }
+      }
+    },
+    "stroke": {
+      "weather": {
+        "1": {
+          "$type": "number",
+          "$value": 1,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        },
+        "2": {
+          "$type": "number",
+          "$value": 2,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        },
+        "1p5": {
+          "$type": "number",
+          "$value": 1.5,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        },
+        "1p1": {
+          "$type": "number",
+          "$value": 1.100000023841858,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        },
+        "0p5": {
+          "$type": "number",
+          "$value": 0.5,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        },
+        "1p2": {
+          "$type": "number",
+          "$value": 1.2000000476837158,
+          "$description": "Weather strokeWeight in pixels; extracted without changing value."
+        }
+      }
+    },
+    "size": {
+      "weather": {
+        "width": {
+          "1": {
+            "$type": "number",
+            "$value": 1,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "6": {
+            "$type": "number",
+            "$value": 6,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "9": {
+            "$type": "number",
+            "$value": 9,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "14": {
+            "$type": "number",
+            "$value": 14,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "16": {
+            "$type": "number",
+            "$value": 16,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "18": {
+            "$type": "number",
+            "$value": 18,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "20": {
+            "$type": "number",
+            "$value": 20,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "22": {
+            "$type": "number",
+            "$value": 22,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "24": {
+            "$type": "number",
+            "$value": 24,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "28": {
+            "$type": "number",
+            "$value": 28,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "32": {
+            "$type": "number",
+            "$value": 32,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "34": {
+            "$type": "number",
+            "$value": 34,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "40": {
+            "$type": "number",
+            "$value": 40,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "44": {
+            "$type": "number",
+            "$value": 44,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "48": {
+            "$type": "number",
+            "$value": 48,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "70": {
+            "$type": "number",
+            "$value": 70,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "86": {
+            "$type": "number",
+            "$value": 86,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "128": {
+            "$type": "number",
+            "$value": 128,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "264": {
+            "$type": "number",
+            "$value": 264,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "274": {
+            "$type": "number",
+            "$value": 274,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "282": {
+            "$type": "number",
+            "$value": 282,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "310": {
+            "$type": "number",
+            "$value": 310,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "320": {
+            "$type": "number",
+            "$value": 320,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "390": {
+            "$type": "number",
+            "$value": 390,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "520": {
+            "$type": "number",
+            "$value": 520,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "788": {
+            "$type": "number",
+            "$value": 788,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "796": {
+            "$type": "number",
+            "$value": 796,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "824": {
+            "$type": "number",
+            "$value": 824,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "1280": {
+            "$type": "number",
+            "$value": 1280,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "40p286": {
+            "$type": "number",
+            "$value": 40.28571319580078,
+            "$description": "Weather width in pixels; extracted without changing value."
+          },
+          "113p714": {
+            "$type": "number",
+            "$value": 113.71428680419922,
+            "$description": "Weather width in pixels; extracted without changing value."
+          }
+        },
+        "height": {
+          "0": {
+            "$type": "number",
+            "$value": 0.00009999999747378752,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "1": {
+            "$type": "number",
+            "$value": 1,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "4": {
+            "$type": "number",
+            "$value": 4,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "6": {
+            "$type": "number",
+            "$value": 6,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "9": {
+            "$type": "number",
+            "$value": 9,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "14": {
+            "$type": "number",
+            "$value": 14,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "16": {
+            "$type": "number",
+            "$value": 16,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "18": {
+            "$type": "number",
+            "$value": 18,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "20": {
+            "$type": "number",
+            "$value": 20,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "22": {
+            "$type": "number",
+            "$value": 22,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "24": {
+            "$type": "number",
+            "$value": 24,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "26": {
+            "$type": "number",
+            "$value": 26,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "28": {
+            "$type": "number",
+            "$value": 28,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "32": {
+            "$type": "number",
+            "$value": 32,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "34": {
+            "$type": "number",
+            "$value": 34,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "36": {
+            "$type": "number",
+            "$value": 36,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "40": {
+            "$type": "number",
+            "$value": 40,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "44": {
+            "$type": "number",
+            "$value": 44,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "48": {
+            "$type": "number",
+            "$value": 48,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "50": {
+            "$type": "number",
+            "$value": 50,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "80": {
+            "$type": "number",
+            "$value": 80,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "84": {
+            "$type": "number",
+            "$value": 84,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "100": {
+            "$type": "number",
+            "$value": 100,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "126": {
+            "$type": "number",
+            "$value": 126,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "130": {
+            "$type": "number",
+            "$value": 130,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "150": {
+            "$type": "number",
+            "$value": 150,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "208": {
+            "$type": "number",
+            "$value": 208,
+            "$description": "Weather height in pixels; extracted without changing value."
+          },
+          "1501": {
+            "$type": "number",
+            "$value": 1501,
+            "$description": "Weather height in pixels; extracted without changing value."
+          }
+        }
+      }
+    },
+    "opacity": {
+      "weather": {
+        "0p6": {
+          "$type": "number",
+          "$value": 0.6000000238418579
+        },
+        "0p25": {
+          "$type": "number",
+          "$value": 0.25
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+### Now plus the multi-day forecast, or the stored snapshot when the API fails.
+class: WeatherForecast
+fields:
+  locationName: String
+  currentTime: DateTime?
+  currentTemperature: double?
+  currentWeatherCode: int
+  condition: String
+  icon: String
+  daily: List<WeatherDay>
+  ### "api" or "cache".
+  source: String

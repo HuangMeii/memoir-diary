@@ -1,0 +1,11 @@
+### Quick note.
+class: Note
+table: notes
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  content: String
+  color: String?
+  isPinned: bool, default=false
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now

@@ -1,5 +1,10 @@
 # 04 — API Reference
 
+> ⚠️ **Cập nhật 2026-10-11:** tài liệu này mô tả **API FastAPI cũ đã bị gỡ**.
+> API hiện tại là các endpoint Serverpod trong
+> `memoir_server/memoir_server_server/lib/src/<domain>/<domain>_endpoint.dart`
+> (xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md)).
+
 ## 1. Quy ước chung
 
 - **Base URL (dev)**: `http://127.0.0.1:8000`
@@ -30,11 +35,31 @@ username=a@example.com&password=secret123
 ```
 ```json
 // Response 200
+{ "access_token": "eyJ...", "refresh_token": "eyJ...", "token_type": "bearer", "expires_in": 3600 }
+```
+
+### 2.2b. Làm mới token (refresh)
+`POST /auth/refresh`
+```json
+// Request
+{ "refresh_token": "eyJ..." }
+// Response 200
 { "access_token": "eyJ...", "token_type": "bearer", "expires_in": 3600 }
 ```
 
+> **Access token hạn 60 phút, refresh token hạn 30 ngày.** Mỗi token mang claim `type`
+> (`access` / `refresh`) và **không dùng chỗ cho nhau**: dùng refresh token gọi API thì
+> `401`, dùng access token gọi `/auth/refresh` cũng `401`. Endpoint này nạp lại user và
+> kiểm tra `is_active`, nên tài khoản bị khoá không thể dùng refresh token cũ để gia hạn.
+>
+> Refresh token là **stateless** (không lưu DB): không xoay vòng, nên thu hồi riêng từng
+> token không được. Việc vô hiệu hóa tài khoản vẫn cắt phiên ngay vì `is_active` được
+> kiểm tra ở cả `/auth/refresh` lẫn mọi request.
+
 ### 2.3. Thông tin user hiện tại
-`GET /auth/me` → `200 { "id", "email", "username", "display_name", "is_active" }`
+`GET /auth/me` → `200 { "id", "email", "username", "display_name", "is_active", "role", "created_at" }`
+
+> `role` là `user` hoặc `admin`; admin được phép dùng nhóm endpoint `/admin`.
 
 ---
 
@@ -127,7 +152,32 @@ username=a@example.com&password=secret123
 }
 ```
 
-## 8. Reflections — `/reflections`
+## 8. Daily quotes — `/daily-quotes`
+
+Cặp câu được **lưu theo ngày**, nên mở app nhiều lần trong ngày vẫn thấy cùng một câu.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/daily-quotes/today` | Cặp câu hôm nay — tạo mới nếu hôm nay chưa có |
+| GET | `/daily-quotes?month=YYYY-MM` | Lịch sử trong tháng, mới nhất trước |
+| DELETE | `/daily-quotes/{id}` | Xoá dòng (dùng để đổi câu của hôm nay) |
+
+**Response `/daily-quotes/today`**
+```json
+{
+  "id": "uuid",
+  "quote_date": "2026-10-05",
+  "quote_id": "uuid",
+  "self_message_id": "uuid",
+  "created_at": "2026-10-05T02:16:00Z",
+  "quote": { "id": "uuid", "text": "...", "author": "..." },
+  "self_message": { "id": "uuid", "content": "..." }
+}
+```
+
+`quote` và `self_message` có thể `null`: tài khoản mới chưa có lời nhắn, hoặc câu đã bị xoá khỏi kho.
+
+## 9. Reflections — `/reflections`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -141,7 +191,7 @@ username=a@example.com&password=secret123
 { "entry_id": "uuid", "quote_id": "uuid", "self_message_id": "uuid", "thought": "Mình thấy 2 câu này như..." }
 ```
 
-## 9. Stats (lưới tháng) — `/stats`
+## 10. Stats (lưới tháng) — `/stats`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -157,7 +207,7 @@ username=a@example.com&password=secret123
 ]
 ```
 
-## 10. Notes — `/notes`
+## 11. Notes — `/notes`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -167,7 +217,7 @@ username=a@example.com&password=secret123
 | PATCH | `/notes/{id}/pin` | Ghim/bỏ ghim |
 | DELETE | `/notes/{id}` | Xóa |
 
-## 11. Todos — `/todos`
+## 12. Todos — `/todos`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -177,7 +227,7 @@ username=a@example.com&password=secret123
 | PATCH | `/todos/{id}/done` | Đánh dấu hoàn thành |
 | DELETE | `/todos/{id}` | Xóa |
 
-## 12. Events — `/events`
+## 13. Events — `/events`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -186,7 +236,7 @@ username=a@example.com&password=secret123
 | PUT | `/events/{id}` | Sửa |
 | DELETE | `/events/{id}` | Xóa |
 
-## 13. Schedule items — `/schedule-items`
+## 14. Schedule items — `/schedule-items`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -195,7 +245,7 @@ username=a@example.com&password=secret123
 | PUT | `/schedule-items/{id}` | Sửa |
 | DELETE | `/schedule-items/{id}` | Xóa |
 
-## 14. Health logs — `/health-logs`
+## 15. Health logs — `/health-logs`
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -209,9 +259,149 @@ username=a@example.com&password=secret123
 { "log_date": "2026-04-04", "steps": 8200, "workout_minutes": 45, "note": "Chạy bộ buổi sáng" }
 ```
 
-## 15. Health check
+## 16. Health check
 
 | Method | Path | Mô tả |
 |---|---|---|
 | GET | `/health` | `{ "status": "ok" }` |
 
+---
+
+## 17. Admin — `/admin` (quản trị)
+
+> Yêu cầu token của tài khoản có `role = "admin"` (tạo bằng `python -m app.seed.admin`).
+> Tài khoản thường gọi các endpoint này sẽ nhận `403`.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/admin/stats` | Tổng quan: users, quotes, entries |
+| GET | `/admin/quotes` | Danh sách câu hệ thống (`user_id IS NULL`) |
+| POST | `/admin/quotes` | Thêm câu vào kho chung |
+| PUT | `/admin/quotes/{id}` | Sửa câu hệ thống |
+| DELETE | `/admin/quotes/{id}` | Xoá mềm câu hệ thống |
+| GET | `/admin/users` | Danh sách users (+ số câu, số entry) |
+| PATCH | `/admin/users/{id}` | Đổi `role`, khoá/mở tài khoản |
+
+```json
+// PATCH /admin/users/{id}  — nâng quyền hoặc khoá tài khoản
+{ "role": "admin", "is_active": false }
+```
+
+> Admin không thể tự vô hiệu hóa chính mình (`400`).
+
+---
+
+## 18. Focus Garden — `/focus` & `/garden` (CHƯA TRIỂN KHAI)
+
+> **Đặc tả, chưa có endpoint nào trong backend hiện tại.** Sẽ triển khai ở [Phase 8–11](../PLAN.md).
+> Thiết kế đầy đủ: [09-focus-garden.md](09-focus-garden.md).
+
+### 18.1. Tập trung — `/focus`
+
+| Method | Path | Mô tả |
+|---|---|---|
+| POST | `/focus/sessions` | Mở phiên tập trung |
+| GET | `/focus/sessions/active` | Phiên đang chạy (khôi phục khi app bị tắt) |
+| POST | `/focus/sessions/{id}/heartbeat` | Ping giữ phiên (mỗi 30s) |
+| POST | `/focus/sessions/{id}/pause` | Tạm dừng |
+| POST | `/focus/sessions/{id}/resume` | Tiếp tục |
+| POST | `/focus/sessions/{id}/complete` | Hoàn thành → chạy chống gian lân + tính thưởng |
+| POST | `/focus/sessions/{id}/cancel` | Hủy phiên (0 coin) |
+| GET | `/focus/sessions?from=&to=` | Lịch sử phiên |
+
+```json
+// POST /focus/sessions
+{ "planned_minutes": 25 }
+// Response 201
+{ "id": "uuid", "status": "running", "started_at": "2026-10-05T21:00:00+00:00",
+  "heartbeat_interval_seconds": 30 }
+```
+
+```json
+// POST /focus/sessions/{id}/heartbeat
+{ "client_elapsed_seconds": 600 }
+// Response 200
+{ "status": "running", "elapsed_seconds": 602, "stall_count": 0 }
+```
+
+```json
+// POST /focus/sessions/{id}/complete
+{ "client_elapsed_seconds": 1500 }
+// Response 200 — kết quả settlement
+{
+  "status": "completed",
+  "elapsed_seconds": 1500,
+  "credited_minutes": 25,
+  "coins_earned": 5,
+  "exp_earned": 25,
+  "capped": false,
+  "flags": []
+}
+```
+
+`status` trả về: `completed` (thưởng đủ) · `capped` (đã chạm trần 480 phút/ngày) · `rejected` (gian lân hoặc phiên quá ngắn).
+
+### 18.2. Khu vườn — `/garden`
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/garden/profile` | Ví: coin, exp, level, streak |
+| GET | `/garden/plots` | Danh sách cây |
+| POST | `/garden/plots` | Gieo hạt |
+| POST | `/garden/plots/{id}/water` | Dùng 1 nước |
+| POST | `/garden/plots/{id}/fertilize` | Dùng 1 phân bón |
+| POST | `/garden/plots/{id}/harvest` | Thu hoạch (chỉ khi `bloom`) |
+| GET | `/garden/shop` | Danh mục vật phẩm |
+| GET | `/garden/inventory` | Vật phẩm đang sở hữu |
+| POST | `/garden/purchase` | Mua vật phẩm |
+| GET | `/garden/leaderboard?period=day\|week\|all` | Bảng xếp hạng |
+| GET | `/garden/challenges` | Sự kiện + tiến độ của tôi |
+| POST | `/garden/challenges/{id}/claim` | Nhận thưởng sự kiện |
+
+```json
+// POST /garden/purchase
+{ "item_code": "water", "quantity": 2 }
+```
+
+### 18.3. Admin tạo sự kiện — `/admin/garden`
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET/POST | `/admin/garden/challenges` | Danh sách / tạo sự kiện |
+| PUT/DELETE | `/admin/garden/challenges/{id}` | Sửa / xoá sự kiện |
+
+```json
+// POST /admin/garden/challenges
+{ "title": "Học 600 phút trong tháng", "metric": "study_minutes",
+  "target": 600, "reward_coins": 50, "reward_exp": 100,
+  "starts_at": "2026-10-01T00:00:00+07:00",
+  "ends_at": "2026-10-31T23:59:59+07:00" }
+```
+
+---
+
+## 19. Calendar — `/calendar` (CHƯA TRIỂN KHAI)
+
+> **Đặc tả, chưa có endpoint.** Xem [10-calendar.md](10-calendar.md). Sẽ thay bằng `events` + `schedule_items` hiện tại.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/calendar?view=day\|week\|month&date=` | Lịch trong khoảng của chế độ đã chọn |
+| GET | `/calendar/{id}` | Chi tiết 1 sự kiện |
+| POST | `/calendar` | Tạo |
+| PUT | `/calendar/{id}` | Sửa |
+| DELETE | `/calendar/{id}` | Xóa |
+| PATCH | `/calendar/{id}/status` | `{ "status": "done" }` |
+| GET | `/calendar/upcoming` | Sắp tới / đang diễn ra (kèm `remind_at`) |
+| GET | `/calendar/stats?month=` | Phút đã lên lịch vs thực tế học |
+
+## 20. Weather — `/weather` (CHƯA TRIỂN KHAI)
+
+> **Đặc tả, chưa có endpoint.** Xem [11-weather-forecast.md](11-weather-forecast.md). Gọi qua backend, không gọi thẳng.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/weather/current?lat=&lon=` | Thời tiết hiện tại + dự báo 7 ngày |
+| GET | `/weather/daily?date=` | Thời tiết một ngày (ưu tiên snapshot) |
+| GET | `/weather/history?from=&to=` | Lịch sử từ snapshot, không gọi mạng |
+| PUT | `/weather/location` | Lưu vị trí của user |

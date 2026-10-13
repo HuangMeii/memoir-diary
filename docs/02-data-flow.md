@@ -1,5 +1,10 @@
 # 02 — Luồng hoạt động (Data Flow)
 
+> ⚠️ **Cập nhật 2026-10-11:** backend FastAPI đã bị gỡ; backend hiện tại là
+> **Serverpod/Dart**. Các luồng REST `/api/v1/...` bên dưới mô tả **bản FastAPI
+> cũ** — tham chiếu lịch sử, xem
+> [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
+
 Tài liệu mô tả các luồng nghiệp vụ chính của Memoir.
 
 ---

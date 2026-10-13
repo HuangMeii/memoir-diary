@@ -1,0 +1,8 @@
+### Response body for register/login.
+### Matches the FastAPI Token/RegisterResponse shape (access_token + user).
+class: AuthResult
+fields:
+  accessToken: String
+  refreshToken: String?
+  expiresIn: int?
+  user: User

@@ -1,0 +1,14 @@
+### Special event.
+class: Event
+table: events
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  title: String
+  description: String?
+  startAt: DateTime
+  endAt: DateTime?
+  location: String?
+  isAllDay: bool, default=false
+  reminderMinutes: int?
+  createdAt: DateTime, default=now

@@ -3,15 +3,17 @@
 *.env
 !.env.example
 
-# --- Python (backend) ---
+# --- Python tooling (local scripts only; the backend is Dart now) ---
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.egg-info/
+
+# --- Local database ---
+*.db
+*.sqlite
+*.sqlite3
 
 # --- Flutter / Dart (flutter_app) ---
 .dart_tool/
@@ -21,6 +23,34 @@ build/
 .flutter-plugins-dependencies
 *.iml
 .idea/
+coverage/
+pubspec.lock
+
+# Local build / analysis logs
+analyze.txt
+test.txt
+build.log
+backend_run.log
+web_server.log
+build_web.log
+*.status
+# Run logs from `serverpod start` and the static web server
+server_run.log
+server_run.err.log
+web_app.log
+web_app.err.log
+
+# Server runtime logs (uvicorn stdout/stderr, không commit)
+server.log
+server.err
+*.err
+
+# Design exports (large; tokens/ is the checked-in source of truth)
+design/
+# Raw Figma frame exports and the token zip: kept on disk only, so `git clean`
+# without -x cannot wipe them.
+ui-figma/
+tokens.zip
 
 # --- OS / IDE ---
 .vscode/*
@@ -28,3 +58,7 @@ build/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# --- Server runtime ---
+# `serverpod start` writes the session log next to the server package.
+memoir_server/memoir_server_server/_boot.log

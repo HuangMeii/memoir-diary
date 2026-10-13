@@ -1,0 +1,7 @@
+### What the client needs to upload one image and then confirm it.
+class: ImageUploadTicket
+fields:
+  ### Where to PUT the bytes.
+  uploadUrl: String
+  ### Server-derived path; pass back to `confirmUpload`.
+  objectKey: String

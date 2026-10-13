@@ -1,0 +1,11 @@
+### User's thoughts about the daily quote + self message pair.
+class: Reflection
+table: reflections
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  entryId: UuidValue?
+  quoteId: UuidValue?
+  selfMessageId: UuidValue?
+  thought: String?
+  createdAt: DateTime, default=now

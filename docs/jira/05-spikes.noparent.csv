@@ -1,0 +1,11 @@
+Summary,Issue Type,Description,Labels,Priority
+Spike: Upload ảnh trên web bằng cách nào?,Spike,"Timebox 1 ngày. Xuất: quyết định cách upload ảnh trên web (XFile bytes / conditional import / endpoint khác) + POC chạy được.","type:spike,area:flutter",Medium
+Spike: Geocode tên vị trí dùng provider nào?,Spike,"Timebox 1 ngày. Xuất: chọn provider geocode (miễn phí?) + POC tra tên thành lat/lon.","type:spike,area:backend",Low
+Spike: Serverpod auth - dùng module hay custom token?,Spike,"Timebox 2 ngày. Xuất: ADR chọn serverpod_auth module hay custom token + ước lượng cho E12.","type:spike,area:serverpod",Highest
+Spike: Chạy dart test trong CI không có PostgreSQL?,Spike,"Timebox 1 ngày. Xuất: phương án chạy dart test trên CI (service container / sqlite / skip có điều kiện) + POC.","type:spike,ci",High
+Spike: Lịch lặp - thư viện RRULE nào trong Dart?,Spike,"Timebox 1 ngày. Xuất: chọn thư viện lặp lịch cho Dart + POC parse lặp hằng tuần.","type:spike,area:backend",Medium
+Spike: Gộp schedule_items vào events - chiến lược migrate?,Spike,"Timebox 1 ngày. Xuất: kế hoạch migrate schedule_items sang events + bước rollback; đếm số hàng trước và sau.","type:spike,risk:high",High
+Spike: Timer chống gian lận - cơ chế khả thi?,Spike,"Timebox 2 ngày. Xuất: thiết kế chốt cho timer server-side + heartbeat 30s + chống gian lận; kèm ước lượng.","type:spike,area:backend",Medium
+Spike: Coin/EXP chống sửa từ client?,Spike,"Timebox 1 ngày. Xuất: quy tắc server-authoritative cho coin/EXP; danh sách điều client không được quyết.","type:spike,security",Medium
+Spike: Deploy ở đâu và chi phí bao nhiêu?,Spike,"Timebox 1 ngày. Xuất: so sánh nơi deploy + chi phí + quyết định; cách rollback image.","type:spike,area:infra",High
+Spike: Error tracking - tự host hay SaaS?,Spike,"Timebox 1 ngày. Xuất: quyết định error tracking (tự host hay SaaS) + chi phí và cách tích hợp.","type:spike,area:infra",Medium
