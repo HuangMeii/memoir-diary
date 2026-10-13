@@ -12,6 +12,7 @@ import 'repositories/lookup_repository.dart';
 import 'repositories/notes_repository.dart';
 import 'repositories/planner_repository.dart';
 import 'repositories/quote_repository.dart';
+import 'repositories/route_repository.dart';
 import 'repositories/weather_repository.dart';
 
 /// The backend the whole app talks to: the Dart Serverpod server.
@@ -269,3 +270,93 @@ void refreshEntryData(WidgetRef ref) {
   ref.invalidate(todayQuoteProvider);
   ref.invalidate(entryImagesProvider);
 }
+
+/// Everything the route weather depends on, as one value, so Riverpod can cache
+/// by value: change one field and the route is planned again.
+class RouteQuery {
+  const RouteQuery({
+    required this.stops,
+    required this.vehicle,
+    required this.departureAt,
+    this.alternatives = true,
+  });
+
+  final List<RouteStop> stops;
+  final String vehicle;
+  final DateTime departureAt;
+  final bool alternatives;
+
+  bool get isValid => stops.length >= 2;
+
+  @override
+  bool operator ==(Object other) =>
+      other is RouteQuery &&
+      other.vehicle == vehicle &&
+      other.departureAt == departureAt &&
+      other.alternatives == alternatives &&
+      _sameStops(other.stops, stops);
+
+  @override
+  int get hashCode =>
+      Object.hash(vehicle, departureAt, alternatives, Object.hashAll(stops));
+}
+
+bool _sameStops(List<RouteStop> a, List<RouteStop> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+final routeRepositoryProvider = Provider<RouteRepository>(
+  (ref) => RouteRepository(ref.watch(backendDataSourceProvider)),
+);
+
+/// The route and the weather along it, cached per [RouteQuery].
+///
+/// One call, because the screen always wants both and a second round trip would
+/// only make the loading state longer.
+final routePlanProvider =
+    FutureProvider.family<RoutePlanWithWeather, RouteQuery>((ref, query) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(routeRepositoryProvider).planWithWeather(
+        stops: query.stops,
+        vehicle: query.vehicle,
+        departureAt: query.departureAt,
+        alternatives: query.alternatives,
+      );
+});
+
+/// Departure times around the picked one, each with its own forecast. Reuses the
+/// cached plan instead of asking for it again.
+final routeDeparturesProvider =
+    FutureProvider.family<List<RouteDepartureOption>, RouteQuery>(
+        (ref, query) async {
+  final planned = await ref.watch(routePlanProvider(query).future);
+  return ref.read(routeRepositoryProvider).compareDepartures(
+        plan: planned.plan,
+        departureAt: query.departureAt,
+      );
+});
+
+/// Places matching a search term, for the planner's suggestion list.
+final placeSearchProvider =
+    FutureProvider.family<List<PlaceCandidate>, String>((ref, query) async {
+  if (query.trim().length < 2) return const [];
+  return ref.read(routeRepositoryProvider).searchPlaces(query);
+});
+
+/// The user's saved trips, newest departure first.
+final journeysProvider = FutureProvider<List<Journey>>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(routeRepositoryProvider).journeys();
+});
+
+/// One saved trip with its stops and its saved weather snapshot.
+final journeyDetailProvider =
+    FutureProvider.family<JourneyDetail, String>((ref, id) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(routeRepositoryProvider).journey(id);
+});
+

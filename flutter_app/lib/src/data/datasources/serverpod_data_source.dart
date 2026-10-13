@@ -87,6 +87,10 @@ class ServerpodDataSource implements BackendDataSource {
       case '/weather/daily':
         final day = await _client.weather.daily(_parseDate(query?['date'])!);
         return day == null ? null : _weatherDayMap(day);
+      case '/journeys':
+        return (await _request(() => _client.journeys.list()))
+            .map(_journeyMap)
+            .toList();
     }
 
     if (path.startsWith('/entries/by-date/')) {
@@ -110,6 +114,11 @@ class ServerpodDataSource implements BackendDataSource {
         path.length - '/url'.length,
       );
       return {'url': _imageUrls[imageId]};
+    }
+    if (path.startsWith('/journeys/')) {
+      final id = path.substring('/journeys/'.length);
+      final detail = await _request(() => _client.journeys.detail(_uuid(id)));
+      return _journeyDetailMap(detail);
     }
     throw ApiException('ServerpodDataSource: unsupported GET $path');
   }
@@ -199,6 +208,65 @@ class ServerpodDataSource implements BackendDataSource {
           weightKg: (body['weight_kg'] as num?)?.toDouble(),
           note: body['note'] as String?,
         ));
+      case '/route/search-places':
+        final places = await _request(() => _client.route.searchPlaces(
+              body['query'] as String? ?? '',
+              limit: body['limit'] as int?,
+            ));
+        return places.map(_placeMap).toList();
+      case '/route/plan':
+        final plan = await _request(() => _client.route.plan(
+              origin: _stopOf(body['origin']),
+              destination: _stopOf(body['destination']),
+              waypoints: _stopsOf(body['waypoints']),
+              vehicle: body['vehicle'] as String?,
+              alternatives: body['alternatives'] as bool?,
+            ));
+        return _routePlanMap(plan);
+      case '/route/forecast':
+        final report = await _request(() => _client.route.forecast(
+              plan: _routePlanOf(body['plan']),
+              departureAt: _parseDate(body['departure_at'])!,
+            ));
+        return _routeReportMap(report);
+      case '/route/plan-with-weather':
+        final both = await _request(() => _client.route.planWithWeather(
+              origin: _stopOf(body['origin']),
+              destination: _stopOf(body['destination']),
+              waypoints: _stopsOf(body['waypoints']),
+              vehicle: body['vehicle'] as String?,
+              departureAt: _parseDate(body['departure_at']),
+              alternatives: body['alternatives'] as bool?,
+            ));
+        return {
+          'plan': _routePlanMap(both.plan),
+          'weather': _routeReportMap(both.weather),
+        };
+      case '/route/departures':
+        final options = await _request(() => _client.route.compareDepartures(
+              plan: _routePlanOf(body['plan']),
+              departureAt: _parseDate(body['departure_at'])!,
+              offsetsHours:
+                  (body['offsets_hours'] as List?)?.whereType<int>().toList(),
+            ));
+        return options.map(_departureOptionMap).toList();
+      case '/journeys':
+        final detail = await _request(() => _client.journeys.save(
+              title: body['title'] as String? ?? '',
+              vehicle: body['vehicle'] as String? ?? 'car',
+              departureAt: _parseDate(body['departure_at'])!,
+              stops: ((body['stops'] as List?) ?? const []).map(_stopOf).toList(),
+              distanceMeters: body['distance_meters'] as int? ?? 0,
+              durationSeconds: body['duration_seconds'] as int? ?? 0,
+              geometry: body['geometry'] as String? ?? '',
+              notes: body['notes'] as String?,
+              entryId: _uuidOrNull(body['entry_id']),
+              weatherSamples: _samplesOf(body['weather_samples']),
+              createEntry: body['create_entry'] as bool?,
+              entryText: body['entry_text'] as String?,
+              weatherId: body['weather_id'] as int?,
+            ));
+        return _journeyDetailMap(detail);
     }
     throw ApiException('ServerpodDataSource: unsupported POST $path');
   }
@@ -301,9 +369,16 @@ class ServerpodDataSource implements BackendDataSource {
       'conflict' => 409,
       'unauthorized' => 401,
       'forbidden' => 403,
+      'noRoute' => 404,
+      'rateLimited' => 429,
+      'unavailable' => 503,
       _ => null,
     };
-    return ApiException(error.message, statusCode: statusCode);
+    return ApiException(
+      error.message,
+      statusCode: statusCode,
+      code: error.code,
+    );
   }
 
   @override
@@ -326,6 +401,7 @@ class ServerpodDataSource implements BackendDataSource {
     if (path.startsWith('/reflections/')) {
       return _client.reflections.delete(id);
     }
+    if (path.startsWith('/journeys/')) return _client.journeys.delete(id);
     throw ApiException('ServerpodDataSource: unsupported DELETE $path');
   }
 
@@ -561,3 +637,231 @@ Map<String, dynamic> _weatherForecastMap(sp.WeatherForecast f) => {
       // The client treats anything but "cache" as a live Open-Meteo reading.
       'source': f.source == 'cache' ? 'cache' : 'open-meteo',
     };
+
+// --- Route planner: JSON in, Serverpod models out (and back) ---------------
+//
+// The repositories speak the same snake_case JSON as the REST era, so these
+// converters keep the request/response shapes identical to the generated ones.
+
+sp.RouteStop _stopOf(dynamic value) {
+  final json = (value as Map).cast<String, dynamic>();
+  return sp.RouteStop(
+    name: json['name'] as String? ?? '',
+    lat: (json['lat'] as num?)?.toDouble() ?? 0,
+    lon: (json['lon'] as num?)?.toDouble() ?? 0,
+    dwellMinutes: json['dwell_minutes'] as int?,
+    kind: json['kind'] as String? ?? 'waypoint',
+  );
+}
+
+List<sp.RouteStop>? _stopsOf(dynamic value) {
+  if (value is! List) return null;
+  return value.map(_stopOf).toList();
+}
+
+sp.RouteLeg _legOf(dynamic value) {
+  final json = (value as Map).cast<String, dynamic>();
+  return sp.RouteLeg(
+    distanceMeters: json['distance_meters'] as int? ?? 0,
+    durationSeconds: json['duration_seconds'] as int? ?? 0,
+    toIndex: json['to_index'] as int? ?? 0,
+  );
+}
+
+sp.RouteAlternative _alternativeOf(dynamic value) {
+  final json = (value as Map).cast<String, dynamic>();
+  return sp.RouteAlternative(
+    distanceMeters: json['distance_meters'] as int? ?? 0,
+    durationSeconds: json['duration_seconds'] as int? ?? 0,
+    geometry: json['geometry'] as String? ?? '',
+  );
+}
+
+/// Rebuilds the plan the client sends back for a re-forecast or a comparison.
+sp.RoutePlan _routePlanOf(dynamic value) {
+  final json = (value as Map).cast<String, dynamic>();
+  return sp.RoutePlan(
+    stops: ((json['stops'] as List?) ?? const []).map(_stopOf).toList(),
+    distanceMeters: json['distance_meters'] as int? ?? 0,
+    durationSeconds: json['duration_seconds'] as int? ?? 0,
+    geometry: json['geometry'] as String? ?? '',
+    legs: ((json['legs'] as List?) ?? const []).map(_legOf).toList(),
+    alternatives: ((json['alternatives'] as List?) ?? const [])
+        .map(_alternativeOf)
+        .toList(),
+    source: json['source'] as String? ?? 'osrm',
+    vehicle: json['vehicle'] as String? ?? 'car',
+  );
+}
+
+sp.RouteWeatherSample _sampleOf(dynamic value) {
+  final json = (value as Map).cast<String, dynamic>();
+  return sp.RouteWeatherSample(
+    seq: json['seq'] as int? ?? 0,
+    label: json['label'] as String? ?? '',
+    kind: json['kind'] as String? ?? 'sample',
+    lat: (json['lat'] as num?)?.toDouble() ?? 0,
+    lon: (json['lon'] as num?)?.toDouble() ?? 0,
+    distanceFromStartMeters: json['distance_from_start_meters'] as int? ?? 0,
+    arrivalAt: _parseDate(json['arrival_at'])!,
+    weatherCode: json['weather_code'] as int?,
+    weatherGroup: json['weather_group'] as String?,
+    condition: json['condition'] as String?,
+    icon: json['icon'] as String?,
+    tempC: (json['temp_c'] as num?)?.toDouble(),
+    precipitationMm: (json['precipitation_mm'] as num?)?.toDouble(),
+    precipitationProbability: json['precipitation_probability'] as int?,
+    windSpeedKmh: (json['wind_speed_kmh'] as num?)?.toDouble(),
+    severity: json['severity'] as String? ?? 'info',
+    reasons: ((json['reasons'] as List?) ?? const []).map((e) => '$e').toList(),
+    status: json['status'] as String? ?? 'forecast',
+  );
+}
+
+List<sp.RouteWeatherSample>? _samplesOf(dynamic value) {
+  if (value is! List) return null;
+  return value.map(_sampleOf).toList();
+}
+
+Map<String, dynamic> _stopMap(sp.RouteStop s) => {
+      'name': s.name,
+      'lat': s.lat,
+      'lon': s.lon,
+      'dwell_minutes': s.dwellMinutes,
+      'kind': s.kind,
+    };
+
+Map<String, dynamic> _placeMap(sp.PlaceCandidate p) => {
+      'name': p.name,
+      'admin': p.admin,
+      'country': p.country,
+      'lat': p.lat,
+      'lon': p.lon,
+    };
+
+Map<String, dynamic> _routeLegMap(sp.RouteLeg l) => {
+      'distance_meters': l.distanceMeters,
+      'duration_seconds': l.durationSeconds,
+      'to_index': l.toIndex,
+    };
+
+Map<String, dynamic> _routeAlternativeMap(sp.RouteAlternative a) => {
+      'distance_meters': a.distanceMeters,
+      'duration_seconds': a.durationSeconds,
+      'geometry': a.geometry,
+    };
+
+Map<String, dynamic> _routePlanMap(sp.RoutePlan p) => {
+      'stops': p.stops.map(_stopMap).toList(),
+      'distance_meters': p.distanceMeters,
+      'duration_seconds': p.durationSeconds,
+      'geometry': p.geometry,
+      'legs': p.legs.map(_routeLegMap).toList(),
+      'alternatives': p.alternatives.map(_routeAlternativeMap).toList(),
+      'source': p.source,
+      'vehicle': p.vehicle,
+    };
+
+Map<String, dynamic> _routeSampleMap(sp.RouteWeatherSample s) => {
+      'seq': s.seq,
+      'label': s.label,
+      'kind': s.kind,
+      'lat': s.lat,
+      'lon': s.lon,
+      'distance_from_start_meters': s.distanceFromStartMeters,
+      'arrival_at': s.arrivalAt.toIso8601String(),
+      'weather_code': s.weatherCode,
+      'weather_group': s.weatherGroup,
+      'condition': s.condition,
+      'icon': s.icon,
+      'temp_c': s.tempC,
+      'precipitation_mm': s.precipitationMm,
+      'precipitation_probability': s.precipitationProbability,
+      'wind_speed_kmh': s.windSpeedKmh,
+      'severity': s.severity,
+      'reasons': s.reasons,
+      'status': s.status,
+    };
+
+Map<String, dynamic> _routeAlertMap(sp.RouteAlert a) => {
+      'severity': a.severity,
+      'title': a.title,
+      'summary': a.summary,
+      'start_at': a.startAt.toIso8601String(),
+      'end_at': a.endAt.toIso8601String(),
+      'from_seq': a.fromSeq,
+      'to_seq': a.toSeq,
+    };
+
+Map<String, dynamic> _routeReportMap(sp.RouteWeatherReport r) => {
+      'generated_at': r.generatedAt.toIso8601String(),
+      'coverage': r.coverage,
+      'source': r.source,
+      'beyond_range': r.beyondRange,
+      'samples': r.samples.map(_routeSampleMap).toList(),
+      'alerts': r.alerts.map(_routeAlertMap).toList(),
+      'notes': r.notes,
+    };
+
+Map<String, dynamic> _departureOptionMap(sp.RouteDepartureOption o) => {
+      'offset_hours': o.offsetHours,
+      'departure_at': o.departureAt.toIso8601String(),
+      'arrival_at': o.arrivalAt.toIso8601String(),
+      'severity': o.severity,
+      'headline': o.headline,
+      'weather': _routeReportMap(o.weather),
+    };
+
+Map<String, dynamic> _journeyMap(sp.Journey j) => {
+      'id': j.id?.toString(),
+      'title': j.title,
+      'vehicle': j.vehicle,
+      'departure_at': j.departureAt.toIso8601String(),
+      'origin_name': j.originName,
+      'origin_lat': j.originLat,
+      'origin_lon': j.originLon,
+      'destination_name': j.destinationName,
+      'destination_lat': j.destinationLat,
+      'destination_lon': j.destinationLon,
+      'distance_meters': j.distanceMeters,
+      'duration_seconds': j.durationSeconds,
+      'geometry': j.geometry,
+      'notes': j.notes,
+      'entry_id': j.entryId?.toString(),
+      'weather_saved_at': j.weatherSavedAt?.toIso8601String(),
+    };
+
+Map<String, dynamic> _journeyStopMap(sp.JourneyStop s) => {
+      'seq': s.seq,
+      'kind': s.kind,
+      'name': s.name,
+      'lat': s.lat,
+      'lon': s.lon,
+      'dwell_minutes': s.dwellMinutes,
+      'arrival_at': s.arrivalAt?.toIso8601String(),
+      'distance_from_start_meters': s.distanceFromStartMeters,
+    };
+
+Map<String, dynamic> _journeyWeatherMap(sp.JourneyWeatherPoint p) => {
+      'seq': p.seq,
+      'sample_at': p.sampleAt.toIso8601String(),
+      'lat': p.lat,
+      'lon': p.lon,
+      'label': p.label,
+      'weather_code': p.weatherCode,
+      'weather_group': p.weatherGroup,
+      'temp_c': p.tempC,
+      'precipitation_mm': p.precipitationMm,
+      'precipitation_probability': p.precipitationProbability,
+      'wind_speed_kmh': p.windSpeedKmh,
+      'severity': p.severity,
+    };
+
+Map<String, dynamic> _journeyDetailMap(sp.JourneyDetail d) => {
+      'journey': _journeyMap(d.journey),
+      'stops': d.stops.map(_journeyStopMap).toList(),
+      'weather_points': d.weatherPoints.map(_journeyWeatherMap).toList(),
+    };
+
+
+

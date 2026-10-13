@@ -465,3 +465,650 @@ class WeatherForecast {
         source: json['source'] as String? ?? 'open-meteo',
       );
 }
+
+/// Severity of the weather at one point of a route. Mirrors
+/// `memoir_server_server/lib/src/route/route_rules.dart`.
+abstract final class RouteSeverity {
+  static const String info = 'info';
+  static const String caution = 'caution';
+  static const String warning = 'warning';
+
+  static const List<String> ordered = [info, caution, warning];
+
+  static int rank(String severity) {
+    final index = ordered.indexOf(severity);
+    return index < 0 ? 0 : index;
+  }
+
+  /// The worst of [values], or [info] when empty.
+  static String highest(Iterable<String> values) {
+    var worst = info;
+    for (final value in values) {
+      if (rank(value) > rank(worst)) worst = value;
+    }
+    return worst;
+  }
+
+  /// The chip text the route screens show.
+  static String label(String severity) => switch (severity) {
+        warning => 'Cảnh báo',
+        caution => 'Cần chú ý',
+        _ => 'Thuận lợi',
+      };
+}
+
+/// One stop of a planned route: the origin, a waypoint or the destination.
+class RouteStop {
+  const RouteStop({
+    required this.name,
+    required this.lat,
+    required this.lon,
+    this.dwellMinutes = 0,
+    this.kind = 'waypoint',
+  });
+
+  final String name;
+  final double lat;
+  final double lon;
+
+  /// Minutes spent here; counts at waypoints only.
+  final int dwellMinutes;
+
+  /// origin | waypoint | destination
+  final String kind;
+
+  bool get isOrigin => kind == 'origin';
+  bool get isDestination => kind == 'destination';
+  bool get isWaypoint => kind == 'waypoint';
+
+  RouteStop copyWith({
+    String? name,
+    double? lat,
+    double? lon,
+    int? dwellMinutes,
+    String? kind,
+  }) =>
+      RouteStop(
+        name: name ?? this.name,
+        lat: lat ?? this.lat,
+        lon: lon ?? this.lon,
+        dwellMinutes: dwellMinutes ?? this.dwellMinutes,
+        kind: kind ?? this.kind,
+      );
+
+  factory RouteStop.fromJson(Map<String, dynamic> json) => RouteStop(
+        name: json['name'] as String? ?? '',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0,
+        dwellMinutes: json['dwell_minutes'] as int? ?? 0,
+        kind: json['kind'] as String? ?? 'waypoint',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'lat': lat,
+        'lon': lon,
+        'dwell_minutes': dwellMinutes,
+        'kind': kind,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is RouteStop &&
+      other.name == name &&
+      other.lat == lat &&
+      other.lon == lon &&
+      other.dwellMinutes == dwellMinutes &&
+      other.kind == kind;
+
+  @override
+  int get hashCode => Object.hash(name, lat, lon, dwellMinutes, kind);
+}
+
+/// Rebuilds a plan from a saved journey so the screen can ask the server for a
+/// newer forecast while showing the trip exactly as it was stored.
+///
+/// The legs are left empty on purpose: the server then spreads the stored
+/// duration across the legs in proportion to their length, which is what the
+/// saved trip knows about.
+RoutePlan planFromJourney(JourneyDetail detail) => RoutePlan(
+      stops: [
+        for (final stop in detail.stops)
+          RouteStop(
+            name: stop.name,
+            lat: stop.lat,
+            lon: stop.lon,
+            dwellMinutes: stop.dwellMinutes,
+            kind: stop.kind,
+          ),
+      ],
+      distanceMeters: detail.journey.distanceMeters,
+      durationSeconds: detail.journey.durationSeconds,
+      geometry: detail.journey.geometry,
+      legs: const [],
+      alternatives: const [],
+      source: 'osrm',
+      vehicle: detail.journey.vehicle,
+    );
+
+/// A place the geocoder knows about.
+class PlaceCandidate {
+  const PlaceCandidate({
+    required this.name,
+    required this.lat,
+    required this.lon,
+    this.admin,
+    this.country,
+  });
+
+  final String name;
+  final double lat;
+  final double lon;
+  final String? admin;
+  final String? country;
+
+  /// "Lâm Đồng · Việt Nam" — the subtitle the suggestion list shows.
+  String get subtitle => [admin, country]
+      .whereType<String>()
+      .where((part) => part.isNotEmpty)
+      .join(' · ');
+
+  RouteStop toStop(String kind) =>
+      RouteStop(name: name, lat: lat, lon: lon, kind: kind);
+
+  factory PlaceCandidate.fromJson(Map<String, dynamic> json) => PlaceCandidate(
+        name: json['name'] as String? ?? '',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0,
+        admin: json['admin'] as String?,
+        country: json['country'] as String?,
+      );
+}
+
+/// One leg of a route: from the previous stop to stop number [toIndex].
+class RouteLeg {
+  const RouteLeg({
+    required this.distanceMeters,
+    required this.durationSeconds,
+    required this.toIndex,
+  });
+
+  final int distanceMeters;
+  final int durationSeconds;
+  final int toIndex;
+
+  factory RouteLeg.fromJson(Map<String, dynamic> json) => RouteLeg(
+        distanceMeters: json['distance_meters'] as int? ?? 0,
+        durationSeconds: json['duration_seconds'] as int? ?? 0,
+        toIndex: json['to_index'] as int? ?? 0,
+      );
+}
+
+/// An alternative route the engine offered, without a leg breakdown.
+class RouteAlternative {
+  const RouteAlternative({
+    required this.distanceMeters,
+    required this.durationSeconds,
+    required this.geometry,
+  });
+
+  final int distanceMeters;
+  final int durationSeconds;
+  final String geometry;
+
+  factory RouteAlternative.fromJson(Map<String, dynamic> json) =>
+      RouteAlternative(
+        distanceMeters: json['distance_meters'] as int? ?? 0,
+        durationSeconds: json['duration_seconds'] as int? ?? 0,
+        geometry: json['geometry'] as String? ?? '',
+      );
+}
+
+/// A route plus the stops it connects.
+class RoutePlan {
+  const RoutePlan({
+    required this.stops,
+    required this.distanceMeters,
+    required this.durationSeconds,
+    required this.geometry,
+    required this.legs,
+    required this.alternatives,
+    required this.source,
+    required this.vehicle,
+  });
+
+  final List<RouteStop> stops;
+  final int distanceMeters;
+  final int durationSeconds;
+
+  /// GeoJSON LineString.
+  final String geometry;
+  final List<RouteLeg> legs;
+  final List<RouteAlternative> alternatives;
+  final String source;
+  final String vehicle;
+
+  bool get hasAlternatives => alternatives.isNotEmpty;
+
+  factory RoutePlan.fromJson(Map<String, dynamic> json) => RoutePlan(
+        stops: ((json['stops'] as List?) ?? const [])
+            .map((e) => RouteStop.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        distanceMeters: json['distance_meters'] as int? ?? 0,
+        durationSeconds: json['duration_seconds'] as int? ?? 0,
+        geometry: json['geometry'] as String? ?? '',
+        legs: ((json['legs'] as List?) ?? const [])
+            .map((e) => RouteLeg.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        alternatives: ((json['alternatives'] as List?) ?? const [])
+            .map((e) =>
+                RouteAlternative.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        source: json['source'] as String? ?? 'osrm',
+        vehicle: json['vehicle'] as String? ?? 'car',
+      );
+}
+
+/// Weather at one point of the route, read at the time the traveller is
+/// expected to be there.
+class RouteWeatherSample {
+  const RouteWeatherSample({
+    required this.seq,
+    required this.label,
+    required this.kind,
+    required this.lat,
+    required this.lon,
+    required this.distanceFromStartMeters,
+    required this.arrivalAt,
+    required this.severity,
+    required this.reasons,
+    required this.status,
+    this.weatherCode,
+    this.weatherGroup,
+    this.condition,
+    this.icon,
+    this.tempC,
+    this.precipitationMm,
+    this.precipitationProbability,
+    this.windSpeedKmh,
+  });
+
+  final int seq;
+  final String label;
+
+  /// origin | waypoint | destination | sample
+  final String kind;
+  final double lat;
+  final double lon;
+  final int distanceFromStartMeters;
+  final DateTime arrivalAt;
+  final int? weatherCode;
+
+  /// `weathers.code` group of [weatherCode], so the app can pick its own icon.
+  final String? weatherGroup;
+  final String? condition;
+  final String? icon;
+  final double? tempC;
+  final double? precipitationMm;
+  final int? precipitationProbability;
+  final double? windSpeedKmh;
+
+  /// info | caution | warning
+  final String severity;
+  final List<String> reasons;
+
+  /// forecast | stale | unavailable
+  final String status;
+
+  bool get isStop => kind != 'sample';
+  bool get hasWeather => weatherCode != null;
+  bool get isStale => status == 'stale';
+
+  factory RouteWeatherSample.fromJson(Map<String, dynamic> json) =>
+      RouteWeatherSample(
+        seq: json['seq'] as int? ?? 0,
+        label: json['label'] as String? ?? '',
+        kind: json['kind'] as String? ?? 'sample',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0,
+        distanceFromStartMeters:
+            json['distance_from_start_meters'] as int? ?? 0,
+        arrivalAt: DateTime.parse(json['arrival_at'] as String).toUtc(),
+        weatherCode: json['weather_code'] as int?,
+        weatherGroup: json['weather_group'] as String?,
+        condition: json['condition'] as String?,
+        icon: json['icon'] as String?,
+        tempC: (json['temp_c'] as num?)?.toDouble(),
+        precipitationMm: (json['precipitation_mm'] as num?)?.toDouble(),
+        precipitationProbability: json['precipitation_probability'] as int?,
+        windSpeedKmh: (json['wind_speed_kmh'] as num?)?.toDouble(),
+        severity: json['severity'] as String? ?? RouteSeverity.info,
+        reasons: ((json['reasons'] as List?) ?? const [])
+            .map((e) => '$e')
+            .toList(),
+        status: json['status'] as String? ?? 'unavailable',
+      );
+}
+
+/// A stretch of the route with unfavourable weather.
+class RouteAlert {
+  const RouteAlert({
+    required this.severity,
+    required this.title,
+    required this.summary,
+    required this.startAt,
+    required this.endAt,
+    required this.fromSeq,
+    required this.toSeq,
+  });
+
+  final String severity;
+  final String title;
+  final String summary;
+  final DateTime startAt;
+  final DateTime endAt;
+  final int fromSeq;
+  final int toSeq;
+
+  factory RouteAlert.fromJson(Map<String, dynamic> json) => RouteAlert(
+        severity: json['severity'] as String? ?? RouteSeverity.info,
+        title: json['title'] as String? ?? '',
+        summary: json['summary'] as String? ?? '',
+        startAt: DateTime.parse(json['start_at'] as String).toUtc(),
+        endAt: DateTime.parse(json['end_at'] as String).toUtc(),
+        fromSeq: json['from_seq'] as int? ?? 0,
+        toSeq: json['to_seq'] as int? ?? 0,
+      );
+}
+
+/// Weather along a route: one sample per stop and per point between stops.
+class RouteWeatherReport {
+  const RouteWeatherReport({
+    required this.generatedAt,
+    required this.coverage,
+    required this.source,
+    required this.beyondRange,
+    required this.samples,
+    required this.alerts,
+    required this.notes,
+  });
+
+  final DateTime generatedAt;
+
+  /// full | partial | none
+  final String coverage;
+
+  /// api | cache | unavailable
+  final String source;
+  final bool beyondRange;
+  final List<RouteWeatherSample> samples;
+  final List<RouteAlert> alerts;
+  final List<String> notes;
+
+  /// The forecast was served from the server's cache.
+  bool get isStale => source == 'cache';
+
+  /// Nothing at all came back from the provider.
+  bool get isUnavailable => source == 'unavailable' || coverage == 'none';
+
+  bool get isPartial => coverage == 'partial';
+
+  /// The worst severity along the route.
+  String get worstSeverity =>
+      RouteSeverity.highest(samples.map((sample) => sample.severity));
+
+  /// Only the points that are stops: the origin, the waypoints, the destination.
+  List<RouteWeatherSample> get stopSamples =>
+      samples.where((sample) => sample.isStop).toList();
+
+  factory RouteWeatherReport.fromJson(Map<String, dynamic> json) =>
+      RouteWeatherReport(
+        generatedAt: DateTime.parse(json['generated_at'] as String).toUtc(),
+        coverage: json['coverage'] as String? ?? 'none',
+        source: json['source'] as String? ?? 'unavailable',
+        beyondRange: json['beyond_range'] as bool? ?? false,
+        samples: ((json['samples'] as List?) ?? const [])
+            .map((e) =>
+                RouteWeatherSample.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        alerts: ((json['alerts'] as List?) ?? const [])
+            .map((e) => RouteAlert.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        notes: ((json['notes'] as List?) ?? const []).map((e) => '$e').toList(),
+      );
+}
+
+/// A planned route together with the weather along it.
+class RoutePlanWithWeather {
+  const RoutePlanWithWeather({required this.plan, required this.weather});
+
+  final RoutePlan plan;
+  final RouteWeatherReport weather;
+
+  factory RoutePlanWithWeather.fromJson(Map<String, dynamic> json) =>
+      RoutePlanWithWeather(
+        plan: RoutePlan.fromJson(
+          (json['plan'] as Map?)?.cast<String, dynamic>() ?? const {},
+        ),
+        weather: RouteWeatherReport.fromJson(
+          (json['weather'] as Map?)?.cast<String, dynamic>() ?? const {},
+        ),
+      );
+}
+
+/// One departure time offered by the comparison panel.
+class RouteDepartureOption {
+  const RouteDepartureOption({
+    required this.offsetHours,
+    required this.departureAt,
+    required this.arrivalAt,
+    required this.severity,
+    required this.headline,
+    required this.weather,
+  });
+
+  final int offsetHours;
+  final DateTime departureAt;
+  final DateTime arrivalAt;
+  final String severity;
+  final String headline;
+  final RouteWeatherReport weather;
+
+  /// The option that matches the departure time the user picked.
+  bool get isCurrent => offsetHours == 0;
+
+  factory RouteDepartureOption.fromJson(Map<String, dynamic> json) =>
+      RouteDepartureOption(
+        offsetHours: json['offset_hours'] as int? ?? 0,
+        departureAt: DateTime.parse(json['departure_at'] as String).toUtc(),
+        arrivalAt: DateTime.parse(json['arrival_at'] as String).toUtc(),
+        severity: json['severity'] as String? ?? RouteSeverity.info,
+        headline: json['headline'] as String? ?? '',
+        weather: RouteWeatherReport.fromJson(
+          (json['weather'] as Map?)?.cast<String, dynamic>() ?? const {},
+        ),
+      );
+}
+
+/// A saved trip: the route, its weather snapshot and the diary link.
+class Journey {
+  const Journey({
+    required this.id,
+    required this.title,
+    required this.vehicle,
+    required this.departureAt,
+    required this.originName,
+    required this.originLat,
+    required this.originLon,
+    required this.destinationName,
+    required this.destinationLat,
+    required this.destinationLon,
+    required this.distanceMeters,
+    required this.durationSeconds,
+    required this.geometry,
+    this.notes,
+    this.entryId,
+    this.weatherSavedAt,
+  });
+
+  final String id;
+  final String title;
+
+  /// car | bike | foot
+  final String vehicle;
+  final DateTime departureAt;
+  final String originName;
+  final double originLat;
+  final double originLon;
+  final String destinationName;
+  final double destinationLat;
+  final double destinationLon;
+  final int distanceMeters;
+  final int durationSeconds;
+
+  /// GeoJSON LineString.
+  final String geometry;
+  final String? notes;
+
+  /// Soft link to the diary entry this trip was written into.
+  final String? entryId;
+
+  /// When the weather snapshot was taken; null when none was saved.
+  final DateTime? weatherSavedAt;
+
+  bool get hasSavedWeather => weatherSavedAt != null;
+  bool get isLinkedToEntry => entryId != null;
+
+  factory Journey.fromJson(Map<String, dynamic> json) => Journey(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        vehicle: json['vehicle'] as String? ?? 'car',
+        departureAt: DateTime.parse(json['departure_at'] as String).toUtc(),
+        originName: json['origin_name'] as String? ?? '',
+        originLat: (json['origin_lat'] as num?)?.toDouble() ?? 0,
+        originLon: (json['origin_lon'] as num?)?.toDouble() ?? 0,
+        destinationName: json['destination_name'] as String? ?? '',
+        destinationLat: (json['destination_lat'] as num?)?.toDouble() ?? 0,
+        destinationLon: (json['destination_lon'] as num?)?.toDouble() ?? 0,
+        distanceMeters: json['distance_meters'] as int? ?? 0,
+        durationSeconds: json['duration_seconds'] as int? ?? 0,
+        geometry: json['geometry'] as String? ?? '',
+        notes: json['notes'] as String?,
+        entryId: json['entry_id'] as String?,
+        weatherSavedAt: json['weather_saved_at'] == null
+            ? null
+            : DateTime.parse(json['weather_saved_at'] as String).toUtc(),
+      );
+}
+
+/// One stop of a saved journey.
+class JourneyStop {
+  const JourneyStop({
+    required this.seq,
+    required this.kind,
+    required this.name,
+    required this.lat,
+    required this.lon,
+    required this.dwellMinutes,
+    this.arrivalAt,
+    this.distanceFromStartMeters,
+  });
+
+  final int seq;
+  final String kind;
+  final String name;
+  final double lat;
+  final double lon;
+  final int dwellMinutes;
+  final DateTime? arrivalAt;
+  final int? distanceFromStartMeters;
+
+  factory JourneyStop.fromJson(Map<String, dynamic> json) => JourneyStop(
+        seq: json['seq'] as int? ?? 0,
+        kind: json['kind'] as String? ?? 'waypoint',
+        name: json['name'] as String? ?? '',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0,
+        dwellMinutes: json['dwell_minutes'] as int? ?? 0,
+        arrivalAt: json['arrival_at'] == null
+            ? null
+            : DateTime.parse(json['arrival_at'] as String).toUtc(),
+        distanceFromStartMeters: json['distance_from_start_meters'] as int?,
+      );
+}
+
+/// A weather reading saved with a journey.
+class JourneyWeatherPoint {
+  const JourneyWeatherPoint({
+    required this.seq,
+    required this.sampleAt,
+    required this.lat,
+    required this.lon,
+    this.label,
+    this.weatherCode,
+    this.weatherGroup,
+    this.tempC,
+    this.precipitationMm,
+    this.precipitationProbability,
+    this.windSpeedKmh,
+    this.severity,
+  });
+
+  final int seq;
+  final DateTime sampleAt;
+  final double lat;
+  final double lon;
+  final String? label;
+  final int? weatherCode;
+  final String? weatherGroup;
+  final double? tempC;
+  final double? precipitationMm;
+  final int? precipitationProbability;
+  final double? windSpeedKmh;
+  final String? severity;
+
+  factory JourneyWeatherPoint.fromJson(Map<String, dynamic> json) =>
+      JourneyWeatherPoint(
+        seq: json['seq'] as int? ?? 0,
+        sampleAt: DateTime.parse(json['sample_at'] as String).toUtc(),
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0,
+        label: json['label'] as String?,
+        weatherCode: json['weather_code'] as int?,
+        weatherGroup: json['weather_group'] as String?,
+        tempC: (json['temp_c'] as num?)?.toDouble(),
+        precipitationMm: (json['precipitation_mm'] as num?)?.toDouble(),
+        precipitationProbability: json['precipitation_probability'] as int?,
+        windSpeedKmh: (json['wind_speed_kmh'] as num?)?.toDouble(),
+        severity: json['severity'] as String?,
+      );
+}
+
+/// A saved journey with its stops and its weather snapshot.
+class JourneyDetail {
+  const JourneyDetail({
+    required this.journey,
+    required this.stops,
+    required this.weatherPoints,
+  });
+
+  final Journey journey;
+  final List<JourneyStop> stops;
+  final List<JourneyWeatherPoint> weatherPoints;
+
+  factory JourneyDetail.fromJson(Map<String, dynamic> json) => JourneyDetail(
+        journey: Journey.fromJson(
+          (json['journey'] as Map?)?.cast<String, dynamic>() ?? const {},
+        ),
+        stops: ((json['stops'] as List?) ?? const [])
+            .map((e) => JourneyStop.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+        weatherPoints: ((json['weather_points'] as List?) ?? const [])
+            .map((e) =>
+                JourneyWeatherPoint.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+      );
+}
+
+
+
