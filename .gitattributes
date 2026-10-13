@@ -1,0 +1,27 @@
+# Git stores every source file in this repo with LF endings: the Dart and
+# Serverpod generators write LF. On Windows a clone with `core.autocrlf=true`
+# checks those files out as CRLF, so the next time a generator rewrites one with
+# LF, git reports it as modified even though the bytes are identical.
+# Pinning the worktree to LF keeps `git status` quiet on every platform.
+#
+# In an existing clone, refresh the cached stat data once after pulling this
+# file:  git add --renormalize .
+
+* text=auto eol=lf
+
+# Never touch binary content.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.jar binary
+*.apk binary
+*.aab binary
+*.keystore binary

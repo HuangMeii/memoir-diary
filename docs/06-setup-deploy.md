@@ -14,6 +14,24 @@
 > Backend là **Serverpod/Dart** (`memoir_server/`). Backend FastAPI cũ đã bị gỡ —
 > xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
 
+### 1.1. Line endings (LF)
+
+Mọi file nguồn được lưu trong Git bằng **LF**, vì Dart và `serverpod generate`
+sinh file bằng LF. Trên Windows, nếu `core.autocrlf=true` thì Git checkout ra
+**CRLF**; tới khi generator ghi lại file bằng LF, `git status` báo file
+"modified" dù byte y hệt (chạy `git diff` thấy trống).
+
+Repo ghim EOL bằng [`.gitattributes`](../.gitattributes) (`* text=auto eol=lf`)
+nên clone mới không cần cấu hình gì thêm. Với clone cũ đã có file CRLF, chạy
+một lần:
+
+```powershell
+git add --renormalize .
+```
+
+Lệnh này chỉ làm mới EOL/stat cache, **không** tạo thay đổi nội dung, và không
+phải push lại gì cả.
+
 ---
 
 ## 2. Cài Backend (Serverpod/Dart)
