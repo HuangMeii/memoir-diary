@@ -7,20 +7,50 @@ dự báo để gợi ý weather khi viết nhật ký.
 
 Cần có states loading, permission denied, API unavailable và stale cache.
 
-## Đã dựng (tiện ích `Thời tiết` trong header)
+## Đã dựng (`Thời tiết` trong header)
 
-`weather_screen.dart` + `weather_card.dart`, đọc `/weather/current` qua
-`weatherProvider`. Màn có **3 tab** theo `Thời tiết · Tuần/Ngày/Theo giờ · Web`:
+`weather_screen.dart` + `ui/weather/*`, đọc `/weather/current` qua
+`weatherProvider`. Màn dựng theo bốn frame `Thời tiết · Tuần/Ngày/Theo giờ/Chọn
+địa điểm · Web`:
 
-- **Tuần**: card `Hôm nay` (icon Figma `sun`/`cloud`/`cloud-rain`/`storm`/
-  `wind`/`weather` map theo điều kiện qua `weatherIconFor`, nhiệt độ, điều
-  kiện, tên vị trí, chip `Dữ liệu cũ · cập nhật HH:mm` khi nguồn `cache`),
-  bảng tuần (7 hàng: icon + thứ + điều kiện + min/max) và strip 7 ô ngày.
-- **Ngày**: hàng chip chọn ngày + card chi tiết ngày (icon 40, thứ · ngày/tháng,
-  điều kiện, min/max).
-- **Theo giờ**: khung báo "chưa kết nối" (backend chưa có dữ liệu theo giờ;
-  khi có sẽ hiện timeline 06:00–23:00 như design).
-- **Chọn địa điểm** (`46:9100`): dialog tìm theo tỉnh/thành gợi ý →
-  `PUT /weather/location` → refresh. Còn lại: state loading/error + nút tải
-  lại + ghi chú nguồn `Open-Meteo · Vị trí`.
+- **Chrome** (`weather_chrome.dart`, `weather_period_controls.dart`): `AppHeader`
+  (điều hướng Lưới tháng / Lịch sự kiện), breadcrumb `← Trang chủ / Tiện ích`,
+  overline `BẦU TRỜI NHỮNG NGÀY TỚI`, tiêu đề theo view (`Thời tiết trong
+  tuần/ngày/từng giờ`) + mô tả, khối **Location controls** (nút mở dialog và
+  menu nhanh `Dùng vị trí hiện tại`), dải trạng thái nguồn (`Dữ liệu trực tiếp ·
+  Open-Meteo`, hoặc `Dữ liệu cũ · cập nhật HH:mm` khi `source == cache`),
+  **Period controls** (`SegmentedTabs` `Tuần | Ngày | Theo giờ` + dải ngày
+  `11–17 tháng 10, 2026`), hàng chip chọn ngày (tab Ngày & Theo giờ) và dòng
+  nguồn cuối trang.
+- **Tuần** (`WeatherWeekTab`): bảng `Dự báo 7 ngày` (`Cao / thấp · °C`; mỗi
+  hàng có thứ/ngày, icon, điều kiện, `mm` và `Xác suất %`) và chart `Lượng mưa
+  trong tuần`; cột phụ `NGÀY ĐANG CHỌN` (4 chỉ số + `Xem ngày & từng giờ`),
+  `Dự kiến ngập`, `BẦU TRỜI & NHẬT KÝ`.
+- **Ngày** (`WeatherDayTab`): `HÔM NAY` (nhiệt độ, điều kiện, 4 chỉ số),
+  `Nhịp trời trong ngày` (6 thẻ giờ 06:00–21:00) và `Lượng mưa theo giờ`.
+- **Theo giờ** (`WeatherHourTab`): `Mưa & nhiệt độ · 24 giờ` (bar mưa + line
+  nhiệt độ, bấm để chọn giờ), bảng `Chi tiết 24 giờ` hai cột, cột phụ
+  `GIỜ ĐANG CHỌN`.
+- **Chọn địa điểm** (`46:9100`, `ui/weather/location_dialog.dart`): dialog
+  `Chọn tỉnh / thành` — ô tìm, `Dùng vị trí hiện tại`, card quyền vị trí,
+  danh sách `TỈNH / THÀNH GỢI Ý` (mục đang dùng có `Đang chọn` + dấu check) →
+  `PUT /weather/location` → refresh.
+
+## Dữ liệu minh họa
+
+Backend chỉ trả `current` + 7 ngày `daily`, còn các frame thời tiết là mockup
+(`Dữ liệu minh họa · Chưa kết nối API`), nên phần **theo giờ, lượng mưa, xác
+suất, gió, độ ẩm và "Dự kiến ngập"** lấy từ `weather_illustrative.dart`: các
+hàm thuần, tất định theo ngày (có unit test trong
+`test/weather_illustrative_test.dart`). Khi dữ liệu giờ là minh họa, màn ghi rõ
+`Số liệu theo giờ và lượng mưa là minh họa` ở dòng nguồn.
+
+## Khác Figma (có chủ ý)
+
+- Icon `map-pin`, `locate-fixed`, `info`, `x`, `check`, `waves`, `search`… chưa
+  được export, nên dùng `Icons.*` của Material, đúng như các màn khác.
+- Chevron kỳ trước/sau bị làm mờ: `/weather/current` chỉ trả cửa sổ 7 ngày bắt
+  đầu từ hôm nay, chưa có kỳ khác để chuyển tới.
+- Định vị tự động chưa nối (app không có plugin geolocation), nên `Tiếp tục`
+  trong card quyền nói rõ chưa xác định được vị trí thay vì giả vờ.
 
