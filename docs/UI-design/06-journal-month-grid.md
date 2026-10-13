@@ -26,7 +26,7 @@ Bố cục bám frame `Lưới tháng · Web` (1280×1154, gutter 36, content 12
 - **Chrome dùng chung** (`ui/widgets/app_header.dart`): một header 84 px gồm
   wordmark + ngày, nav `Trang chủ · Lưới tháng · Lịch sử kiện`, pill tiện ích và
   tài khoản. Nav chỉ hiện khi header đủ rộng (≥ 880 px bên trong gutter) và **tự
-  cuộn thay vì tràn**; `Lịch sử kiện` render mờ vì chưa có màn.
+  cuộn thay vì tràn**.
 - **Hero** (`ui/screens/month_grids_screen.dart`): breadcrumb `← Trang chủ`,
   overline `NHÌN LẠI TỪNG NGÀY`, tiêu đề `Lưới tháng · Tháng 10`, mô tả, control
   `Tuần | Tháng | Năm` (chỉ `Tháng` hoạt động), `Hôm nay` + `‹ ›` đổi tháng, và
@@ -60,7 +60,7 @@ Bố cục bám frame `Lưới tháng · Web` (1280×1154, gutter 36, content 12
 
 - State Loading/Empty/Error của cả màn (hiện chỉ có loading/error cục bộ ở từng
   thẻ, và state Offline chưa dựng).
-- Chế độ `Tuần`/`Năm` và màn `Lịch sử kiện`.
+- Chế độ `Tuần`/`Năm` (màn `Lịch sử kiện` đã dựng ở `27-event-calendar.md`).
 - Frame `Lưới tháng · Mobile` chưa dựng riêng: trên máy hẹp màn xếp dọc theo
   cùng thứ tự (hero → 3 thẻ → ngày đang chọn → footer), header không có nav.
 

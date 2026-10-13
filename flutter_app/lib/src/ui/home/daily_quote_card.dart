@@ -114,14 +114,6 @@ class _QuoteBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Divider(height: 24),
-              Text(
-                'Câu thứ hai dành cho bạn',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontSize: MemoirType.caption,
-                  letterSpacing: MemoirType.overlineEditorialLetterSpacing,
-                ),
-              ),
               const SizedBox(height: 6),
               Text(
                 '“${data.quote2Text}”',

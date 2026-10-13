@@ -24,6 +24,7 @@ abstract class Event
     this.endAt,
     this.location,
     bool? isAllDay,
+    this.reminderMinutes,
     DateTime? createdAt,
   }) : isAllDay = isAllDay ?? false,
        createdAt = createdAt ?? DateTime.now();
@@ -37,6 +38,7 @@ abstract class Event
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
     DateTime? createdAt,
   }) = _EventImpl;
 
@@ -58,6 +60,7 @@ abstract class Event
       isAllDay: jsonSerialization['isAllDay'] == null
           ? null
           : _isc.BoolJsonExtension.fromJson(jsonSerialization['isAllDay']),
+      reminderMinutes: jsonSerialization['reminderMinutes'] as int?,
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -83,6 +86,8 @@ abstract class Event
 
   bool isAllDay;
 
+  int? reminderMinutes;
+
   DateTime createdAt;
 
   /// Returns a shallow copy of this [Event]
@@ -97,6 +102,7 @@ abstract class Event
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
     DateTime? createdAt,
   });
   @override
@@ -111,6 +117,7 @@ abstract class Event
       if (endAt != null) 'endAt': endAt?.toJson(),
       if (location != null) 'location': location,
       'isAllDay': isAllDay,
+      if (reminderMinutes != null) 'reminderMinutes': reminderMinutes,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -127,6 +134,7 @@ abstract class Event
       if (endAt != null) 'endAt': endAt?.toJson(),
       if (location != null) 'location': location,
       'isAllDay': isAllDay,
+      if (reminderMinutes != null) 'reminderMinutes': reminderMinutes,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -149,6 +157,7 @@ class _EventImpl extends Event {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -159,6 +168,7 @@ class _EventImpl extends Event {
          endAt: endAt,
          location: location,
          isAllDay: isAllDay,
+         reminderMinutes: reminderMinutes,
          createdAt: createdAt,
        );
 
@@ -175,6 +185,7 @@ class _EventImpl extends Event {
     Object? endAt = _Undefined,
     Object? location = _Undefined,
     bool? isAllDay,
+    Object? reminderMinutes = _Undefined,
     DateTime? createdAt,
   }) {
     return Event(
@@ -186,6 +197,9 @@ class _EventImpl extends Event {
       endAt: endAt is DateTime? ? endAt : this.endAt,
       location: location is String? ? location : this.location,
       isAllDay: isAllDay ?? this.isAllDay,
+      reminderMinutes: reminderMinutes is int?
+          ? reminderMinutes
+          : this.reminderMinutes,
       createdAt: createdAt ?? this.createdAt,
     );
   }

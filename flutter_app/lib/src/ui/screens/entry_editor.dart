@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,14 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/auth_provider.dart';
+import '../../core/autosave.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../home/home_scale.dart';
+import '../home/picker_card.dart';
+import '../icons.dart';
 import '../tokens.dart';
 import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import '../widgets/entry_images_section.dart';
-import '../widgets/icon_picker_row.dart';
+import 'calendar_screen.dart';
 
 /// Content width of the `JOURNAL-02 · Web` frames: 1280 minus 36 px gutters.
 const double kJournalContentWidth = 1208;
@@ -22,6 +26,13 @@ const double kJournalContentWidth = 1208;
 const double kJournalMainColumnWidth = 700;
 const double kJournalSideColumnWidth = 300;
 const double kJournalColumnGap = 24;
+
+/// How long the editor waits after the writing pauses before it saves itself.
+///
+/// The design (`JOURNAL-02 · Web`) pins a `Lưu nhật ký` button in the save bar
+/// and a "leave with unsaved changes?" dialog beside it; the editor drops both
+/// and saves on its own, so a pause of a few seconds is all the writer does.
+const Duration kEntryAutoSaveDelay = Duration(seconds: 4);
 
 /// JOURNAL-02 — the diary editor for one day, like Figma `JOURNAL-02 · Web`
 /// (`97:3`, `99:118`, `99:460`, `99:574`, `99:688`, `99:232`) + mobile `99:346`.
@@ -33,9 +44,6 @@ class EntryEditorScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<EntryEditorScreen> createState() => _EntryEditorScreenState();
 }
-
-/// Inline banner under the save bar: saved (`99:574`) or error (`99:688`).
-enum _SaveBanner { none, saved, error }
 
 class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   final _diary = TextEditingController();
@@ -56,9 +64,29 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   bool _loading = true;
   bool _saving = false;
 
-  /// Snapshot after load/save; leaving dirty asks to confirm (Figma `99:232`).
+  /// Saves a few seconds after the writing pauses, which is what lets the
+  /// editor drop the `Lưu nhật ký` button of the design.
+  late final AutosaveDebouncer _autosave = AutosaveDebouncer(
+    delay: kEntryAutoSaveDelay,
+    onElapsed: _autosaveNow,
+  );
+
+  /// The save in flight, if any. A keystroke, a quick pick and leaving the
+  /// editor can all ask at once; they share this request instead of racing.
+  Future<void>? _inFlight;
+
+  /// Snapshot of the last saved state: what the status line reports on and
+  /// what leaving the editor flushes.
   String _baseline = '';
-  _SaveBanner _banner = _SaveBanner.none;
+
+  /// The reflection and the self message are records of their own, so their
+  /// ids are remembered: a later autosave edits them instead of adding one
+  /// more row every few seconds.
+  String? _reflectionId;
+  String? _selfMessageId;
+  String _savedReflection = '';
+  String _savedSelfMessage = '';
+
   String? _errorMessage;
   DateTime? _savedAt;
 
@@ -85,14 +113,27 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
 
   @override
   void dispose() {
+    _autosave.cancel();
     for (final c in _allControllers) {
       c.dispose();
     }
     super.dispose();
   }
 
+  /// Every keystroke restarts the wait, so the entry goes up once the writing
+  /// has actually paused rather than on every character.
   void _onChanged() {
-    if (!_loading && mounted) setState(() {});
+    if (_loading || !mounted) return;
+    setState(() {});
+    _autosave.schedule();
+  }
+
+  Future<void> _autosaveNow() async {
+    if (!mounted || _loading) return;
+    await _save();
+    // The writing went on while the request was travelling: give it another
+    // quiet period rather than dropping it.
+    if (mounted && _dirty) _autosave.schedule();
   }
 
   bool get _dirty => _snapshot() != _baseline;
@@ -131,14 +172,23 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     setState(() => _loading = false);
   }
 
-  Future<void> _save() async {
+  /// Saves the page, sharing the request with whoever else asked for one.
+  Future<void> _save() {
+    final running = _inFlight;
+    if (running != null) return running;
+    if (!_dirty) return Future<void>.value();
+    final future = _saveNow();
+    _inFlight = future.whenComplete(() => _inFlight = null);
+    return _inFlight!;
+  }
+
+  Future<void> _saveNow() async {
     setState(() {
       _saving = true;
-      _banner = _SaveBanner.none;
       _errorMessage = null;
     });
     try {
-      final iso = widget.date.toIso8601String().substring(0, 10);
+      final iso = dayKey(widget.date);
       final body = <String, dynamic>{
         'entry_date': iso,
         'diary_text': _text(_diary),
@@ -152,43 +202,40 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
         if (_weatherId != null) 'weather_id': _weatherId,
       };
 
-      final existing =
-          await ref.read(entryByDateProvider(dayKey(widget.date)).future);
-      if (existing == null) {
-        final created = await ref.read(entryRepositoryProvider).create(body);
-        _entryId = created['id'] as String?;
-      } else {
-        await ref.read(entryRepositoryProvider).update(existing.id, body);
-        _entryId = existing.id;
-      }
+      final saved = await ref
+          .read(entryRepositoryProvider)
+          .saveForDate(iso, body);
+      _entryId = saved.id;
 
-      // The reflection is stored separately, linked to today's entry.
-      if (_reflection.text.trim().isNotEmpty) {
-        await ref.read(quoteRepositoryProvider).saveReflection(
-          _reflection.text.trim(),
-        );
+      // The reflection and the self message live outside the entry. Each is
+      // only touched when its text really changed, and is then edited by the
+      // id of the row already stored: saving every few seconds must never
+      // leave a trail of near-duplicates.
+      final reflection = _reflection.text.trim();
+      if (reflection.isNotEmpty && reflection != _savedReflection) {
+        _reflectionId = await saveReflection(ref, reflection, id: _reflectionId);
+        _savedReflection = reflection;
       }
 
       // "Câu hỏi gửi gắm tương lai" moved here from the home quote card: it
       // fills the library the daily pairing draws from, so it is stored as a
       // self message rather than on the entry.
-      if (_selfMessage.text.trim().isNotEmpty) {
-        await saveSelfMessage(ref, _selfMessage.text);
+      final selfMessage = _selfMessage.text.trim();
+      if (selfMessage.isNotEmpty && selfMessage != _savedSelfMessage) {
+        _selfMessageId =
+            await saveSelfMessage(ref, selfMessage, id: _selfMessageId);
+        _savedSelfMessage = selfMessage;
       }
 
       refreshEntryData(ref);
       if (!mounted) return;
       setState(() {
-        _banner = _SaveBanner.saved;
         _savedAt = DateTime.now();
         _baseline = _snapshot();
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _banner = _SaveBanner.error;
-        _errorMessage = '$e';
-      });
+      setState(() => _errorMessage = '$e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -228,36 +275,39 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     }
   }
 
-  Future<bool> _confirmLeave() async {
-    if (!_dirty || _saving) return true;
-    final choice = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Rời màn khi chưa lưu?'),
-        content: const Text('Bạn có thay đổi chưa lưu. Lưu, bỏ, hay ở lại?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'stay'),
-            child: const Text('Tiếp tục'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'discard'),
-            child: const Text('Bỏ thay đổi'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, 'draft'),
-            child: const Text('Lưu bản nháp'),
-          ),
-        ],
-      ),
-    );
-    if (choice == 'discard') return true;
-    if (choice == 'draft') {
+  /// A tap on a quick-choice tile saves straight away — the `Tự động lưu` the
+  /// home dashboard's picker cards promise.
+  Future<void> _pick(String field, int? value) async {
+    _autosave.cancel();
+    setState(() {
+      if (field == 'mood') {
+        _moodId = value;
+      } else {
+        _weatherId = value;
+      }
+    });
+    await _flush();
+  }
+
+  /// Pushes everything on screen to the server, including whatever arrived
+  /// while an earlier request was still travelling. Stops once the page is
+  /// clean, or on the first failure: the banner then carries the error and the
+  /// writing stays where it is.
+  Future<void> _flush() async {
+    while (mounted && _dirty) {
       await _save();
-      return true;
+      if (_errorMessage != null) return;
     }
-    return false;
+  }
+
+  /// Leaves the editor without ever dropping a change: whatever is still
+  /// waiting for its quiet period is saved on the way out. When that save
+  /// fails the editor stays open on the error banner.
+  Future<void> _handleLeave() async {
+    _autosave.cancel();
+    await _flush();
+    if (_errorMessage != null) return;
+    if (mounted) Navigator.of(context).pop();
   }
 
   static String _weekday(DateTime d) => const [
@@ -280,9 +330,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (await _confirmLeave() && context.mounted) {
-          Navigator.of(context).pop();
-        }
+        await _handleLeave();
       },
       child: Scaffold(
         body: LayoutBuilder(
@@ -348,6 +396,12 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
               onNavigate: (destination) {
                 if (destination == AppDestination.home) {
                   Navigator.of(context).popUntil((route) => route.isFirst);
+                } else if (destination == AppDestination.eventHistory) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CalendarScreen(),
+                    ),
+                  );
                 }
               },
               showUtilities: sideBySide,
@@ -391,14 +445,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                         ],
                         SizedBox(height: MemoirSpace.s8 * scale),
                         const PrivacyNote(),
-                        SizedBox(height: MemoirSpace.s6 * scale),
-                        if (!sideBySide)
-                          FilledButton.icon(
-                            onPressed: _saving ? null : _save,
-                            icon: const Icon(Icons.check),
-                            label: Text(
-                                _saving ? 'Đang lưu...' : 'Lưu nhật ký'),
-                          ),
                       ],
                     ),
             ),
@@ -408,15 +454,18 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     );
   }
 
+  /// The status line of the design's sticky save bar (`99:460`) — without the
+  /// `Huỷ` and `Lưu nhật ký` buttons: the editor saves by itself, so the bar
+  /// only has to say where the writing stands.
   Widget _saveBar(BuildContext context, double scale) {
     final theme = Theme.of(context);
     final status = _saving
         ? 'Đang lưu...'
-        : _savedAt != null && !_dirty
-            ? 'Đã lưu lúc ${_two(_savedAt!.hour)}:${_two(_savedAt!.minute)}'
-            : _dirty
-                ? 'Có thay đổi chưa lưu.'
-                : 'Chưa lưu thay đổi nào. Ghi lại một điều nhỏ rồi bấm Lưu.';
+        : _dirty
+            ? 'Sẽ tự động lưu...'
+            : _savedAt != null
+                ? 'Đã lưu lúc ${_two(_savedAt!.hour)}:${_two(_savedAt!.minute)}'
+                : 'Nhật ký tự động lưu sau vài giây.';
     return Container(
       padding: EdgeInsets.symmetric(vertical: MemoirSpace.s4 * scale),
       decoration: BoxDecoration(
@@ -426,54 +475,46 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(status)),
-          TextButton(
-            onPressed: () async {
-              if (await _confirmLeave() && context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('Huỷ'),
-          ),
-          SizedBox(width: MemoirSpace.s2 * scale),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: Text(_saving ? 'Đang lưu...' : 'Lưu nhật ký'),
+          if (_saving) ...[
+            SizedBox(
+              width: 14 * scale,
+              height: 14 * scale,
+              child: const CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: MemoirSpace.s2 * scale),
+          ],
+          Expanded(
+            child: Text(
+              status,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  /// The only banner left is the failed save (`99:688`): the editor saves
+  /// itself, so there is no "Đã lưu nhật ký" banner to dismiss.
   Widget _bannerView(BuildContext context, double scale) {
-    if (_banner == _SaveBanner.none) return const SizedBox.shrink();
+    if (_errorMessage == null) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    final saved = _banner == _SaveBanner.saved;
     return Container(
       margin: EdgeInsets.only(top: MemoirSpace.s4 * scale),
       padding: EdgeInsets.all(MemoirSpace.s4 * scale),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(MemoirRadius.card * scale),
-        border: Border.all(
-            color: saved ? theme.colorScheme.primary : theme.colorScheme.error),
+        border: Border.all(color: theme.colorScheme.error),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(saved
-                ? 'Đã lưu nhật ký'
-                : 'Chưa lưu được: ${_errorMessage ?? ''}'),
+          Expanded(child: Text('Chưa lưu được: ${_errorMessage!}')),
+          OutlinedButton(
+            onPressed: _saving ? null : _save,
+            child: const Text('Thử lại'),
           ),
-          if (saved)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Xem lưới tháng'),
-            )
-          else
-            OutlinedButton(
-              onPressed: _saving ? null : _save,
-              child: const Text('Thử lại'),
-            ),
         ],
       ),
     );
@@ -488,7 +529,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
       children: [
         SizedBox(height: MemoirSpace.s5 * scale),
         InkWell(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: _handleLeave,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -611,7 +652,12 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     );
   }
 
-  /// The 300 px side column of Figma `99:189`: day card, weather, mood, photos.
+  /// The 300 px side column of Figma `99:189`: day card, the two quick picks,
+  /// photos.
+  ///
+  /// The picks are the same cards the home dashboard shows — `WeatherMoodRow`
+  /// keeps them side by side when the column is wide enough and stacked when
+  /// it is not — and a tap saves at once, like `Tự động lưu` there.
   Widget _sideCards(
     double scale,
     AsyncValue<List<LookupItem>> moods,
@@ -629,19 +675,22 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
               ? 'Trang này đã có nội dung.'
               : 'Chưa có trang nào cho ngày này.',
         ),
-        SizedBox(height: MemoirSpace.s5 * scale),
-        _lookupCard(
-          title: 'Thời tiết',
-          items: weathers,
-          selectedId: _weatherId,
-          onSelected: (id) => setState(() => _weatherId = id),
-        ),
-        SizedBox(height: MemoirSpace.s5 * scale),
-        _lookupCard(
-          title: 'Cảm xúc',
-          items: moods,
-          selectedId: _moodId,
-          onSelected: (id) => setState(() => _moodId = id),
+        SizedBox(height: MemoirSpace.s4 * scale),
+        WeatherMoodRow(
+          weather: _picker(
+            title: 'Thời tiết hôm nay',
+            items: weathers,
+            iconName: (item) => weatherIcon(item.code),
+            selectedId: _weatherId,
+            onSelected: (id) => _pick('weather', id),
+          ),
+          mood: _picker(
+            title: 'Cảm xúc hôm nay',
+            items: moods,
+            iconName: (item) => moodIcon(item.code),
+            selectedId: _moodId,
+            onSelected: (id) => _pick('mood', id),
+          ),
         ),
         SizedBox(height: MemoirSpace.s5 * scale),
         Container(
@@ -654,10 +703,18 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // The label yields to the action rather than pushing it out of
+              // the 300 px card.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Ảnh kèm theo', style: theme.textTheme.labelMedium),
+                  Expanded(
+                    child: Text(
+                      'Ảnh kèm theo',
+                      style: theme.textTheme.labelMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   TextButton(
                     onPressed: _pickImage,
                     child: const Text('+ Thêm ảnh'),
@@ -680,42 +737,44 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     );
   }
 
-  Widget _lookupCard({
+  /// One of the two quick picks, built exactly like the home dashboard's card.
+  ///
+  /// Loading and error keep the same card chrome, so the side column does not
+  /// jump while the lookups arrive.
+  Widget _picker({
     required String title,
     required AsyncValue<List<LookupItem>> items,
+    required String Function(LookupItem item) iconName,
     required int? selectedId,
     required ValueChanged<int?> onSelected,
   }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(MemoirRadius.card),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+    return items.when(
+      loading: () => _pickerShell(title, const LinearProgressIndicator()),
+      error: (e, _) => _pickerShell(
+        title,
+        Text('$e', style: TextStyle(color: Theme.of(context).colorScheme.error)),
       ),
-      child: items.when(
-        loading: () => Column(
+      data: (list) => PickerCard(
+        title: title,
+        items: list,
+        iconName: iconName,
+        selectedId: selectedId,
+        onSelected: onSelected,
+      ),
+    );
+  }
+
+  Widget _pickerShell(String title, Widget child) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(MemoirSpace.s4),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.labelMedium),
+            Text(title, style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
-            const LinearProgressIndicator(),
-          ],
-        ),
-        error: (e, _) =>
-            Text('$e', style: TextStyle(color: theme.colorScheme.error)),
-        data: (list) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: theme.textTheme.labelMedium),
-            const SizedBox(height: 10),
-            IconPickerRow(
-              label: '',
-              items: list,
-              selectedId: selectedId,
-              onSelected: onSelected,
-            ),
+            child,
           ],
         ),
       ),

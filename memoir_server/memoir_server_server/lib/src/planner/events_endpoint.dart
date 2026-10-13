@@ -30,6 +30,7 @@ class EventsEndpoint extends Endpoint {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) {
     return Event.db.insertRow(
       session,
@@ -41,6 +42,7 @@ class EventsEndpoint extends Endpoint {
         endAt: endAt,
         location: location,
         isAllDay: isAllDay ?? false,
+        reminderMinutes: reminderMinutes,
       ),
     );
   }
@@ -54,6 +56,7 @@ class EventsEndpoint extends Endpoint {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) async {
     final event = await _owned(session, id);
     if (title != null) event.title = title;
@@ -62,6 +65,7 @@ class EventsEndpoint extends Endpoint {
     event.endAt = endAt;
     event.location = location;
     if (isAllDay != null) event.isAllDay = isAllDay;
+    event.reminderMinutes = reminderMinutes;
     return Event.db.updateRow(session, event);
   }
 

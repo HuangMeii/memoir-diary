@@ -150,15 +150,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   AuthErrorBanner(message: _error!),
                 ],
                 const SizedBox(height: MemoirSpace.s6),
-                FilledButton(
-                  onPressed: isLoading ? null : _submit,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isRegister ? 'Đăng ký' : 'Đăng nhập'),
+                // `filledButtonTheme` only pins the height, so a button that
+                // must fill its column asks for it explicitly.
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: isLoading ? null : _submit,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_isRegister ? 'Đăng ký' : 'Đăng nhập'),
+                  ),
                 ),
                 const SizedBox(height: MemoirSpace.s2),
                 TextButton(

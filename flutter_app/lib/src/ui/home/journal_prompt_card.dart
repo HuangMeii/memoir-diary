@@ -77,9 +77,11 @@ class JournalPromptCard extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               // The theme pins the button to 48 px; the home scales with the
-              // rest of the design.
+              // rest of the design. `Size(0, …)` rather than
+              // `Size.fromHeight(…)`: the latter's width is infinite, which a
+              // `Row` cannot lay out.
               style: FilledButton.styleFrom(
-                minimumSize: Size.fromHeight(48 * scale),
+                minimumSize: Size(0, 48 * scale),
               ),
               onPressed: onOpen,
               icon: MemoirIcon(

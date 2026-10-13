@@ -1427,6 +1427,7 @@ class _EventsEndpoint {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1446,6 +1447,7 @@ class _EventsEndpoint {
             'endAt': endAt,
             'location': location,
             'isAllDay': isAllDay,
+            'reminderMinutes': reminderMinutes,
           }),
           serializationManager: _serializationManager,
         );
@@ -1471,6 +1473,7 @@ class _EventsEndpoint {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1491,6 +1494,7 @@ class _EventsEndpoint {
             'endAt': endAt,
             'location': location,
             'isAllDay': isAllDay,
+            'reminderMinutes': reminderMinutes,
           }),
           serializationManager: _serializationManager,
         );

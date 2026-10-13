@@ -103,7 +103,15 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
+        // `Size.fromHeight(48)` reads like "48 tall" but is
+        // `Size(double.infinity, 48)` — an infinite *minimum width*. Buttons
+        // that a parent does not stretch (a direct child of a `Row`, which
+        // lays its non-flex children out with unbounded width) then get an
+        // impossible constraint, `performLayout` throws "BoxConstraints
+        // forces an infinite width", and on web that blanks the whole page.
+        // State the height only; a button that must span its column is made
+        // to by that column.
+        minimumSize: const Size(0, 48),
         textStyle: const TextStyle(
           fontFamily: sansFamily,
           fontSize: MemoirType.button,

@@ -4,7 +4,7 @@
 
 ## Sections
 
-1. Ngày đang ghi và nút lưu.
+1. Ngày đang ghi và trạng thái lưu.
 2. Chọn thời tiết.
 3. Chọn cảm xúc.
 4. Nội dung nhật ký nhiều dòng.
@@ -20,9 +20,14 @@
 ## Hành vi
 
 - Tạo mới hoặc sửa entry theo ngày, một entry/ngày.
-- Nút lưu sticky trên web, AppBar/bottom action trên mobile.
-- Thêm ảnh trước khi entry tồn tại phải hiện hướng dẫn lưu entry trước.
-- Rời màn hình khi có thay đổi → confirm “Lưu bản nháp / Bỏ thay đổi / Tiếp tục”.
+- **Tự động lưu**: sau ~4 giây ngừng gõ (debounce), toàn bộ trang (mọi ô nhập,
+  cảm xúc, thời tiết) được đẩy lên server — không cần nút `Lưu nhật ký`. Chạm
+  chọn cảm xúc/thời tiết lưu ngay, đúng “Tự động lưu” của Home.
+- Reflection và câu gửi gắm tương lai được lưu **theo id** bản ghi đã tạo, nên
+  tự lưu nhiều lần không nhân bản dữ liệu.
+- Rời màn hình: lưu nốt những gì đang chờ (flush) rồi thoát; nếu lưu thất bại ở
+  lại với banner lỗi để không mất chữ.
+- Thêm ảnh trước khi entry tồn tại vẫn hiện hướng dẫn lưu entry trước.
 
 ## States
 
@@ -53,28 +58,39 @@ Mốc version trước khi dựng: `trước JOURNAL-02` (id `240939024373087895
 `flutter_app/lib/src/ui/screens/entry_editor.dart` đã được dựng lại theo các
 frame trên:
 
-- `PopScope` chặn back + dialog `Rời màn khi chưa lưu?` (Tiếp tục / Bỏ thay đổi /
-  Lưu bản nháp) — frame `99:232`.
-- Save-bar sticky trên cùng: trạng thái (`Chưa lưu / Có thay đổi chưa lưu /
-  Đang lưu... / Đã lưu lúc HH:mm`) + `Huỷ` + nút `Lưu nhật ký` — `99:460`.
-- Banner inline `Đã lưu nhật ký` + `Xem lưới tháng`, và banner lỗi
-  `Chưa lưu được: ...` + `Thử lại` — `99:574` / `99:688`.
+- **Tự động lưu thay cho nút lưu** (lệch thiết kế có chủ đích — xem “Đã dừng
+  theo thiết kế” bên dưới).
+- `PopScope` chặn back; khi rời trang, phần đang chờ lưu được **flush** trước
+  khi pop — không còn dialog `Rời màn khi chưa lưu?` (frame `99:232`).
+- Save-bar sticky trên cùng chỉ còn trạng thái: `Đang lưu... / Sẽ tự động
+  lưu... / Đã lưu lúc HH:mm / Nhật ký tự động lưu sau vài giây.` — không còn
+  `Huỷ` và nút `Lưu nhật ký` (frame `99:460`).
+- Banner lỗi `Chưa lưu được: ...` + `Thử lại` — `99:688`. Không còn banner
+  `Đã lưu nhật ký` + `Xem lưới tháng` (`99:574`) vì đã tự lưu.
 - Breadcrumb `← Lưới tháng`, overline `TRANG NHẬT KÝ · dd.MM`, tiêu đề
   `Thứ, dd.MM` — `97:3`.
 - 2 cột: trái 700 (9 field đúng thứ tự Figma + block `2 câu hôm nay` trước ô
-  phản tư), phải 300 (card `Ngày đang ghi`, card `Thời tiết`, card `Cảm xúc`,
-  card `Ảnh kèm theo` với `+ Thêm ảnh`) — `99:152` / `99:189`.
+  phản tư), phải 300 (card `Ngày đang ghi`, cặp `Thời tiết hôm nay` / `Cảm xúc
+  hôm nay` — cùng `WeatherMoodRow` + `PickerCard` của Home, chạm là lưu ngay —
+  và card `Ảnh kèm theo` với `+ Thêm ảnh`) — `99:152` / `99:189`.
 - `_Field` theo spec: label 13 có icon 18, input radius 10, viền `border.default`,
   nền `surface.input`, nhật ký chính ~10 dòng.
 - Responsive: dưới ngưỡng 2 cột (main + gap + side + 32, đã scale) chuyển 1 cột
-  với `AppHeader(showUtilities: false)`; mobile giữ thanh lưu trên theo brief
-  `Nút lưu sticky trên web, AppBar/bottom action trên mobile`.
+  với `AppHeader(showUtilities: false)`.
+
+### Đã dừng theo thiết kế (bỏ nút lưu)
+
+Theo yêu cầu sản phẩm, JOURNAL-02 không còn nút `Lưu nhật ký`: mọi ô nhập tự lưu
+sau ~4 giây ngừng gõ, chọn cảm xúc/thời tiết lưu ngay và rời trang thì flush. So
+với Figma (`99:460` nút lưu, `99:574` banner đã lưu, `99:232` dialog rời màn),
+đây là lệch thiết kế có chủ đích.
 
 ### Còn lại của bản "gọn" (chi tiết sau)
 
 - **Chưa dựng**: state ảnh `JOURNAL-03` (thumbnail 104, upload progress, lỗi
   upload, dialog xoá ảnh) và frame `JOURNAL-02 · Mobile · Đã có nhật ký`.
-- Mobile đang giữ thanh lưu ở **trên**; brief yêu cầu sticky **đáy** — cần đổi.
+- Thanh trạng thái lưu ở trên (mobile); không còn nút `Lưu nhật ký` nên không
+  còn chuyện sticky đáy.
 - Ô nhập trong các field phụ đang cao 86 (1 dòng hint ở trên); bản đầy đủ nên là
   3 dòng (~120) và có icon 18 bên trái nhãn (icon chưa có SVG nên chưa vẽ).
 - Card cột phải rộng 300 trong cột 358 trên mobile; nên cho card dãn theo cột.

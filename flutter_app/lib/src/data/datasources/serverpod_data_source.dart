@@ -35,7 +35,8 @@ class ServerpodDataSource implements BackendDataSource {
         );
         return entries.map(_entryMap).toList();
       case '/stats/mood-grid':
-        final cells = await _client.stats.moodGrid(month: query!['month'] as String);
+        final cells =
+            await _client.stats.moodGrid(month: query!['month'] as String);
         return {'cells': cells.map(_gridCellMap).toList()};
       case '/stats/weather-grid':
         final cells =
@@ -52,7 +53,9 @@ class ServerpodDataSource implements BackendDataSource {
             await _client.dailyQuotes.history(month: query!['month'] as String);
         return rows.map(_pairMap).toList();
       case '/self-messages':
-        return (await _client.selfMessages.list()).map(_selfMessageMap).toList();
+        return (await _client.selfMessages.list())
+            .map(_selfMessageMap)
+            .toList();
       case '/reflections':
         return (await _client.reflections.list()).map(_reflectionMap).toList();
       case '/notes':
@@ -60,7 +63,11 @@ class ServerpodDataSource implements BackendDataSource {
       case '/todos':
         return (await _client.todos.list()).map(_todoMap).toList();
       case '/events':
-        return (await _client.events.list()).map(_eventMap).toList();
+        final events = await _client.events.list(
+          from: _parseDate(query?['from']),
+          to: _parseDate(query?['to']),
+        );
+        return events.map(_eventMap).toList();
       case '/schedule-items':
         return (await _client.schedules.list()).map(_scheduleMap).toList();
       case '/health-logs':
@@ -84,7 +91,7 @@ class ServerpodDataSource implements BackendDataSource {
 
     if (path.startsWith('/entries/by-date/')) {
       final iso = path.substring('/entries/by-date/'.length);
-      final entry = await _client.entries.byDate(iso);
+      final entry = await _request(() => _client.entries.byDate(iso));
       if (entry == null) {
         throw ApiException('Entry not found', statusCode: 404);
       }
@@ -125,18 +132,18 @@ class ServerpodDataSource implements BackendDataSource {
     final body = (data as Map?)?.cast<String, dynamic>() ?? const {};
     switch (path) {
       case '/entries':
-        return _entryMap(await _client.entries.create(
-          entryDate: _parseDate(body['entry_date'])!,
-          moodId: body['mood_id'] as int?,
-          weatherId: body['weather_id'] as int?,
-          diaryText: body['diary_text'] as String?,
-          otherPerspective: body['other_perspective'] as String?,
-          futureMessage: body['future_message'] as String?,
-          selfCare: body['self_care'] as String?,
-          tomorrowHope: body['tomorrow_hope'] as String?,
-          gratitude: body['gratitude'] as String?,
-          dream: body['dream'] as String?,
-        ));
+        return _entryMap(await _request(() => _client.entries.create(
+              entryDate: _parseDate(body['entry_date'])!,
+              moodId: body['mood_id'] as int?,
+              weatherId: body['weather_id'] as int?,
+              diaryText: body['diary_text'] as String?,
+              otherPerspective: body['other_perspective'] as String?,
+              futureMessage: body['future_message'] as String?,
+              selfCare: body['self_care'] as String?,
+              tomorrowHope: body['tomorrow_hope'] as String?,
+              gratitude: body['gratitude'] as String?,
+              dream: body['dream'] as String?,
+            )));
       case '/self-messages':
         return _selfMessageMap(await _client.selfMessages.create(
           content: body['content'] as String,
@@ -172,6 +179,7 @@ class ServerpodDataSource implements BackendDataSource {
           endAt: _parseDate(body['end_at']),
           location: body['location'] as String?,
           isAllDay: body['is_all_day'] as bool?,
+          reminderMinutes: body['reminder_minutes'] as int?,
         ));
       case '/schedule-items':
         return _scheduleMap(await _client.schedules.create(
@@ -205,18 +213,18 @@ class ServerpodDataSource implements BackendDataSource {
     final body = (data as Map?)?.cast<String, dynamic>() ?? const {};
     final id = _idOf(path);
     if (path.startsWith('/entries/')) {
-      return _entryMap(await _client.entries.update(
-        id: _uuid(id),
-        moodId: body['mood_id'] as int?,
-        weatherId: body['weather_id'] as int?,
-        diaryText: body['diary_text'] as String?,
-        otherPerspective: body['other_perspective'] as String?,
-        futureMessage: body['future_message'] as String?,
-        selfCare: body['self_care'] as String?,
-        tomorrowHope: body['tomorrow_hope'] as String?,
-        gratitude: body['gratitude'] as String?,
-        dream: body['dream'] as String?,
-      ));
+      return _entryMap(await _request(() => _client.entries.update(
+            id: _uuid(id),
+            moodId: body['mood_id'] as int?,
+            weatherId: body['weather_id'] as int?,
+            diaryText: body['diary_text'] as String?,
+            otherPerspective: body['other_perspective'] as String?,
+            futureMessage: body['future_message'] as String?,
+            selfCare: body['self_care'] as String?,
+            tomorrowHope: body['tomorrow_hope'] as String?,
+            gratitude: body['gratitude'] as String?,
+            dream: body['dream'] as String?,
+          )));
     }
     if (path.startsWith('/self-messages/')) {
       return _selfMessageMap(await _client.selfMessages.update(
@@ -250,6 +258,7 @@ class ServerpodDataSource implements BackendDataSource {
         endAt: _parseDate(body['end_at']),
         location: body['location'] as String?,
         isAllDay: body['is_all_day'] as bool?,
+        reminderMinutes: body['reminder_minutes'] as int?,
       ));
     }
     if (path.startsWith('/schedule-items/')) {
@@ -271,6 +280,30 @@ class ServerpodDataSource implements BackendDataSource {
       return null;
     }
     throw ApiException('ServerpodDataSource: unsupported PUT $path');
+  }
+
+  Future<T> _request<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on sp.ApiException catch (error) {
+      throw _apiException(error);
+    } on sp.SerializableException catch (error) {
+      if (error is sp.ApiException) {
+        throw _apiException(error);
+      }
+      rethrow;
+    }
+  }
+
+  ApiException _apiException(sp.ApiException error) {
+    final statusCode = switch (error.code) {
+      'notFound' => 404,
+      'conflict' => 409,
+      'unauthorized' => 401,
+      'forbidden' => 403,
+      _ => null,
+    };
+    return ApiException(error.message, statusCode: statusCode);
   }
 
   @override
@@ -338,7 +371,24 @@ sp.UuidValue? _uuidOrNull(dynamic value) =>
 DateTime? _parseDate(dynamic value) {
   if (value == null) return null;
   if (value is DateTime) return value;
-  return DateTime.parse(value as String);
+  final text = value as String;
+  // A bare `YYYY-MM-DD` is a calendar day, not an instant. Serverpod sends
+  // every DateTime with `.toUtc()`, and the server normalizes dates with
+  // `dateOnly(d) = DateTime.utc(d.year, d.month, d.day)`. Parsing a date-only
+  // string as local midnight would, on any UTC+X machine, arrive as the
+  // previous day in UTC (and the first of a month would slip into the month
+  // before, dropping the entry out of that month's heatmap). Parse it as UTC
+  // midnight so the day the caller meant is the day stored. Full ISO
+  // timestamps (event start/end) keep their own offset via DateTime.parse.
+  final dateOnly = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+  if (dateOnly.hasMatch(text)) {
+    return DateTime.utc(
+      int.parse(text.substring(0, 4)),
+      int.parse(text.substring(5, 7)),
+      int.parse(text.substring(8, 10)),
+    );
+  }
+  return DateTime.parse(text);
 }
 
 String _idOf(String path) => path.split('/').last;
@@ -455,6 +505,7 @@ Map<String, dynamic> _eventMap(sp.Event e) => {
       'end_at': e.endAt?.toIso8601String(),
       'location': e.location,
       'is_all_day': e.isAllDay,
+      'reminder_minutes': e.reminderMinutes,
     };
 
 Map<String, dynamic> _scheduleMap(sp.ScheduleItem s) => {

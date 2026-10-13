@@ -508,6 +508,7 @@ class EndpointEvents extends _isc.EndpointRef {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) => caller.callServerEndpoint<_ijprwagz.Event>(
     'events',
     'create',
@@ -518,6 +519,7 @@ class EndpointEvents extends _isc.EndpointRef {
       'endAt': endAt,
       'location': location,
       'isAllDay': isAllDay,
+      'reminderMinutes': reminderMinutes,
     },
   );
 
@@ -529,6 +531,7 @@ class EndpointEvents extends _isc.EndpointRef {
     DateTime? endAt,
     String? location,
     bool? isAllDay,
+    int? reminderMinutes,
   }) => caller.callServerEndpoint<_ijprwagz.Event>(
     'events',
     'update',
@@ -540,6 +543,7 @@ class EndpointEvents extends _isc.EndpointRef {
       'endAt': endAt,
       'location': location,
       'isAllDay': isAllDay,
+      'reminderMinutes': reminderMinutes,
     },
   );
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
 import '../icons.dart';
+import '../theme.dart';
 import '../tokens.dart';
 import 'home_scale.dart';
 
@@ -42,6 +43,7 @@ class ChoiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = MemoirPalette.of(context);
     final brand = theme.colorScheme.primary;
     final scale = HomeScale.of(context);
 
@@ -60,21 +62,28 @@ class ChoiceTile extends StatelessWidget {
             vertical: MemoirComponent.choicePadding * scale,
           ),
           decoration: BoxDecoration(
+            // Figma's selected `Choice`: a brand-tinted fill (`surface
+            // .brand-subtle`) ringed by the brand stroke (`action.primary`,
+            // 1.5 px). The unselected tile keeps a neutral fill and a hairline
+            // so the selected one clearly stands out.
             color: isSelected
-                ? brand.withValues(alpha: MemoirOpacity.weather0p25)
-                : theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: MemoirOpacity.weather0p25),
+                ? palette.surfaceBrandSubtle
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius:
                 BorderRadius.circular(MemoirComponent.choiceRadius * scale),
             border: Border.all(
-              color: isSelected ? brand : Colors.transparent,
+              color: isSelected ? brand : theme.colorScheme.outlineVariant,
               width: MemoirStroke.weather1p5 * scale,
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              MemoirIcon(iconName, size: _choiceIconSize * scale),
+              MemoirIcon(
+                iconName,
+                size: _choiceIconSize * scale,
+                color: isSelected ? brand : null,
+              ),
               SizedBox(height: MemoirSpace.s1 * scale),
               Text(
                 item.label,
@@ -82,7 +91,9 @@ class ChoiceTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurfaceVariant,
                   fontSize: MemoirType.caption,
                   // Two-line labels (Bình thường, Rất buồn) still have to fit the
                   // 69 px tile, so the label uses the caption line height from
@@ -161,7 +172,7 @@ class PickerCard extends StatelessWidget {
             Text(
               selected == null
                   ? 'Chọn điều gần với bạn nhất'
-                  : '${selected.label} · Đã lưu',
+                  : selected.label,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: selected == null
                     ? theme.colorScheme.onSurfaceVariant

@@ -120,18 +120,24 @@ class SelectedDayDetails extends StatelessWidget {
           ),
         ),
         SizedBox(height: MemoirSpace.s5 * scale),
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            minimumSize: Size.fromHeight(44 * scale),
-          ),
-          onPressed: onWrite,
-          icon: MemoirIcon('square-pen', size: 18 * scale, color: Colors.white),
-          label: Text(
-            written
-                ? 'Mở trang nhật ký'
-                : isToday
-                    ? 'Viết nhật ký hôm nay'
-                    : 'Viết nhật ký ngày này',
+        // Fills the column. The theme only pins the height now, so the width
+        // is asked for here — `Size.fromHeight` would have done it, but its
+        // width is infinite, which a `Row` cannot lay out.
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              minimumSize: Size(0, 44 * scale),
+            ),
+            onPressed: onWrite,
+            icon: MemoirIcon('square-pen', size: 18 * scale, color: Colors.white),
+            label: Text(
+              written
+                  ? 'Mở trang nhật ký'
+                  : isToday
+                      ? 'Viết nhật ký hôm nay'
+                      : 'Viết nhật ký ngày này',
+            ),
           ),
         ),
       ],

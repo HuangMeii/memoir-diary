@@ -33,7 +33,7 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
 - **App header** (84 px, `ui/widgets/app_header.dart`): brand mark (SVG đã có sẵn
   màu, **không** tint `srcIn`), tên + ngày, nav `Trang chủ · Lưới tháng ·
   Lịch sử kiện` (thêm theo frame `Lưới tháng · Web`; chỉ hiện khi header đủ rộng,
-  `Lịch sử kiện` còn mờ), pill tiện ích, avatar chữ cái, tên hiển thị, Đăng xuất —
+  mỗi mục mở màn của nó), pill tiện ích, avatar chữ cái, tên hiển thị, Đăng xuất —
   **tất cả trên một hàng**.
 - **Tiện ích nằm trong header** (`ui/home/utility_pill.dart`): pill “Xem thời
   tiết” ngay trước phần tài khoản, hiện khi content ≥ 1024 px; bề rộng hẹp hơn
@@ -71,8 +71,8 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
   `calendar-days`, `sticky-note`, `list-checks`, `heart-pulse`.
 - Thanh “Nhịp viết” đang khoá ở chế độ `Tháng`; `Tuần`/`Năm` hiển thị mờ.
 - State Offline chưa dựng.
-- Nav `Trang chủ / Lưới tháng / Lịch sử` đã có trong header; `Lịch sử kiện` vẫn
-  mờ vì chưa có màn.
+- Nav `Trang chủ / Lưới tháng / Lịch sử kiện` đã có trong header; cả ba mục đều
+  dựng (`Lịch sử kiện` = màn Lịch, xem `27-event-calendar.md`).
 
 ### Khác Figma (có chủ ý)
 
