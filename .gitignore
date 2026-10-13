@@ -58,3 +58,7 @@ tokens.zip
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# --- Server runtime ---
+# `serverpod start` writes the session log next to the server package.
+memoir_server/memoir_server_server/_boot.log
