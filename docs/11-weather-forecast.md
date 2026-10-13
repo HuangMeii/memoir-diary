@@ -1,8 +1,8 @@
 # 11 — Dự báo thời tiết (Open-Meteo)
 
-> **Trạng thái: ĐẶC TẢ — CHƯA TRIỂN KHAI.**
-> Mã nguồn hiện tại **không có** bất kỳ lời gọi API thời tiết nào. Bảng `weathers` chỉ là **bảng tra cứu 5 giá trị cố định** (nắng / râm / mưa / bão / khác) dùng để tô màu lưới tháng — chưa phải dữ liệu thời tiết thật.
-> Sẽ triển khai ở [Phase 19–20](../PLAN.md).
+> **Trạng thái: ĐÃ TRIỂN KHAI** (Phase 19–20) — backend **Serverpod/Dart** (`WeatherEndpoint`) + màn **Tiện ích → Thời tiết**.
+> Cập nhật 2026-10-14: đặc tả dưới đây vốn viết cho FastAPI. Phần **hành vi, dữ liệu, ngưỡng và cache vẫn đúng**, chỉ đổi lớp gọi API: `httpx` → gói `http` của Dart, router → `WeatherEndpoint`.
+> Bảng `weathers` vẫn là **bảng tra cứu 5 giá trị cố định** (nắng / râm / mưa / bão / khác) để tô màu lưới tháng; dự báo thật nằm ở `weather_snapshots` + `WeatherEndpoint`.
 
 ---
 
@@ -32,7 +32,8 @@ Lựa chọn phù hợp nhất cho dự án cá nhân: **không có bí mật n�
 ## 2. Kiến trúc: backend làm trung gian
 
 ```
-Flutter  ──>  FastAPI /weather/*  ──>  Open-Meteo
+Flutter  ──>  Serverpod /weather/*  ──>  Open-Meteo
+              (WeatherEndpoint)
 ```
 
 **Không cho Flutter gọi thẳng Open-Meteo.** Lý do:
@@ -94,14 +95,16 @@ Lưu kết quả dự báo theo ngày để có **lịch sử** và giảm gọi
 > Cần **cả hai** cột: `weather_code` (WMO, 0–99) và `weather_id` (tra cứu nội bộ). Nếu chỉ lưu `weather_id` thì mất thông tin gốc khi cần hiển thị chi tiết hoặc đổi cách ánh xạ về sau.
 ---
 
-## 5. API dự kiến
+## 5. API (đã dựng dưới dạng Serverpod endpoint)
 
-| Method | Path | Mô tả |
+| Endpoint | Kiểu trả về | Mô tả |
 |---|---|---|
-| GET | `/weather/current?lat=&lon=` | Thời tiết hiện tại + dự báo 7 ngày |
-| GET | `/weather/daily?date=` | Thời tiết một ngày (ưu tiên snapshot đã lưu) |
-| GET | `/weather/history?from=&to=` | Lịch sử từ snapshot, **không** gọi API ngoài |
-| PUT | `/weather/location` | Lưu vị trí của user |
+| `weather.current` | `WeatherForecast` | Thời tiết hiện tại + dự báo 7 ngày (vị trí lấy từ hồ sơ user) |
+| `weather.daily` | `WeatherDay?` | Thời tiết một ngày (ưu tiên snapshot đã lưu) |
+| `weather.history` | `List<WeatherDay>` | Lịch sử từ snapshot, **không** gọi API ngoài |
+| `weather.setLocation` | `void` | Lưu `weather_lat` / `weather_lon` / `weather_location_name` của user |
+
+> `serverpod generate` sinh lại `memoir_server_client`; `ServerpodDataSource` map các endpoint này về path REST-shaped `/weather/*` như cũ nên repository và UI không phải đổi.
 
 ```json
 // GET /weather/current
@@ -167,7 +170,7 @@ WEATHER_DEFAULT_LAT=21.0285
 WEATHER_DEFAULT_LON=105.8542
 ```
 
-Cần thêm `httpx` vào `requirements.txt` (hiện chỉ nằm trong `requirements-dev.txt`).
+Backend Serverpod/Dart dùng gói `http` (đã có sẵn) — **không** cần `httpx`. Khối `env` trên giữ lại làm tham chiếu cho các giá trị mặc định.
 
 ---
 
@@ -175,13 +178,14 @@ Cần thêm `httpx` vào `requirements.txt` (hiện chỉ nằm trong `requireme
 
 | Màn hình | Nội dung |
 |---|---|
-| `weather_card.dart` → `WeatherForecastView` | Nhiệt độ hôm nay + các ngày tới, icon + nhiệt min/max |
-| `weather_screen.dart` | Màn hình **Tiện ích → Thời tiết**: dự báo + đổi vị trí |
-| — Tích hợp | Thêm nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor |
+| `ui/widgets/weather_card.dart` → `WeatherForecastView` | Nhiệt độ hôm nay + các ngày tới, icon + nhiệt min/max |
+| `ui/screens/weather_screen.dart` + `ui/weather/*` | Màn hình **Tiện ích → Thời tiết**: tab `Tuần / Ngày / Theo giờ`, chrome, biểu đồ, bảng chi tiết |
+| `ui/weather/location_dialog.dart` | Dialog `Chọn tỉnh / thành` → `setLocation` → refresh |
+| — Tích hợp *(chưa làm)* | Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor |
 
 > **Vị trí hiển thị (chốt theo Figma HOME-01):** Home chỉ có phần **chọn nhanh** thời tiết/cảm xúc (`WeatherMoodRow` với hai `PickerCard`); **dự báo thời tiết không lặp lại trên Home** mà nằm trong mục **Tiện ích** (thanh footer trên web, khối "Tiện ích" trên mobile) → mở `weather_screen.dart`.
 
-State: `weatherProvider` (Riverpod `AsyncNotifier`); lỗi → hiện giá trị cache kèm nhãn "cập nhật lúc HH:mm".
+State: `weatherProvider` (`FutureProvider<WeatherForecast>` trong `data/providers.dart`, chờ `authReadyProvider`); lỗi → hiện giá trị cache kèm nhãn `Dữ liệu cũ · cập nhật HH:mm`.
 
 ---
 
@@ -197,8 +201,9 @@ State: `weatherProvider` (Riverpod `AsyncNotifier`); lỗi → hiện giá trị
 
 | Phase | Nội dung |
 |---|---|
-| 19 | Backend: `httpx` + `weather_service` + cache 2 tầng + bảng `weather_snapshots` + router `/weather` |
-| 20 | Flutter: `weather_card` + màn hình đổi vị trí + nút "dùng thời tiết hôm nay" ở entry editor |
+| 19 ✅ | Backend: `WeatherEndpoint` (gói `http`) + cache 2 tầng + bảng `weather_snapshots` + cột vị trí trên `users` |
+| 20 ✅ | Flutter: `weather_screen.dart` + `ui/weather/*` + dialog đổi vị trí *(nút "dùng thời tiết hôm nay" ở entry editor **chưa làm**)* |
+| 22–27 | **Thời tiết theo hành trình** — đặc tả riêng: [12-route-weather.md](12-route-weather.md) |
 
 ---
 

@@ -55,4 +55,5 @@ duy nhất.
 - [24-roadmap-calendar.md](24-roadmap-calendar.md)
 - [25-roadmap-weather.md](25-roadmap-weather.md)
 - [26-shared-components.md](26-shared-components.md)
+- [28-route-weather.md](28-route-weather.md)
 

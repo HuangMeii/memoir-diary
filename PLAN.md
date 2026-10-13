@@ -152,25 +152,68 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] "Ghi nhật ký sau sự kiện" (`entry_id`)
 - [ ] Thống kê so sánh **phút đã lên lịch** vs **thực tế học**
 
-### ⬜ Phase 19 — Backend: API thời tiết Open-Meteo (CHƯA TRIỂN KHAI)
+### ✅ Phase 19 — Backend: API thời tiết Open-Meteo (ĐÃ TRIỂN KHAI)
 > Đặc tả đầy đủ: [docs/11-weather-forecast.md](docs/11-weather-forecast.md)
 
-- [ ] Thêm `httpx` vào `requirements.txt` (đang chỉ có trong dev)
-- [ ] Bảng `weather_snapshots` + cột vị trí trên `users`
-- [ ] `weather_service`: gọi Open-Meteo, ánh xạ mã WMO → 5 nhóm `weathers`, cache 2 tầng
-- [ ] Router `/weather` (current / daily / history / location) + timeout 5s, lỗi thì trả cache
+- [x] Gọi HTTP bằng gói `http` của Dart (không còn `httpx` — đó là phương án FastAPI trước đây)
+- [x] Bảng `weather_snapshots` + cột `weather_lat` / `weather_lon` / `weather_location_name` trên `users`
+- [x] `WeatherEndpoint`: gọi Open-Meteo, ánh xạ mã WMO → 5 nhóm `weathers`, cache 2 tầng (bộ nhớ 30 phút + DB)
+- [x] Endpoint `weather.current / daily / history / setLocation` + timeout 5s, lỗi thì trả cache chứ không trả lỗi
 
-### ⬜ Phase 20 — Flutter: dự báo thời tiết (CHƯA TRIỂN KHAI)
-- [ ] `weather_card.dart` — nhiệt độ hôm nay + 5 ngày tới
-- [ ] `weather_settings_screen.dart` — đổi vị trí
-- [ ] Nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết ở entry editor
-- [ ] Lỗi mạng → hiện dữ liệu cache kèm nhãn "cập nhật lúc HH:mm"
+### ✅ Phase 20 — Flutter: dự báo thời tiết (ĐÃ TRIỂN KHAI)
+- [x] `ui/screens/weather_screen.dart` + `ui/weather/*` — tab `Tuần / Ngày / Theo giờ` theo các frame `Thời tiết · … · Web`
+- [x] `ui/weather/location_dialog.dart` — dialog `Chọn tỉnh / thành` → `setLocation` → refresh
+- [x] `ui/widgets/weather_card.dart` — `WeatherForecastView` dùng cho mục **Tiện ích → Thời tiết**
+- [x] Lỗi mạng → hiện dữ liệu cache kèm nhãn `Dữ liệu cũ · cập nhật HH:mm`
+- [x] Phần số liệu **theo giờ / lượng mưa / xác suất / gió / độ ẩm** còn là **minh họa**, có ghi rõ ở dòng nguồn (xem [docs/UI-design/25-roadmap-weather.md](docs/UI-design/25-roadmap-weather.md))
 
 ### ✅ Phase 21 — UI: thời tiết & cảm xúc cùng một hàng (ĐÃ TRIỂN KHAI)
 - [x] `WeatherMoodRow` (`flutter_app/lib/src/ui/home/picker_card.dart`) — hai thẻ `PickerCard` ("Thời tiết hôm nay" + "Cảm xúc hôm nay") nằm **cùng một dòng**, đúng frame `HOME-01 · Weather and mood row`
 - [x] `LayoutBuilder` + `kPickerRowBreakpoint = 700`: `Row` khi đủ rộng (mỗi thẻ ~342 px như thiết kế), `Column` khi hẹp (mobile không tràn, giống frame Mobile)
 - [x] Giữ nguyên: `Semantics`, màu chọn, tap bỏ chọn, nhãn nút
 - [x] **Dự báo thời tiết không nằm trên Home**: chỉ hiện trong mục **Tiện ích → Thời tiết** (`weather_screen.dart` dùng `WeatherForecastView`); Home chỉ còn phần chọn nhanh, không lặp lại dự báo
+
+### ✅ Phase 22 — Backend: routing + thời tiết dọc tuyến (ĐÃ TRIỂN KHAI)
+> Đặc tả đầy đủ: [docs/12-route-weather.md](docs/12-route-weather.md) · khác biệt so với đặc tả: [§18](docs/12-route-weather.md#18-bản-dựng-thực-tế-phase-2227)
+
+- [x] `route_service`: gọi **OSRM** (`car` / `bike` / `foot`), đọc `distance` / `duration` / `geometry` (GeoJSON) / `legs`, hỗ trợ `alternatives`
+- [x] Geocoding bằng **Open-Meteo Geocoding** — `searchPlaces(query)` (truy vấn được phi dấu trước khi gửi)
+- [x] Sinh **điểm mẫu dọc tuyến** (bước 25 km, trần 25 mẫu, luôn giữ đủ điểm dừng) + **ETA** từ `leg.duration` và `dwell`
+- [x] Gọi Open-Meteo **nhiều toạ độ trong một request**, ghép giờ ⇒ nhiệt độ / trạng thái / xác suất mưa / lượng mưa / gió (ghép theo khoảng cách gần nhất, không theo thứ tự trả về)
+- [x] `route_rules.dart`: ngưỡng đoạn bất lợi (`info` / `caution` / `warning`) + gộp thành dải cảnh báo
+- [x] `RouteEndpoint`: `searchPlaces` · `plan` · `forecast` · `planWithWeather` · `compareDepartures`
+- [x] Test Dart thuần: haversine, sampling, ETA, quy tắc, vượt 16 ngày — **31 test xanh**
+- [x] `tool/route_smoke.dart` đo nhà cung cấp thật (293 km TP.HCM → Đà Lạt, 14 điểm mẫu)
+
+### ✅ Phase 23 — Backend: lưu hành trình (ĐÃ TRIỂN KHAI)
+- [x] Bảng `journeys` / `journey_stops` / `journey_weather_points` + migration `20261013174623807` và `20261013175627648` (chỉ thêm)
+- [x] `JourneysEndpoint`: `list` · `detail` · `save` · `delete`, cách ly theo `user_id` (`ensureOwned`)
+- [x] `save` ghi **bản tóm tắt dự báo** vào `journey_weather_points` + `weather_saved_at`
+- [x] Liên kết nhật ký: `journeys.entryId` là liên kết mềm (`UuidValue?`, như `reflections.entryId`); `save(createEntry: true)` upsert entry của ngày khởi hành
+
+### ✅ Phase 24 — Flutter: dữ liệu lộ trình (ĐÃ TRIỂN KHAI)
+- [x] `data/repositories/route_repository.dart` + model Dart trong `data/models.dart`
+- [x] Provider: `routeRepositoryProvider` · `routePlanProvider` · `routeDeparturesProvider` · `placeSearchProvider` · `journeysProvider` · `journeyDetailProvider`
+- [x] Nhánh path mới trong `data/datasources/serverpod_data_source.dart` (`/route/*`, `/journeys/*`) + `ApiException.code`
+
+### ✅ Phase 25 — Flutter UI: lộ trình, bản đồ, timeline (ĐÃ TRIỂN KHAI)
+- [x] `ui/screens/route_weather_screen.dart` + `ui/route/*` (chrome, form, bản đồ, biểu đồ, timeline, khuyến cáo, so sánh giờ)
+- [x] **Form Quản lý lộ trình**: điểm đi / nhiều điểm dừng / điểm đến, tìm kiếm, chọn trên bản đồ, phương tiện, ngày–giờ, dwell, đảo chiều, chọn tuyến thay thế
+- [x] Bản đồ tile thật (`flutter_map` + tile OSM): polyline + marker địa điểm + marker nhiệt độ; chọn marker ↔ highlight timeline, chọn timeline ↔ bản đồ cuộn tới marker
+- [x] Đăng ký màn vào `ui/utilities.dart` (nhãn đầy đủ `Thời tiết hành trình`, nhãn header `Hành trình`)
+
+### ✅ Phase 26 — Flutter: lưu nhật ký + xem lại hành trình (ĐÃ TRIỂN KHAI)
+- [x] `ui/route/save_journey_dialog.dart` — tên chuyến, ghi / không ghi vào nhật ký ngày khởi hành, tóm tắt đính kèm sửa được, ghi chú (ảnh qua nhật ký đã liên kết)
+- [x] `ui/route/saved_journeys_dialog.dart`: danh sách hành trình, chi tiết, **bản tóm tắt đã lưu** tách khỏi nút **Cập nhật dự báo mới nhất**, xoá hành trình
+- [x] Trạng thái mục E: loading, không có tuyến, lỗi / vượt giới hạn, dữ liệu một phần, vượt 16 ngày, lưu thành công / thất bại, dữ liệu cũ — chưa đăng nhập do guard `/login` sẵn có
+
+### ✅ Phase 27 — Đóng gói thời tiết hành trình (ĐÃ TRIỂN KHAI, còn bước vẽ Figma)
+- [x] `flutter analyze` sạch + `dart analyze` (workspace server) sạch; `flutter test` 99/99, `dart test` 31/31
+- [x] Attribution `© OpenStreetMap contributors · OSRM · Open-Meteo` (góc bản đồ + dòng nguồn) và dòng miễn trừ
+- [x] Cập nhật docs: `12` (§18), `03-database-schema`, `05-features`, `UI/02-screen-inventory`, `UI-design/28`
+- [ ] Vẽ frame Figma `ROUTE-01` để đối chiếu (màn đã dựng theo ngôn ngữ thị giác, chưa có bản vẽ)
+- [ ] Verify trên thiết bị thật (`flutter run` web/mobile) — chưa chạy trong phiên này
+
 
 ---
 
@@ -188,7 +231,8 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | M7 | *(đang chờ)* Vườn + shop + bảng xếp hạng + sự kiện, Flutter hoàn chỉnh |
 | M8 | *(đang chờ)* Calendar: gộp bảng, CRUD, timeline, lặp + nhắc nhở |
 | M9 | *(đang chờ)* Liên kết Calendar ↔ Study ↔ Journal + thống kê thời gian |
-| M10 | *(đang chờ)* Dự báo thời tiết Open-Meteo + thẻ thời tiết trên Home |
+| M10 | Dự báo thời tiết Open-Meteo + màn **Tiện ích → Thời tiết** *(đã xong)* |
+| M11 | Thời tiết theo hành trình: routing + dự báo dọc tuyến + lưu hành trình vào nhật ký *(đã xong)* |
 
 ---
 
@@ -212,6 +256,11 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | *(Phase 17)* Web không có push → không nhắc được khi app đóng | Trung *(đã chốt)* | Chấp nhận: nhắc 2 lớp (khi app mở + banner). Muốn nhắc khi đóng thì cần web push, ngoài phạm vi |
 | *(Phase 19–20)* Open-Meteo chậm / mất mạng làm treo app | Trung *(đã chốt thiết kế)* | Timeout cứng 5s + cache 2 tầng + luôn có đường về bằng `weather_snapshots`; lỗi thì trả cache chứ không trả lỗi |
 | *(Phase 19–20)* Gọi Open-Meteo quá nhiều lần bị giới hạn | Thấp | Cache bộ nhớ 30 phút theo tọa độ; `WEATHER_API_ENABLED=false` để tắt hẳn |
+| *(Phase 22–27)* Instance OSRM công khai là server demo, có giới hạn và không cam kết SLA | **Cao** *(đã chốt thiết kế)* | Timeout cứng 5s + cache 30 phút + trần 25 điểm mẫu; đổi `ROUTE_API_URL_*` sang instance tự host **không cần sửa code**; OSRM lỗi thì tuyến cũ vẫn hiển thị |
+| *(Phase 22–27)* Tile OSM bị chặn nếu lạm dụng | Trung | Chỉ dùng cho một khung bản đồ nhỏ trong app, có User-Agent, khối lượng thấp; đổi tile provider khi cần |
+| *(Phase 22–27)* Open-Meteo chỉ dự báo tối đa **16 ngày** | Thấp *(đã chốt)* | Trả trạng thái `beyondRange` rõ ràng + nhãn "ngoài phạm vi dự báo"; **không** đoán cho phần vượt |
+| *(Phase 22–27)* Nhiều toạ độ trong một request Open-Meteo có thể trả thiếu | Trung *(đã chốt)* | Báo cáo `coverage = partial`, mẫu thiếu hiển thị `—` (vẫn giữ vị trí + ETA) — xem docs/12 §5.4 |
+| *(Phase 22–27)* Hiểu sai "dự báo" thành "chắc chắn xảy ra" | Trung | Mọi câu chữ chỉ dùng "dự kiến / có thể / xác suất"; panel khuyến cáo ghi rõ là quy tắc hiển thị của Memoir, không phải khuyến nghị giao thông chính thức |
 
 ---
 

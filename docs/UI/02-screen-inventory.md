@@ -69,6 +69,8 @@ Các trường của `JOURNAL-02`:
 | GARDEN-04 | Leaderboard / challenges | Chưa triển khai |
 | CAL-01 | Calendar ngày / tuần / tháng | Chưa triển khai |
 | CAL-02 | Tạo sự kiện lặp và nhắc nhở | Chưa triển khai |
-| WEATHER-01 | Dự báo thời tiết | Chưa triển khai |
+| WEATHER-01 | Dự báo thời tiết | Đã triển khai (`weather_screen.dart` + `ui/weather/*`) |
+| ROUTE-01 | Thời tiết theo hành trình | Đã triển khai (`route_weather_screen.dart` + `ui/route/*`) — đặc tả: [12-route-weather.md](../12-route-weather.md), brief: [UI-design/28](../UI-design/28-route-weather.md) |
+| ROUTE-02 | Modal lưu hành trình vào nhật ký | Đã triển khai (`save_journey_dialog.dart`) + danh sách hành trình đã lưu (`saved_journeys_dialog.dart`) |
 | ADMIN-01 | Admin dashboard | Backend có API, Flutter UI chưa có |
 | ADMIN-02 | Quản lý users | Backend có API, Flutter UI chưa có |
