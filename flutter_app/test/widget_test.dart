@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memoir_app/src/core/autosave.dart';
 import 'package:memoir_app/src/ui/theme.dart';
 import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
 import 'package:memoir_app/src/ui/month/day_details.dart';
 import 'package:memoir_app/src/ui/month/month_card.dart';
+import 'package:memoir_app/src/ui/screens/calendar_screen.dart';
+import 'package:memoir_app/src/ui/screens/entry_editor.dart';
+import 'package:memoir_app/src/ui/tokens.dart';
 import 'package:memoir_app/src/ui/widgets/app_header.dart';
-import 'package:memoir_app/src/ui/widgets/icon_picker_row.dart';
 import 'package:memoir_app/src/ui/widgets/month_heatmap.dart';
+import 'package:memoir_app/src/ui/widgets/weather_card.dart';
 import 'package:memoir_app/src/data/models.dart';
 
 void main() {
@@ -236,105 +240,97 @@ void main() {
     });
   });
 
-  group('IconPickerStrip', () {
-    // Mirrors the seeded rows: five weathers, five moods.
-    List<LookupItem> weather() => [
-          for (final t in [
-            ['sunny', 'Nắng', '☀️'],
-            ['cloudy', 'Râm', '⛅'],
-            ['rainy', 'Mưa', '🌧️'],
-            ['storm', 'Bão', '⛈️'],
-            ['other', 'Khác', '❔'],
-          ])
+  group('Journal editor quick picks', () {
+    // The editor's side column carries the same cards the home dashboard
+    // shows, so this covers both shapes it can take: the 300 px column (the
+    // cards stack) and a window wide enough for them to sit in one row.
+    List<LookupItem> choices() => [
+          for (var i = 0; i < 5; i++)
             LookupItem(
-              id: t[0].hashCode % 97 + 1,
-              code: t[0],
-              label: t[1],
-              colorHex: '#5C9EDB',
-              icon: t[2],
-            ),
-        ];
-
-    List<LookupItem> moods() => [
-          for (final t in [
-            ['happy', 'Vui', '😀'],
-            ['sad', 'Buồn', '😢'],
-            ['bored', 'Chán', '😑'],
-            ['neutral', 'Bình thường', '😐'],
-            ['angry', 'Giận', '😠'],
-          ])
-            LookupItem(
-              id: t[0].hashCode % 89 + 1,
-              code: t[0],
-              label: t[1],
+              id: i + 1,
+              code: 'code-$i',
+              label: 'Lựa chọn $i',
               colorHex: '#FFD93D',
-              icon: t[2],
+              icon: '•',
             ),
         ];
 
-    // Matches the private widget so the count can be asserted without
-    // exporting it from the library.
-    Finder cells() => find.byWidgetPredicate(
-          (w) => w.runtimeType.toString().contains('IconCell'),
+    Widget cards({int? moodId}) => WeatherMoodRow(
+          weather: PickerCard(
+            title: 'Thời tiết hôm nay',
+            items: choices(),
+            iconName: (_) => 'sun',
+            selectedId: null,
+            onSelected: (_) {},
+          ),
+          mood: PickerCard(
+            title: 'Cảm xúc hôm nay',
+            items: choices(),
+            iconName: (_) => 'mood-3',
+            selectedId: moodId,
+            onSelected: (_) {},
+          ),
         );
 
-    Widget strip({required double width, int? weatherId, int? moodId}) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: width,
-              child: IconPickerStrip(
-                weatherLabel: 'THỜI TIẾT',
-                weatherItems: weather(),
-                weatherSelectedId: weatherId,
-                onWeatherSelected: (_) {},
-                moodLabel: 'CẢM XÚC',
-                moodItems: moods(),
-                moodSelectedId: moodId,
-                onMoodSelected: (_) {},
-              ),
-            ),
-          ),
+    testWidgets('fit the 300 px side column with no overflow', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(Brightness.light),
+          home: Scaffold(body: SizedBox(width: 300, child: cards())),
         ),
       );
-    }
+      await tester.pumpAndSettle();
 
-    testWidgets('puts all ten icons on one row when wide', (tester) async {
+      // Overflow stripes would show up here: the tiles are at their narrowest
+      // and the test font wraps every label onto two lines.
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ChoiceTile), findsNWidgets(10));
+      // 300 px is under the row's breakpoint, so the two cards stack.
+      expect(
+        tester.getTopLeft(find.text('Cảm xúc hôm nay')).dy,
+        greaterThan(tester.getTopLeft(find.text('Thời tiết hôm nay')).dy),
+      );
+    });
+
+    testWidgets('name the choice the day already stored', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(Brightness.light),
+          home: Scaffold(body: SizedBox(width: 342, child: cards(moodId: 3))),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ChoiceTile), findsNWidgets(10));
+      // Both picker cards carry tiles with the same labels, so the meaningful
+      // assertion is the card's status line naming the stored choice — that is
+      // what keeps a mood picked on the home dashboard visible here.
+      final primary = buildTheme(Brightness.light).colorScheme.primary;
+      final namingStatusLines = tester
+          .widgetList<Text>(find.text('Lựa chọn 2'))
+          .where((t) => t.style?.color == primary);
+      expect(namingStatusLines.length, 1);
+    });
+
+    testWidgets('sit in one row when the window has room', (tester) async {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(strip(width: 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(Brightness.light),
+          home: Scaffold(body: cards()),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      expect(cells(), findsNWidgets(10));
-      // Two group captions share one line, which is what tells us the groups
-      // sit side by side rather than being stacked.
-      expect(find.text('Chưa chọn'), findsNWidgets(2));
-    });
-
-    testWidgets('stacks into two rows when the window is narrow',
-        (tester) async {
-      tester.view.physicalSize = const Size(400, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(strip(width: 300));
-      await tester.pumpAndSettle();
-
-      // Same ten icons, just not beside each other.
-      expect(cells(), findsNWidgets(10));
-    });
-
-    testWidgets('names the selection instead of relying on colour alone',
-        (tester) async {
-      final items = weather();
-      await tester.pumpWidget(strip(width: 1000, weatherId: items[1].id));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Râm'), findsOneWidget);
-      expect(find.text('Chưa chọn'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getTopLeft(find.text('Cảm xúc hôm nay')).dy,
+        tester.getTopLeft(find.text('Thời tiết hôm nay')).dy,
+      );
     });
   });
 
@@ -525,13 +521,12 @@ void main() {
       expect(tapped, [AppDestination.home]);
     });
 
-    testWidgets('leaves the destination without a screen dimmed',
-        (tester) async {
+    testWidgets('makes every destination reachable', (tester) async {
       final tapped = <AppDestination>[];
       await pumpHeader(tester, const Size(1400, 800), onNavigate: tapped.add);
 
       await tester.tap(find.text('Lịch sử kiện'));
-      expect(tapped, isEmpty);
+      expect(tapped, [AppDestination.eventHistory]);
     });
 
     testWidgets('hides the navigation when the header is narrow',
@@ -604,6 +599,64 @@ void main() {
     });
   });
 
+  group('AutosaveDebouncer', () {
+    // The editor has no `Lưu nhật ký` button: it saves itself once the writing
+    // pauses, so the wait has to restart on every keystroke.
+    testWidgets('saves only once the writing pauses', (tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      var saves = 0;
+      final debouncer = AutosaveDebouncer(
+        delay: kEntryAutoSaveDelay,
+        onElapsed: () => saves++,
+      );
+      addTearDown(debouncer.cancel);
+
+      debouncer.schedule();
+      await tester.pump(kEntryAutoSaveDelay - const Duration(seconds: 1));
+      expect(saves, 0, reason: 'still inside the quiet period');
+
+      await tester.pump(const Duration(seconds: 1));
+      expect(saves, 1);
+    });
+
+    testWidgets('collapses a burst of typing into one save', (tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      var saves = 0;
+      final debouncer = AutosaveDebouncer(
+        delay: kEntryAutoSaveDelay,
+        onElapsed: () => saves++,
+      );
+      addTearDown(debouncer.cancel);
+
+      for (var keystroke = 0; keystroke < 5; keystroke++) {
+        debouncer.schedule();
+        expect(debouncer.pending, isTrue);
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(saves, 0, reason: 'every keystroke restarts the wait');
+
+      await tester.pump(kEntryAutoSaveDelay);
+      expect(saves, 1);
+    });
+
+    testWidgets('cancel drops a waiting save', (tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      var saves = 0;
+      final debouncer = AutosaveDebouncer(
+        delay: kEntryAutoSaveDelay,
+        onElapsed: () => saves++,
+      );
+      addTearDown(debouncer.cancel);
+
+      debouncer.schedule();
+      debouncer.cancel();
+      expect(debouncer.pending, isFalse);
+
+      await tester.pump(kEntryAutoSaveDelay * 2);
+      expect(saves, 0);
+    });
+  });
+
   group('SelectedDayDetails', () {
     const mood = LookupItem(
       id: 1,
@@ -667,6 +720,181 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Viết nhật ký ngày này'), findsOneWidget);
+    });
+  });
+
+  group('FilledButton minimum size', () {
+    // The theme used to say `minimumSize: const Size.fromHeight(48)`, which is
+    // `Size(double.infinity, 48)` — an infinite *minimum width*. A `Row` lays
+    // its non-flex children out with unbounded width, so a `FilledButton` in
+    // one gets an impossible constraint: `performLayout` throws "BoxConstraints
+    // forces an infinite width" and, on web, the whole page goes blank. The
+    // entry editor's save bar is exactly that shape.
+    testWidgets('the theme never asks a button for an infinite width',
+        (tester) async {
+      Size minimumOf(ThemeData theme) => theme
+          .filledButtonTheme.style!
+          .minimumSize!
+          .resolve(const <WidgetState>{})!;
+
+      final minimum = minimumOf(buildTheme(Brightness.light));
+      expect(minimum.width.isFinite, isTrue);
+      // The 48 px height is the part the design pins.
+      expect(minimum.height, 48);
+
+      expect(minimumOf(buildTheme(Brightness.dark)).width.isFinite, isTrue);
+    });
+
+    testWidgets('a filled button survives a Row beside an Expanded',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildTheme(Brightness.light),
+        home: Scaffold(
+          body: Row(
+            children: [
+              const Expanded(child: Text('Đã lưu lúc 10:20')),
+              TextButton(onPressed: () {}, child: const Text('Huỷ')),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: () {},
+                child: const Text('Lưu nhật ký'),
+              ),
+            ],
+          ),
+        ),
+      ));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Lưu nhật ký'), findsOneWidget);
+    });
+
+    // The buttons that must span their column ask for it themselves now that
+    // the theme only pins the height.
+    testWidgets('a button can still be made to fill its column', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildTheme(Brightness.light),
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {},
+                    child: const Text('Lưu nhật ký'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ));
+
+      expect(
+        tester.getSize(find.byType(FilledButton)),
+        const Size(300, 48),
+      );
+    });
+
+    testWidgets('the day-details CTA still spans its card', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildTheme(Brightness.light),
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            child: SelectedDayDetails(
+              date: DateTime(2026, 10, 11),
+              isToday: true,
+              mood: null,
+              weather: null,
+              entry: null,
+              onWrite: () {},
+            ),
+          ),
+        ),
+      ));
+
+      expect(
+        tester.getSize(find.byType(FilledButton)).width,
+        400 - 2 * MemoirSpace.s6,
+      );
+    });
+  });
+
+  group('weatherIconFor', () {
+    test('maps conditions to the Figma weather icons', () {
+      expect(weatherIconFor('Nắng'), 'sun');
+      expect(weatherIconFor('Mưa to'), 'cloud-rain');
+      expect(weatherIconFor('Có gió'), 'wind');
+      expect(weatherIconFor('Giông bão'), 'storm');
+      expect(weatherIconFor('Sương mù'), 'weather');
+      expect(weatherIconFor('Không biết'), 'cloud');
+    });
+  });
+
+  group('Calendar helpers', () {
+    List<Map<String, dynamic>> rows() => [
+          {
+            'id': 'a',
+            'title': 'Họp gia đình',
+            'start_at': '2026-10-13T09:00:00',
+            'end_at': '2026-10-13T10:00:00',
+            'location': 'Nhà',
+            'description': null,
+          },
+          {
+            'id': 'b',
+            'title': 'Tập thể dục',
+            'start_at': '2026-10-14T07:00:00',
+          },
+        ];
+
+    test('parses the /events rows without the optional columns', () {
+      final events = eventsFromRows(rows());
+      expect(events, hasLength(2));
+      expect(events.first.title, 'Họp gia đình');
+      expect(events.first.location, 'Nhà');
+      expect(events.first.endAt!.hour, 10);
+      expect(events.last.endAt, isNull);
+    });
+
+    test('calendarCells frames the month Monday to Sunday', () {
+      final cells = calendarCells(DateTime(2026, 10));
+      expect(cells, hasLength(42));
+      final days = cells.whereType<DateTime>().toList();
+      expect(days, hasLength(31));
+      expect(days.first, DateTime(2026, 10, 1));
+      expect(days.last, DateTime(2026, 10, 31));
+      // The blank cells before the first of the month push the grid so its
+      // first row starts on a Monday (`DateTime.weekday` 1 = Monday).
+      expect(
+        cells.takeWhile((d) => d == null).length,
+        DateTime(2026, 10, 1).weekday - 1,
+      );
+    });
+
+    test('eventsOn matches a whole local day', () {
+      final events = eventsFromRows(rows());
+      final onDay = eventsOn(events, DateTime(2026, 10, 13));
+      expect(onDay.map((e) => e.title), ['Họp gia đình']);
+      expect(eventsOn(events, DateTime(2026, 10, 15)), isEmpty);
+    });
+
+    test('upcomingAfter drops older events and sorts', () {
+      final events = eventsFromRows([
+        {'id': 'late', 'title': 'Muộn', 'start_at': '2026-10-14T07:00:00'},
+        {'id': 'early', 'title': 'Sớm', 'start_at': '2026-10-14T06:00:00'},
+      ]);
+      final from = DateTime(2026, 10, 14, 6, 30);
+      expect(
+        upcomingAfter(events, from).map((e) => e.title),
+        ['Muộn'],
+      );
+      expect(
+        upcomingAfter(events, DateTime(2026, 10, 13)).map((e) => e.title),
+        ['Sớm', 'Muộn'],
+      );
     });
   });
 }
