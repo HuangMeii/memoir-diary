@@ -1,0 +1,5 @@
+Summary,Issue Type,Description,Labels,Priority
+Tạo .github/workflows/backend.yml,Subtask,"Workflow chạy ruff + pytest cho backend/, kết thúc dưới 5 phút.","ci,area:infra",Highest
+Cache pip cho job backend,Subtask,"Bật actions/cache cho pip để rút thời gian job.","ci,area:infra",High
+Thêm path filter backend/**,Subtask,"Job bị skip khi PR không đụng backend/.","ci,area:infra",Medium
+Thử một PR đỏ để xác nhận chặn merge,Subtask,"Mở PR cố tình fail test; xác nhận CI đỏ và merge bị chặn.","ci,area:infra",High

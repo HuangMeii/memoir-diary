@@ -1,0 +1,16 @@
+Summary,Issue Type
+[Platform] Tooling - CI/CD và bảo vệ nhánh,Epic
+[Auth] Xác thực và tài khoản,Epic
+[Journal] Nhật ký và ảnh,Epic
+[Quotes] Kho câu - cặp câu và phản tư,Epic
+[Planner] Ghi chú - todo - sự kiện - lịch biểu,Epic
+[Health] Theo dõi sức khoẻ,Epic
+[Stats] Thống kê và lưới tháng,Epic
+[Admin] Quản trị hệ thống,Epic
+[Weather] Dự báo thời tiết Open-Meteo,Epic
+[Calendar] Lịch đầy đủ (ngày/tuần/tháng - lặp - nhắc nhở),Epic
+[Garden] Vườn học tập - timer - coin/EXP - shop - xếp hạng,Epic
+[Platform] Chuyển backend sang Serverpod/Dart,Epic
+[Release] Build và triển khai production,Epic
+[Quality] Kiểm thử - a11y - i18n - hiệu năng,Epic
+[Ops] Vận hành - bảo mật và sao lưu,Epic
