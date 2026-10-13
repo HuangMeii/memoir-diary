@@ -1025,6 +1025,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<bool?>(),
               nullable: true,
             ),
+            'reminderMinutes': _is.ParameterDescription(
+              name: 'reminderMinutes',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -1039,6 +1044,7 @@ class Endpoints extends _is.EndpointDispatch {
                     endAt: params['endAt'],
                     location: params['location'],
                     isAllDay: params['isAllDay'],
+                    reminderMinutes: params['reminderMinutes'],
                   ),
         ),
         'update': _is.MethodConnector(
@@ -1079,6 +1085,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<bool?>(),
               nullable: true,
             ),
+            'reminderMinutes': _is.ParameterDescription(
+              name: 'reminderMinutes',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -1094,6 +1105,7 @@ class Endpoints extends _is.EndpointDispatch {
                     endAt: params['endAt'],
                     location: params['location'],
                     isAllDay: params['isAllDay'],
+                    reminderMinutes: params['reminderMinutes'],
                   ),
         ),
         'delete': _is.MethodConnector(

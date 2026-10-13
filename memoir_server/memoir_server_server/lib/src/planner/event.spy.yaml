@@ -10,4 +10,5 @@ fields:
   endAt: DateTime?
   location: String?
   isAllDay: bool, default=false
+  reminderMinutes: int?
   createdAt: DateTime, default=now
