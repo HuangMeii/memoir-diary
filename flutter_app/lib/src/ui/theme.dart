@@ -180,6 +180,28 @@ class MemoirPalette {
   Color get surfaceIllustration => _dark
       ? MemoirColorsDark.surfaceInput
       : MemoirColorsLight.surfaceIllustration;
+
+  /// Bar colour of the weather rain charts
+  /// (`chart.weather.rain-accumulation`).
+  Color get rainChart => _dark
+      ? MemoirColorsDark.statusDefault
+      : MemoirColorsLight.chartWeatherRainAccumulation;
+
+  /// Panel behind a cautious callout (`feedback.warning-background`).
+  Color get warningSurface => _dark
+      ? MemoirColorsDark.feedbackWarningBackground
+      : MemoirColorsLight.feedbackWarningBackground;
+
+  /// Text and icon colour inside a cautious callout (`feedback.warning`).
+  Color get warningText => _dark
+      ? MemoirColorsDark.feedbackWarning
+      : MemoirColorsLight.feedbackWarning;
+
+  /// Botanical sprig colour of the forecast context note
+  /// (`illustration.botanical`).
+  Color get botanicalNote => _dark
+      ? MemoirColorsDark.illustrationBotanical
+      : MemoirColorsLight.illustrationBotanical;
 }
 
 /// Five-step green ramp for the journal heatmap ("Nhịp viết của bạn").
