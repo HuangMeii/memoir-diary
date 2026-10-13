@@ -46,6 +46,16 @@ void main() {
       expect(hours.where((h) => h.rainMm == 0), isNotEmpty);
     });
 
+    test('spreads the day rain as a hump, not a flat row', () {
+      final wet = hourlySeries(dayOf('Mưa rào'))
+          .where((hour) => hour.rainMm > 0)
+          .map((hour) => hour.rainMm)
+          .toList();
+      expect(wet.length, greaterThan(2));
+      // The bars rise and fall instead of all matching.
+      expect(wet.toSet().length, greaterThan(1));
+    });
+
     test('is stable across calls', () {
       final first = hourlySeries(dayOf('Mưa rào'));
       final second = hourlySeries(dayOf('Mưa rào'));
@@ -104,29 +114,40 @@ void main() {
   });
 
   group('axis helpers', () {
-    test('axisTop rounds up to the next step', () {
-      expect(axisTop(const [12, 42]), 50);
-      expect(axisTop(const [0, 1]), 20);
-      expect(axisTop(const [3], step: 1, minimum: 2), 3);
-    });
-
     test('axisTicks run from 0 to the top', () {
       expect(axisTicks(50), [0, 10, 20, 30, 40, 50]);
       expect(axisTicks(2, segments: 2), [0, 1, 2]);
     });
 
-    test('rainAxisTicks step by the unit the design labels', () {
-      expect(rainAxisTicks(50), [0, 10, 20, 30, 40, 50]);
-      expect(rainAxisTicks(20), [0, 10, 20]);
-      expect(rainAxisTicks(2, step: 1), [0, 1, 2]);
+    test('rainAxis keeps the weekly plot on its 10 mm steps', () {
+      final axis = rainAxis(const [1, 10, 1, 12, 1, 42]);
+      expect(axis.top, 50);
+      expect(axis.ticks, [0, 10, 20, 30, 40, 50]);
+    });
+
+    test('rainAxis widens the step for a tall hour', () {
+      // 10.3 mm would otherwise draw twelve 1 mm rules across the plot.
+      final axis = rainAxis(const [0, 10.3, 10.3, 0]);
+      expect(axis.top, 15);
+      expect(axis.ticks, [0, 5, 10, 15]);
+    });
+
+    test('rainAxis keeps small hourly values on 1 mm steps', () {
+      final axis = rainAxis(const [0, 1, 2, 0]);
+      expect(axis.ticks, [0, 1, 2]);
+    });
+
+    test('rainAxis survives a dry window', () {
+      expect(rainAxis(const [0, 0]).ticks, [0, 1, 2]);
+      expect(rainAxis(const <double>[]).ticks, [0, 1, 2]);
     });
 
     test('rainAxisTop reads the scale from the largest tick', () {
-      // axisTicks opens on 0; taking the first tick as the scale flattens the
-      // chart and pushes every bar past the canvas.
-      expect(rainAxisTicks(20).first, 0);
-      expect(rainAxisTop(rainAxisTicks(20)), 20);
-      expect(rainAxisTop(rainAxisTicks(2, step: 1)), 2);
+      // The ticks open on 0; taking the first one flattens the chart and pushes
+      // every bar past the canvas.
+      expect(rainAxis(const [10.3, 0]).ticks.first, 0);
+      expect(rainAxisTop(rainAxis(const [10.3, 0]).ticks), 15);
+      expect(rainAxisTop(rainAxis(const [42]).ticks), 50);
       expect(rainAxisTop(const <double>[]), 1);
       expect(rainAxisTop(const [0]), 1);
     });
