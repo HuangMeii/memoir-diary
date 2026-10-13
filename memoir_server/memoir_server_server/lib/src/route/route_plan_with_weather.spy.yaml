@@ -1,0 +1,6 @@
+### A plan together with the weather along it, so the screen needs one call
+### instead of two.
+class: RoutePlanWithWeather
+fields:
+  plan: RoutePlan
+  weather: RouteWeatherReport

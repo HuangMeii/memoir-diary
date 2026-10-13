@@ -1,0 +1,625 @@
+import 'package:memoir_server_server/src/generated/protocol.dart';
+import 'package:memoir_server_server/src/route/route_rules.dart';
+import 'package:memoir_server_server/src/route/route_service.dart';
+import 'package:test/test.dart';
+
+/// A straight line between two points, [segments] apart.
+List<RouteCoord> straightLine(RouteCoord from, RouteCoord to, int segments) => [
+      for (var i = 0; i <= segments; i++)
+        RouteCoord(
+          from.lat + (to.lat - from.lat) * i / segments,
+          from.lon + (to.lon - from.lon) * i / segments,
+        ),
+    ];
+
+RouteStop stop(
+  String name,
+  double lat,
+  double lon, {
+  String kind = 'waypoint',
+  int dwell = 0,
+}) =>
+    RouteStop(name: name, lat: lat, lon: lon, kind: kind, dwellMinutes: dwell);
+
+RouteWeatherSample sample(
+  int seq,
+  String severity, {
+  String kind = 'sample',
+  int km = 0,
+  List<String> reasons = const [],
+}) =>
+    RouteWeatherSample(
+      seq: seq,
+      label: kind == 'sample' ? 'Km $km' : 'Điểm $seq',
+      kind: kind,
+      lat: 10,
+      lon: 106,
+      distanceFromStartMeters: km * 1000,
+      arrivalAt: DateTime.utc(2026, 10, 11, 6).add(Duration(minutes: seq * 10)),
+      severity: severity,
+      reasons: reasons,
+      status: 'forecast',
+    );
+
+HourlySeries series({
+  required double lat,
+  required double lon,
+  required List<DateTime> times,
+  double temp = 25,
+  double precip = 0,
+  int probability = 0,
+  double wind = 5,
+  double gust = 10,
+  double visibility = 10000,
+  int code = 0,
+}) =>
+    HourlySeries(
+      lat: lat,
+      lon: lon,
+      times: times,
+      temperature: List<double?>.filled(times.length, temp),
+      precipitation: List<double?>.filled(times.length, precip),
+      probability: List<int?>.filled(times.length, probability),
+      windSpeed: List<double?>.filled(times.length, wind),
+      windGust: List<double?>.filled(times.length, gust),
+      visibility: List<double?>.filled(times.length, visibility),
+      weatherCode: List<int?>.filled(times.length, code),
+    );
+
+void main() {
+  group('geometry', () {
+    test('haversine matches a degree of latitude', () {
+      final meters = haversineMeters(
+        const RouteCoord(10, 106),
+        const RouteCoord(11, 106),
+      );
+      expect(meters, closeTo(111195, 300));
+    });
+
+    test('cumulative distances start at zero and grow', () {
+      final line =
+          straightLine(const RouteCoord(10, 106), const RouteCoord(11, 106), 4);
+      final cumulative = cumulativeMeters(line);
+
+      expect(cumulative.first, 0);
+      expect(cumulative.last, closeTo(111195, 300));
+      for (var i = 1; i < cumulative.length; i++) {
+        expect(cumulative[i], greaterThan(cumulative[i - 1]));
+      }
+    });
+
+    test('pointAtDistance clamps and interpolates', () {
+      final line = [
+        const RouteCoord(0, 0),
+        const RouteCoord(0, 1),
+        const RouteCoord(0, 2),
+      ];
+      final cumulative = cumulativeMeters(line);
+      final total = cumulative.last;
+
+      expect(pointAtDistance(line, cumulative, -5).lon, 0);
+      expect(pointAtDistance(line, cumulative, total * 2).lon, 2);
+
+      final middle = pointAtDistance(line, cumulative, total / 4);
+      expect(middle.lat, closeTo(0, 0.0001));
+      expect(middle.lon, closeTo(0.5, 0.01));
+    });
+
+    test('decodeLineString reads GeoJSON lon/lat pairs', () {
+      final line = decodeLineString(
+        '{"type":"LineString","coordinates":[[106.0,10.0],[107.5,11.25]]}',
+      );
+      expect(line, hasLength(2));
+      expect(line.first.lat, 10.0);
+      expect(line.first.lon, 106.0);
+      expect(line.last.lat, 11.25);
+    });
+
+    test('decodeLineString survives junk', () {
+      expect(decodeLineString('{}'), isEmpty);
+      expect(decodeLineString('{"coordinates":"nope"}'), isEmpty);
+    });
+
+    test('normalizeStops forces the kinds by position', () {
+      final stops = normalizeStops([
+        stop('A', 10, 106, kind: 'waypoint'),
+        stop('  ', 10.5, 106),
+        stop('B', 11, 106, kind: 'origin'),
+        stop('C', 11.5, 106, kind: 'origin'),
+      ]);
+
+      expect(stops.map((s) => s.name).toList(), ['A', 'B', 'C']);
+      expect(stops.map((s) => s.kind).toList(), [
+        'origin',
+        'waypoint',
+        'destination',
+      ]);
+    });
+
+    test('folds Vietnamese search terms to ASCII', () {
+      expect(foldForSearch('Đà Lạt'), 'Da Lat');
+      expect(foldForSearch('Hà Nội'), 'Ha Noi');
+      expect(foldForSearch('Đèo Bảo Lộc'), 'Deo Bao Loc');
+      expect(foldForSearch('Đà Nẵng'), 'Da Nang');
+      expect(foldForSearch('Cần Thơ'), 'Can Tho');
+      // Everything outside the Vietnamese set is left alone.
+      expect(foldForSearch('AB 123 / Đà-Lạt'), 'AB 123 / Da-Lat');
+    });
+  });
+
+  group('sampling', () {
+    test('keeps every stop and adds points every 25 km', () {
+      // 300 km straight north, waypoint in the middle.
+      final line = straightLine(
+        const RouteCoord(10, 106),
+        const RouteCoord(12.7, 106),
+        300,
+      );
+      final plan = planRouteSamples(
+        line: line,
+        stops: [
+          stop('A', 10, 106, kind: 'origin'),
+          stop('B', 11.35, 106, kind: 'waypoint'),
+          stop('C', 12.7, 106, kind: 'destination'),
+        ],
+      );
+
+      expect(plan.points.first.kind, 'origin');
+      expect(plan.points.last.kind, 'destination');
+      expect(plan.points.where((point) => point.kind == 'waypoint'), hasLength(1));
+
+      // One point per 25 km step along both legs, and every stop kept.
+      final interior =
+          plan.points.where((point) => point.kind == 'sample').toList();
+      expect(interior, isNotEmpty);
+      for (var i = 1; i < interior.length; i++) {
+        final gap = interior[i].distanceMeters - interior[i - 1].distanceMeters;
+        expect(gap, greaterThan(24000));
+        expect(gap, lessThan(26000));
+      }
+      expect(
+        plan.points.where((point) => point.stopIndex != null),
+        hasLength(3),
+      );
+    });
+
+    test('thins the samples instead of dropping stops on a long route', () {
+      final line = straightLine(
+        const RouteCoord(10, 106),
+        const RouteCoord(28, 106),
+        400,
+      );
+      final plan = planRouteSamples(
+        line: line,
+        stops: [
+          stop('A', 10, 106, kind: 'origin'),
+          stop('B', 16, 106),
+          stop('C', 22, 106),
+          stop('D', 28, 106, kind: 'destination'),
+        ],
+      );
+
+      expect(plan.points.length, lessThanOrEqualTo(routeMaxSamples));
+      expect(plan.points.where((point) => point.stopIndex != null), hasLength(4));
+
+      final distances =
+          plan.points.map((point) => point.distanceMeters).toList();
+      for (var i = 1; i < distances.length; i++) {
+        expect(distances[i], greaterThanOrEqualTo(distances[i - 1]));
+      }
+    });
+
+    test('a stop never sits on top of a plain sample', () {
+      final line = straightLine(
+        const RouteCoord(10, 106),
+        const RouteCoord(12.7, 106),
+        300,
+      );
+      final plan = planRouteSamples(
+        line: line,
+        stops: [
+          stop('A', 10, 106, kind: 'origin'),
+          // Exactly one 25 km step in, where a plain sample would land.
+          stop('B', 10 + 25 / 111.195, 106),
+          stop('C', 12.7, 106, kind: 'destination'),
+        ],
+      );
+
+      final atStop = plan.points
+          .where((point) => (point.distanceMeters - plan.stopDistances[1]).abs() < 100)
+          .toList();
+      expect(atStop, hasLength(1));
+      expect(atStop.single.kind, 'waypoint');
+    });
+
+    test('needs a line and two stops', () {
+      expect(
+        () => planRouteSamples(
+          line: const [RouteCoord(10, 106)],
+          stops: [stop('A', 10, 106), stop('B', 11, 106)],
+        ),
+        throwsA(isA<RouteFailure>()),
+      );
+    });
+  });
+
+  group('arrival times', () {
+    test('adds the dwell at waypoints between the legs', () {
+      final line = straightLine(
+        const RouteCoord(10, 106),
+        const RouteCoord(12.7, 106),
+        300,
+      );
+      final stops = [
+        stop('A', 10, 106, kind: 'origin'),
+        stop('B', 11.35, 106, dwell: 30),
+        stop('C', 12.7, 106, kind: 'destination'),
+      ];
+      final plan = planRouteSamples(line: line, stops: stops);
+      final arrivals = arrivalTimes(
+        points: plan.points,
+        stopDistances: plan.stopDistances,
+        stops: stops,
+        legs: [
+          RouteLeg(distanceMeters: 150000, durationSeconds: 3600, toIndex: 1),
+          RouteLeg(distanceMeters: 150000, durationSeconds: 7200, toIndex: 2),
+        ],
+        totalDurationSeconds: 10800,
+        departureAt: DateTime.utc(2026, 10, 11, 6),
+      );
+
+      final origin = plan.points.indexWhere((point) => point.kind == 'origin');
+      final waypoint = plan.points.indexWhere((point) => point.kind == 'waypoint');
+      final destination =
+          plan.points.indexWhere((point) => point.kind == 'destination');
+
+      expect(arrivals[origin], DateTime.utc(2026, 10, 11, 6));
+      expect(arrivals[waypoint], DateTime.utc(2026, 10, 11, 7));
+      // The 2 h leg plus the half hour spent at the waypoint.
+      expect(arrivals[destination], DateTime.utc(2026, 10, 11, 9, 30));
+    });
+
+    test('places a sample partway along its leg', () {
+      final points = [
+        const RouteSamplePoint(
+          distanceMeters: 0,
+          coord: RouteCoord(10, 106),
+          kind: 'origin',
+          label: 'A',
+          stopIndex: 0,
+        ),
+        const RouteSamplePoint(
+          distanceMeters: 55597.5,
+          coord: RouteCoord(10.5, 106),
+          kind: 'sample',
+          label: 'Km 56',
+        ),
+        const RouteSamplePoint(
+          distanceMeters: 111195,
+          coord: RouteCoord(11, 106),
+          kind: 'destination',
+          label: 'B',
+          stopIndex: 1,
+        ),
+      ];
+      final arrivals = arrivalTimes(
+        points: points,
+        stopDistances: const [0, 111195],
+        stops: [
+          stop('A', 10, 106, kind: 'origin'),
+          stop('B', 11, 106, kind: 'destination'),
+        ],
+        legs: [
+          RouteLeg(distanceMeters: 111195, durationSeconds: 3600, toIndex: 1),
+        ],
+        totalDurationSeconds: 3600,
+        departureAt: DateTime.utc(2026, 10, 11, 6),
+      );
+
+      expect(arrivals[1], DateTime.utc(2026, 10, 11, 6, 30));
+    });
+
+    test('spreads the total duration when the engine sent no legs', () {
+      final durations = legDurations(
+        stopDistances: const [0, 100000, 300000],
+        legs: const [],
+        totalDurationSeconds: 7200,
+      );
+
+      expect(durations, hasLength(2));
+      // Spans are 100 km and 200 km of a 300 km route, so a quarter and three
+      // quarters of the total duration.
+      expect(durations.first, 2400);
+      expect(durations.last, 4800);
+      expect(durations.reduce((a, b) => a + b), 7200);
+    });
+
+    test('keeps the engine durations when the legs line up', () {
+      final durations = legDurations(
+        stopDistances: const [0, 100000, 300000],
+        legs: [
+          RouteLeg(distanceMeters: 100000, durationSeconds: 111, toIndex: 1),
+          RouteLeg(distanceMeters: 200000, durationSeconds: 222, toIndex: 2),
+        ],
+        totalDurationSeconds: 999,
+      );
+
+      expect(durations, [111, 222]);
+    });
+  });
+
+  group('hour lookup', () {
+    final times = [
+      DateTime.utc(2026, 10, 11, 0),
+      DateTime.utc(2026, 10, 11, 1),
+      DateTime.utc(2026, 10, 11, 2),
+      DateTime.utc(2026, 10, 11, 3),
+    ];
+
+    test('picks the hour that has already started', () {
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 0)), 0);
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 0, 59)), 0);
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 1)), 1);
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 2, 30)), 2);
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 3)), 3);
+    });
+
+    test('clamps before the window and reports the horizon', () {
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 10, 20)), 0);
+      expect(hourIndexFor(times, DateTime.utc(2026, 10, 11, 3, 1)), isNull);
+      expect(hourIndexFor(const [], DateTime.utc(2026)), isNull);
+    });
+  });
+
+  group('adverse weather rules', () {
+    test('a calm reading stays info', () {
+      final verdict = evaluateRouteConditions(
+        const RouteConditions(
+          weatherCode: 0,
+          tempC: 24,
+          precipitationMm: 0,
+          precipitationProbability: 5,
+          windSpeedKmh: 6,
+          windGustKmh: 12,
+          visibilityMeters: 20000,
+        ),
+      );
+
+      expect(verdict.severity, RouteSeverity.info);
+      expect(verdict.reasons, isEmpty);
+      expect(verdict.isCaution, isFalse);
+    });
+
+    test('flags moderate and heavy rain at their thresholds', () {
+      expect(
+        evaluateRouteConditions(const RouteConditions(precipitationMm: 2.5))
+            .severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(
+          const RouteConditions(
+            precipitationMm: 1,
+            precipitationProbability: 60,
+          ),
+        ).severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(
+          const RouteConditions(
+            precipitationMm: 0.4,
+            precipitationProbability: 90,
+          ),
+        ).severity,
+        RouteSeverity.info,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(precipitationMm: 7.6))
+            .severity,
+        RouteSeverity.warning,
+      );
+    });
+
+    test('flags a thunderstorm code and strong gusts', () {
+      expect(
+        evaluateRouteConditions(const RouteConditions(weatherCode: 95)).severity,
+        RouteSeverity.warning,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(windGustKmh: 60)).severity,
+        RouteSeverity.warning,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(windSpeedKmh: 40)).severity,
+        RouteSeverity.caution,
+      );
+      // A storm outranks the plain wind rule.
+      expect(
+        evaluateRouteConditions(
+          const RouteConditions(weatherCode: 99, windSpeedKmh: 45),
+        ).severity,
+        RouteSeverity.warning,
+      );
+    });
+
+    test('flags fog, heat and cold', () {
+      expect(
+        evaluateRouteConditions(const RouteConditions(weatherCode: 45)).severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(visibilityMeters: 900))
+            .severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(tempC: 35)).severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(tempC: 10)).severity,
+        RouteSeverity.caution,
+      );
+      expect(
+        evaluateRouteConditions(const RouteConditions(tempC: 11)).severity,
+        RouteSeverity.info,
+      );
+    });
+
+    test('reports every reason and keeps the worst severity', () {
+      final verdict = evaluateRouteConditions(
+        const RouteConditions(
+          weatherCode: 80,
+          tempC: 36,
+          precipitationMm: 9,
+          windSpeedKmh: 45,
+        ),
+      );
+
+      expect(verdict.severity, RouteSeverity.warning);
+      expect(verdict.reasons, hasLength(3));
+    });
+
+    test('missing values never raise an alarm', () {
+      expect(
+        evaluateRouteConditions(const RouteConditions()).severity,
+        RouteSeverity.info,
+      );
+    });
+  });
+
+  group('alerts and conditions', () {
+    test('merges neighbouring notable samples into one stretch', () {
+      final alerts = mergeAlerts([
+        sample(0, RouteSeverity.info, km: 0, kind: 'origin'),
+        sample(1, RouteSeverity.caution, km: 25, reasons: const ['Mưa vừa']),
+        sample(2, RouteSeverity.warning, km: 50, reasons: const ['Gió mạnh']),
+        sample(3, RouteSeverity.info, km: 75),
+      ]);
+
+      expect(alerts, hasLength(1));
+      expect(alerts.single.severity, RouteSeverity.warning);
+      expect(alerts.single.fromSeq, 1);
+      expect(alerts.single.toSeq, 2);
+      expect(alerts.single.summary, contains('Mưa vừa'));
+      expect(alerts.single.summary, contains('Gió mạnh'));
+      expect(alerts.single.title, 'Đoạn Km 25 – Km 50');
+    });
+
+    test('names the stretch after a stop when one is inside it', () {
+      final alerts = mergeAlerts([
+        sample(0, RouteSeverity.info, km: 0),
+        sample(1, RouteSeverity.caution, km: 25),
+        sample(2, RouteSeverity.caution, km: 50, kind: 'waypoint'),
+        sample(3, RouteSeverity.info, km: 75),
+      ]);
+
+      expect(alerts, hasLength(1));
+      expect(alerts.single.title, contains('Điểm 2'));
+    });
+
+    test('a one-sample stretch is a point, not a range', () {
+      final alerts = mergeAlerts([
+        sample(0, RouteSeverity.info, km: 0),
+        sample(1, RouteSeverity.caution, km: 206),
+        sample(2, RouteSeverity.info, km: 231),
+      ]);
+
+      expect(alerts, hasLength(1));
+      expect(alerts.single.title, 'Đoạn Km 206');
+    });
+
+    test('a calm route has no alerts', () {
+      expect(
+        mergeAlerts([
+          sample(0, RouteSeverity.info, km: 0),
+          sample(1, RouteSeverity.info, km: 25),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('matches the response entry nearest to the sample', () {
+      final times = [
+        DateTime.utc(2026, 10, 11, 6),
+        DateTime.utc(2026, 10, 11, 7),
+      ];
+      final hourly = [
+        series(lat: 10, lon: 106, times: times, temp: 30, code: 0),
+        series(lat: 11.5, lon: 107.5, times: times, temp: 18, code: 63),
+      ];
+
+      final near = conditionsAt(
+        hourly,
+        const RouteCoord(11.52, 107.49),
+        DateTime.utc(2026, 10, 11, 6, 30),
+      );
+      expect(near?.tempC, 18);
+      expect(near?.weatherCode, 63);
+
+      final far = conditionsAt(
+        hourly,
+        const RouteCoord(10.01, 106.01),
+        DateTime.utc(2026, 10, 11, 6, 30),
+      );
+      expect(far?.tempC, 30);
+    });
+
+    test('past the horizon there is no reading', () {
+      final hourly = [
+        series(lat: 10, lon: 106, times: [DateTime.utc(2026, 10, 11, 6)]),
+      ];
+
+      expect(
+        conditionsAt(
+          hourly,
+          const RouteCoord(10, 106),
+          DateTime.utc(2026, 10, 20),
+        ),
+        isNull,
+      );
+      expect(
+        conditionsAt(const [], const RouteCoord(10, 106), DateTime.utc(2026)),
+        isNull,
+      );
+    });
+  });
+
+  group('departure comparison', () {
+    RouteWeatherReport report({
+      required String source,
+      List<RouteWeatherSample> samples = const [],
+    }) =>
+        RouteWeatherReport(
+          generatedAt: DateTime.utc(2026, 10, 11),
+          coverage: samples.isEmpty ? 'none' : 'full',
+          source: source,
+          beyondRange: false,
+          samples: samples,
+          alerts: const [],
+          notes: const [],
+        );
+
+    test('summarises an unavailable forecast instead of pretending', () {
+      expect(
+        headlineFor(RouteSeverity.info, report(source: 'unavailable')),
+        'Chưa có dữ liệu dự báo',
+      );
+    });
+
+    test('reads the worst sample severity', () {
+      final full = report(
+        source: 'api',
+        samples: [sample(0, RouteSeverity.info, km: 0)],
+      );
+
+      expect(headlineFor(RouteSeverity.warning, full), 'Có đoạn thời tiết xấu');
+      expect(headlineFor(RouteSeverity.caution, full), 'Có đoạn cần chú ý');
+      expect(headlineFor(RouteSeverity.info, full), 'Điều kiện thuận lợi');
+    });
+  });
+}
+
+
+

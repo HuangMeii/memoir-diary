@@ -1,0 +1,17 @@
+### A route computed by the routing engine, plus the stops it connects.
+class: RoutePlan
+fields:
+  ### Stops in travel order: origin, waypoints..., destination.
+  stops: List<RouteStop>
+  distanceMeters: int
+  durationSeconds: int
+  ### GeoJSON LineString of the chosen route.
+  geometry: String
+  ### One entry per stop pair; leg i arrives at stop i + 1.
+  legs: List<RouteLeg>
+  ### Empty when the engine offers no alternative.
+  alternatives: List<RouteAlternative>
+  ### Name of the routing backend, e.g. "osrm".
+  source: String
+  ### car | bike | foot
+  vehicle: String

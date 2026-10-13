@@ -1,0 +1,15 @@
+### One stop of a saved journey, in travel order.
+class: JourneyStop
+table: journey_stops
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  journeyId: UuidValue, relation(parent=journeys, onDelete=Cascade)
+  seq: int, unique(per=journeyId)
+  ### origin | waypoint | destination
+  kind: String
+  name: String
+  lat: double
+  lon: double
+  dwellMinutes: int, default=0
+  arrivalAt: DateTime?
+  distanceFromStartMeters: int?

@@ -1,0 +1,30 @@
+### Weather at one point of the route, at the time the traveller is expected to
+### be there. The five weather groups reuse the `weathers` lookup, so `condition`
+### and `icon` match the wording used everywhere else in the app.
+class: RouteWeatherSample
+fields:
+  seq: int
+  ### Stop name, or "Km 185" for a point between two stops.
+  label: String
+  ### origin | waypoint | destination | sample
+  kind: String
+  lat: double
+  lon: double
+  distanceFromStartMeters: int
+  arrivalAt: DateTime
+  weatherCode: int?
+  ### `weathers.code` group of [weatherCode]; lets the app pick its own icon
+  ### without repeating the WMO table on the client.
+  weatherGroup: String?
+  condition: String?
+  icon: String?
+  tempC: double?
+  precipitationMm: double?
+  precipitationProbability: int?
+  windSpeedKmh: double?
+  ### info | caution | warning
+  severity: String
+  ### Human readable reasons; empty when nothing stands out.
+  reasons: List<String>
+  ### forecast | stale | unavailable
+  status: String

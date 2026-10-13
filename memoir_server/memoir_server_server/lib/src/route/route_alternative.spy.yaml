@@ -1,0 +1,8 @@
+### An alternative route the engine offered. Kept flat on purpose: only the
+### primary route carries the per-leg breakdown the ETA calculation needs.
+class: RouteAlternative
+fields:
+  distanceMeters: int
+  durationSeconds: int
+  ### GeoJSON LineString.
+  geometry: String

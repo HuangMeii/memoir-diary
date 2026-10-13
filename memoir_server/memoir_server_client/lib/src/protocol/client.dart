@@ -44,6 +44,24 @@ import 'package:memoir_server_client/src/protocol/quotes/reflection.dart'
     as _ivmwvttz;
 import 'package:memoir_server_client/src/protocol/quotes/self_message.dart'
     as _i4smoveg;
+import 'package:memoir_server_client/src/protocol/route/journey.dart'
+    as _i8cgeaon;
+import 'package:memoir_server_client/src/protocol/route/journey_detail.dart'
+    as _irr74z0a;
+import 'package:memoir_server_client/src/protocol/route/place_candidate.dart'
+    as _i972nhj2;
+import 'package:memoir_server_client/src/protocol/route/route_departure_option.dart'
+    as _ia1gr6j3;
+import 'package:memoir_server_client/src/protocol/route/route_plan.dart'
+    as _ivfcqbu8;
+import 'package:memoir_server_client/src/protocol/route/route_plan_with_weather.dart'
+    as _idn1z7ab;
+import 'package:memoir_server_client/src/protocol/route/route_stop.dart'
+    as _isj44i7w;
+import 'package:memoir_server_client/src/protocol/route/route_weather_report.dart'
+    as _iaiilleq;
+import 'package:memoir_server_client/src/protocol/route/route_weather_sample.dart'
+    as _iw3tlfli;
 import 'package:memoir_server_client/src/protocol/stats/grid_cell.dart'
     as _idxtic5g;
 import 'package:memoir_server_client/src/protocol/stats/stats_summary.dart'
@@ -871,6 +889,178 @@ class EndpointSelfMessages extends _isc.EndpointRef {
       );
 }
 
+/// Saved trips and their weather snapshot (docs/12-route-weather.md §8, §9).
+///
+/// A journey is written only when the user asks for it, and it keeps the
+/// forecast it was planned with: reopening a trip shows that snapshot next to a
+/// separately fetched, fresher forecast instead of mixing the two.
+/// {@category Endpoint}
+class EndpointJourneys extends _isc.EndpointRef {
+  EndpointJourneys(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'journeys';
+
+  /// The user's trips, newest departure first.
+  _ida.Future<List<_i8cgeaon.Journey>> list() =>
+      caller.callServerEndpoint<List<_i8cgeaon.Journey>>(
+        'journeys',
+        'list',
+        {},
+      );
+
+  /// One trip with its stops and its saved weather snapshot.
+  _ida.Future<_irr74z0a.JourneyDetail> detail(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_irr74z0a.JourneyDetail>(
+        'journeys',
+        'detail',
+        {'id': id},
+      );
+
+  /// Stores a trip, its stops and its weather snapshot.
+  ///
+  /// [entryId] links an existing diary entry. [createEntry] instead writes the
+  /// departure day's entry — or updates it, since there is one row per day —
+  /// with [entryText], and links that. Passing neither saves the trip alone.
+  _ida.Future<_irr74z0a.JourneyDetail> save({
+    required String title,
+    required String vehicle,
+    required DateTime departureAt,
+    required List<_isj44i7w.RouteStop> stops,
+    required int distanceMeters,
+    required int durationSeconds,
+    required String geometry,
+    String? notes,
+    _isc.UuidValue? entryId,
+    List<_iw3tlfli.RouteWeatherSample>? weatherSamples,
+    bool? createEntry,
+    String? entryText,
+    int? weatherId,
+  }) => caller.callServerEndpoint<_irr74z0a.JourneyDetail>(
+    'journeys',
+    'save',
+    {
+      'title': title,
+      'vehicle': vehicle,
+      'departureAt': departureAt,
+      'stops': stops,
+      'distanceMeters': distanceMeters,
+      'durationSeconds': durationSeconds,
+      'geometry': geometry,
+      'notes': notes,
+      'entryId': entryId,
+      'weatherSamples': weatherSamples,
+      'createEntry': createEntry,
+      'entryText': entryText,
+      'weatherId': weatherId,
+    },
+  );
+
+  _ida.Future<void> delete(_isc.UuidValue id) =>
+      caller.callServerEndpoint<void>(
+        'journeys',
+        'delete',
+        {'id': id},
+      );
+}
+
+/// Route planning and the weather along a route
+/// (docs/12-route-weather.md §9).
+///
+/// The client never talks to OSRM or Open-Meteo directly: this endpoint owns the
+/// provider choice, the sampling rules, the adverse-weather rules and the
+/// 30-minute cache, so all of that can change without touching the app.
+/// {@category Endpoint}
+class EndpointRoute extends _isc.EndpointRef {
+  EndpointRoute(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'route';
+
+  /// Places matching [query], for the planner's search box.
+  _ida.Future<List<_i972nhj2.PlaceCandidate>> searchPlaces(
+    String query, {
+    int? limit,
+  }) => caller.callServerEndpoint<List<_i972nhj2.PlaceCandidate>>(
+    'route',
+    'searchPlaces',
+    {
+      'query': query,
+      'limit': limit,
+    },
+  );
+
+  /// The route through [origin], the optional [waypoints] and [destination].
+  _ida.Future<_ivfcqbu8.RoutePlan> plan({
+    required _isj44i7w.RouteStop origin,
+    required _isj44i7w.RouteStop destination,
+    List<_isj44i7w.RouteStop>? waypoints,
+    String? vehicle,
+    bool? alternatives,
+  }) => caller.callServerEndpoint<_ivfcqbu8.RoutePlan>(
+    'route',
+    'plan',
+    {
+      'origin': origin,
+      'destination': destination,
+      'waypoints': waypoints,
+      'vehicle': vehicle,
+      'alternatives': alternatives,
+    },
+  );
+
+  /// The weather along [plan], sampled at the stops and every 25 km in between,
+  /// each read at the time the traveller is expected to be there.
+  _ida.Future<_iaiilleq.RouteWeatherReport> forecast({
+    required _ivfcqbu8.RoutePlan plan,
+    required DateTime departureAt,
+  }) => caller.callServerEndpoint<_iaiilleq.RouteWeatherReport>(
+    'route',
+    'forecast',
+    {
+      'plan': plan,
+      'departureAt': departureAt,
+    },
+  );
+
+  /// [plan] and [forecast] in one call, so the screen needs a single round trip.
+  _ida.Future<_idn1z7ab.RoutePlanWithWeather> planWithWeather({
+    required _isj44i7w.RouteStop origin,
+    required _isj44i7w.RouteStop destination,
+    List<_isj44i7w.RouteStop>? waypoints,
+    String? vehicle,
+    DateTime? departureAt,
+    bool? alternatives,
+  }) => caller.callServerEndpoint<_idn1z7ab.RoutePlanWithWeather>(
+    'route',
+    'planWithWeather',
+    {
+      'origin': origin,
+      'destination': destination,
+      'waypoints': waypoints,
+      'vehicle': vehicle,
+      'departureAt': departureAt,
+      'alternatives': alternatives,
+    },
+  );
+
+  /// Departure times around the picked one, each with its own forecast, for the
+  /// "compare departure times" panel.
+  _ida.Future<List<_ia1gr6j3.RouteDepartureOption>> compareDepartures({
+    required _ivfcqbu8.RoutePlan plan,
+    required DateTime departureAt,
+    List<int>? offsetsHours,
+  }) => caller.callServerEndpoint<List<_ia1gr6j3.RouteDepartureOption>>(
+    'route',
+    'compareDepartures',
+    {
+      'plan': plan,
+      'departureAt': departureAt,
+      'offsetsHours': offsetsHours,
+    },
+  );
+}
+
 /// Idempotent reference-data seeding, replacing `python -m app.seed.seed`.
 ///
 /// It only inserts missing rows, so it is safe to call repeatedly. A production
@@ -1010,6 +1200,8 @@ class Client extends _isc.ServerpodClientShared {
     quotes = EndpointQuotes(this);
     reflections = EndpointReflections(this);
     selfMessages = EndpointSelfMessages(this);
+    journeys = EndpointJourneys(this);
+    route = EndpointRoute(this);
     seed = EndpointSeed(this);
     stats = EndpointStats(this);
     weather = EndpointWeather(this);
@@ -1043,6 +1235,10 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointSelfMessages selfMessages;
 
+  late final EndpointJourneys journeys;
+
+  late final EndpointRoute route;
+
   late final EndpointSeed seed;
 
   late final EndpointStats stats;
@@ -1065,6 +1261,8 @@ class Client extends _isc.ServerpodClientShared {
     'quotes': quotes,
     'reflections': reflections,
     'selfMessages': selfMessages,
+    'journeys': journeys,
+    'route': route,
     'seed': seed,
     'stats': stats,
     'weather': weather,

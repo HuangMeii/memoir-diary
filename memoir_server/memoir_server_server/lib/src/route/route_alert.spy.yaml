@@ -1,0 +1,13 @@
+### A stretch of the route with unfavourable weather, merged from neighbouring
+### samples so the UI can show one callout instead of many markers.
+class: RouteAlert
+fields:
+  ### info | caution | warning
+  severity: String
+  title: String
+  summary: String
+  startAt: DateTime
+  endAt: DateTime
+  ### Sequence numbers of the first and last sample in the stretch.
+  fromSeq: int
+  toSeq: int

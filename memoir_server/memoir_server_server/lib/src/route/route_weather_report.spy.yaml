@@ -1,0 +1,15 @@
+### Weather along a route: one sample per stop and per point between stops,
+### plus the merged unfavourable stretches.
+class: RouteWeatherReport
+fields:
+  generatedAt: DateTime
+  ### full | partial | none
+  coverage: String
+  ### api | cache | unavailable
+  source: String
+  ### True when the trip reaches past the provider's forecast horizon.
+  beyondRange: bool
+  samples: List<RouteWeatherSample>
+  alerts: List<RouteAlert>
+  ### Vietnamese notes explaining the coverage, shown verbatim in the UI.
+  notes: List<String>

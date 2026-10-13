@@ -1,0 +1,12 @@
+### One departure time offered by the "compare departure times" panel.
+class: RouteDepartureOption
+fields:
+  ### Hours from the departure time the user picked (negative = earlier).
+  offsetHours: int
+  departureAt: DateTime
+  arrivalAt: DateTime
+  ### Worst severity along the route: info | caution | warning
+  severity: String
+  ### Short Vietnamese verdict, e.g. "Ít mưa nhất".
+  headline: String
+  weather: RouteWeatherReport

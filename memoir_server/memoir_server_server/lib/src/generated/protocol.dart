@@ -38,6 +38,16 @@ import 'package:memoir_server_server/src/generated/quotes/reflection.dart'
     as _i6c9evrp;
 import 'package:memoir_server_server/src/generated/quotes/self_message.dart'
     as _in6lippz;
+import 'package:memoir_server_server/src/generated/route/journey.dart'
+    as _idopqiek;
+import 'package:memoir_server_server/src/generated/route/place_candidate.dart'
+    as _ile7spz5;
+import 'package:memoir_server_server/src/generated/route/route_departure_option.dart'
+    as _i5y2yltz;
+import 'package:memoir_server_server/src/generated/route/route_stop.dart'
+    as _imxvpk9j;
+import 'package:memoir_server_server/src/generated/route/route_weather_sample.dart'
+    as _iiotk9u0;
 import 'package:memoir_server_server/src/generated/stats/grid_cell.dart'
     as _iq2zvbrw;
 import 'package:memoir_server_server/src/generated/weather/weather_day.dart'
@@ -63,6 +73,20 @@ import 'quotes/daily_quote_pair.dart' as _ip1ndbg5;
 import 'quotes/quote.dart' as _ijvippl1;
 import 'quotes/reflection.dart' as _ie2y0yiy;
 import 'quotes/self_message.dart' as _iyriup1i;
+import 'route/journey.dart' as _is36joid;
+import 'route/journey_detail.dart' as _iknanxwr;
+import 'route/journey_stop.dart' as _igofjck1;
+import 'route/journey_weather_point.dart' as _ibs4q8yo;
+import 'route/place_candidate.dart' as _ino3yrjt;
+import 'route/route_alert.dart' as _izwu4g79;
+import 'route/route_alternative.dart' as _iidrek38;
+import 'route/route_departure_option.dart' as _ixslv2d7;
+import 'route/route_leg.dart' as _inhn4us6;
+import 'route/route_plan.dart' as _ize64pbg;
+import 'route/route_plan_with_weather.dart' as _i1mr55ne;
+import 'route/route_stop.dart' as _ia9lknw1;
+import 'route/route_weather_report.dart' as _ipvx79ch;
+import 'route/route_weather_sample.dart' as _iodoclik;
 import 'shared/api_exception.dart' as _iatey69s;
 import 'stats/grid_cell.dart' as _idkvug70;
 import 'stats/stats_summary.dart' as _iaxcfmie;
@@ -88,6 +112,20 @@ export 'quotes/daily_quote_pair.dart';
 export 'quotes/quote.dart';
 export 'quotes/reflection.dart';
 export 'quotes/self_message.dart';
+export 'route/journey.dart';
+export 'route/journey_detail.dart';
+export 'route/journey_stop.dart';
+export 'route/journey_weather_point.dart';
+export 'route/place_candidate.dart';
+export 'route/route_alert.dart';
+export 'route/route_alternative.dart';
+export 'route/route_departure_option.dart';
+export 'route/route_leg.dart';
+export 'route/route_plan.dart';
+export 'route/route_plan_with_weather.dart';
+export 'route/route_stop.dart';
+export 'route/route_weather_report.dart';
+export 'route/route_weather_sample.dart';
 export 'shared/api_exception.dart';
 export 'stats/grid_cell.dart';
 export 'stats/stats_summary.dart';
@@ -641,6 +679,385 @@ class Protocol extends _is.DatabaseSerializationManager {
           isPrimary: false,
         ),
       ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'journey_stops',
+      dartName: 'JourneyStop',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'journeyId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'seq',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'kind',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'name',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'lat',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'lon',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'dwellMinutes',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+        _isp.ColumnDefinition(
+          name: 'arrivalAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'distanceFromStartMeters',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'journey_stops_fk_0',
+          columns: ['journeyId'],
+          referenceTable: 'journeys',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'journey_stops__journeyId__seq__unique_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'journeyId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'seq',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'journey_weather_points',
+      dartName: 'JourneyWeatherPoint',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'journeyId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'seq',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sampleAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'lat',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'lon',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'label',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weatherCode',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weatherGroup',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weatherId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'tempC',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'precipitationMm',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'precipitationProbability',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'windSpeedKmh',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'severity',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'fetchedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'journey_weather_points_fk_0',
+          columns: ['journeyId'],
+          referenceTable: 'journeys',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'journey_weather_points__journeyId__seq__unique_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'journeyId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'seq',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'journeys',
+      dartName: 'Journey',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'title',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'vehicle',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'departureAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'originName',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'originLat',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'originLon',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'destinationName',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'destinationLat',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'destinationLon',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _isp.ColumnDefinition(
+          name: 'distanceMeters',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'durationSeconds',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'geometry',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'notes',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'entryId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: true,
+          dartType: 'UuidValue?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weatherSavedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+        _isp.ColumnDefinition(
+          name: 'updatedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'journeys_fk_0',
+          columns: ['userId'],
+          referenceTable: 'users',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -1488,6 +1905,48 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _iyriup1i.SelfMessage) {
       return _iyriup1i.SelfMessage.fromJson(data) as T;
     }
+    if (t == _is36joid.Journey) {
+      return _is36joid.Journey.fromJson(data) as T;
+    }
+    if (t == _iknanxwr.JourneyDetail) {
+      return _iknanxwr.JourneyDetail.fromJson(data) as T;
+    }
+    if (t == _igofjck1.JourneyStop) {
+      return _igofjck1.JourneyStop.fromJson(data) as T;
+    }
+    if (t == _ibs4q8yo.JourneyWeatherPoint) {
+      return _ibs4q8yo.JourneyWeatherPoint.fromJson(data) as T;
+    }
+    if (t == _ino3yrjt.PlaceCandidate) {
+      return _ino3yrjt.PlaceCandidate.fromJson(data) as T;
+    }
+    if (t == _izwu4g79.RouteAlert) {
+      return _izwu4g79.RouteAlert.fromJson(data) as T;
+    }
+    if (t == _iidrek38.RouteAlternative) {
+      return _iidrek38.RouteAlternative.fromJson(data) as T;
+    }
+    if (t == _ixslv2d7.RouteDepartureOption) {
+      return _ixslv2d7.RouteDepartureOption.fromJson(data) as T;
+    }
+    if (t == _inhn4us6.RouteLeg) {
+      return _inhn4us6.RouteLeg.fromJson(data) as T;
+    }
+    if (t == _ize64pbg.RoutePlan) {
+      return _ize64pbg.RoutePlan.fromJson(data) as T;
+    }
+    if (t == _i1mr55ne.RoutePlanWithWeather) {
+      return _i1mr55ne.RoutePlanWithWeather.fromJson(data) as T;
+    }
+    if (t == _ia9lknw1.RouteStop) {
+      return _ia9lknw1.RouteStop.fromJson(data) as T;
+    }
+    if (t == _ipvx79ch.RouteWeatherReport) {
+      return _ipvx79ch.RouteWeatherReport.fromJson(data) as T;
+    }
+    if (t == _iodoclik.RouteWeatherSample) {
+      return _iodoclik.RouteWeatherSample.fromJson(data) as T;
+    }
     if (t == _iatey69s.ApiException) {
       return _iatey69s.ApiException.fromJson(data) as T;
     }
@@ -1566,6 +2025,62 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_iyriup1i.SelfMessage?>()) {
       return (data != null ? _iyriup1i.SelfMessage.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_is36joid.Journey?>()) {
+      return (data != null ? _is36joid.Journey.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iknanxwr.JourneyDetail?>()) {
+      return (data != null ? _iknanxwr.JourneyDetail.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_igofjck1.JourneyStop?>()) {
+      return (data != null ? _igofjck1.JourneyStop.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ibs4q8yo.JourneyWeatherPoint?>()) {
+      return (data != null
+              ? _ibs4q8yo.JourneyWeatherPoint.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _is.getType<_ino3yrjt.PlaceCandidate?>()) {
+      return (data != null ? _ino3yrjt.PlaceCandidate.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_izwu4g79.RouteAlert?>()) {
+      return (data != null ? _izwu4g79.RouteAlert.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iidrek38.RouteAlternative?>()) {
+      return (data != null ? _iidrek38.RouteAlternative.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ixslv2d7.RouteDepartureOption?>()) {
+      return (data != null
+              ? _ixslv2d7.RouteDepartureOption.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _is.getType<_inhn4us6.RouteLeg?>()) {
+      return (data != null ? _inhn4us6.RouteLeg.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ize64pbg.RoutePlan?>()) {
+      return (data != null ? _ize64pbg.RoutePlan.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i1mr55ne.RoutePlanWithWeather?>()) {
+      return (data != null
+              ? _i1mr55ne.RoutePlanWithWeather.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _is.getType<_ia9lknw1.RouteStop?>()) {
+      return (data != null ? _ia9lknw1.RouteStop.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ipvx79ch.RouteWeatherReport?>()) {
+      return (data != null ? _ipvx79ch.RouteWeatherReport.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_iodoclik.RouteWeatherSample?>()) {
+      return (data != null ? _iodoclik.RouteWeatherSample.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_iatey69s.ApiException?>()) {
       return (data != null ? _iatey69s.ApiException.fromJson(data) : null) as T;
     }
@@ -1585,6 +2100,51 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_i7z01835.WeatherSnapshot?>()) {
       return (data != null ? _i7z01835.WeatherSnapshot.fromJson(data) : null)
           as T;
+    }
+    if (t == List<_igofjck1.JourneyStop>) {
+      return (data as List)
+              .map((e) => deserialize<_igofjck1.JourneyStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ibs4q8yo.JourneyWeatherPoint>) {
+      return (data as List)
+              .map((e) => deserialize<_ibs4q8yo.JourneyWeatherPoint>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ia9lknw1.RouteStop>) {
+      return (data as List)
+              .map((e) => deserialize<_ia9lknw1.RouteStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_inhn4us6.RouteLeg>) {
+      return (data as List)
+              .map((e) => deserialize<_inhn4us6.RouteLeg>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iidrek38.RouteAlternative>) {
+      return (data as List)
+              .map((e) => deserialize<_iidrek38.RouteAlternative>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iodoclik.RouteWeatherSample>) {
+      return (data as List)
+              .map((e) => deserialize<_iodoclik.RouteWeatherSample>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_izwu4g79.RouteAlert>) {
+      return (data as List)
+              .map((e) => deserialize<_izwu4g79.RouteAlert>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
     if (t == Map<String, int>) {
       return (data as Map).map(
@@ -1670,6 +2230,61 @@ class Protocol extends _is.DatabaseSerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_idopqiek.Journey>) {
+      return (data as List)
+              .map((e) => deserialize<_idopqiek.Journey>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_imxvpk9j.RouteStop>) {
+      return (data as List)
+              .map((e) => deserialize<_imxvpk9j.RouteStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iiotk9u0.RouteWeatherSample>) {
+      return (data as List)
+              .map((e) => deserialize<_iiotk9u0.RouteWeatherSample>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_iiotk9u0.RouteWeatherSample>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_iiotk9u0.RouteWeatherSample>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_ile7spz5.PlaceCandidate>) {
+      return (data as List)
+              .map((e) => deserialize<_ile7spz5.PlaceCandidate>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_imxvpk9j.RouteStop>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_imxvpk9j.RouteStop>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_i5y2yltz.RouteDepartureOption>) {
+      return (data as List)
+              .map((e) => deserialize<_i5y2yltz.RouteDepartureOption>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<int>) {
+      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
+    }
+    if (t == _is.getType<List<int>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<int>(e)).toList()
+              : null)
+          as T;
+    }
     if (t == List<_iq2zvbrw.GridCell>) {
       return (data as List)
               .map((e) => deserialize<_iq2zvbrw.GridCell>(e))
@@ -1709,6 +2324,20 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ijvippl1.Quote => 'Quote',
       _ie2y0yiy.Reflection => 'Reflection',
       _iyriup1i.SelfMessage => 'SelfMessage',
+      _is36joid.Journey => 'Journey',
+      _iknanxwr.JourneyDetail => 'JourneyDetail',
+      _igofjck1.JourneyStop => 'JourneyStop',
+      _ibs4q8yo.JourneyWeatherPoint => 'JourneyWeatherPoint',
+      _ino3yrjt.PlaceCandidate => 'PlaceCandidate',
+      _izwu4g79.RouteAlert => 'RouteAlert',
+      _iidrek38.RouteAlternative => 'RouteAlternative',
+      _ixslv2d7.RouteDepartureOption => 'RouteDepartureOption',
+      _inhn4us6.RouteLeg => 'RouteLeg',
+      _ize64pbg.RoutePlan => 'RoutePlan',
+      _i1mr55ne.RoutePlanWithWeather => 'RoutePlanWithWeather',
+      _ia9lknw1.RouteStop => 'RouteStop',
+      _ipvx79ch.RouteWeatherReport => 'RouteWeatherReport',
+      _iodoclik.RouteWeatherSample => 'RouteWeatherSample',
       _iatey69s.ApiException => 'ApiException',
       _idkvug70.GridCell => 'GridCell',
       _iaxcfmie.StatsSummary => 'StatsSummary',
@@ -1770,6 +2399,34 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'Reflection';
       case _iyriup1i.SelfMessage():
         return 'SelfMessage';
+      case _is36joid.Journey():
+        return 'Journey';
+      case _iknanxwr.JourneyDetail():
+        return 'JourneyDetail';
+      case _igofjck1.JourneyStop():
+        return 'JourneyStop';
+      case _ibs4q8yo.JourneyWeatherPoint():
+        return 'JourneyWeatherPoint';
+      case _ino3yrjt.PlaceCandidate():
+        return 'PlaceCandidate';
+      case _izwu4g79.RouteAlert():
+        return 'RouteAlert';
+      case _iidrek38.RouteAlternative():
+        return 'RouteAlternative';
+      case _ixslv2d7.RouteDepartureOption():
+        return 'RouteDepartureOption';
+      case _inhn4us6.RouteLeg():
+        return 'RouteLeg';
+      case _ize64pbg.RoutePlan():
+        return 'RoutePlan';
+      case _i1mr55ne.RoutePlanWithWeather():
+        return 'RoutePlanWithWeather';
+      case _ia9lknw1.RouteStop():
+        return 'RouteStop';
+      case _ipvx79ch.RouteWeatherReport():
+        return 'RouteWeatherReport';
+      case _iodoclik.RouteWeatherSample():
+        return 'RouteWeatherSample';
       case _iatey69s.ApiException():
         return 'ApiException';
       case _idkvug70.GridCell():
@@ -1853,6 +2510,48 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'SelfMessage') {
       return deserialize<_iyriup1i.SelfMessage>(data['data']);
     }
+    if (dataClassName == 'Journey') {
+      return deserialize<_is36joid.Journey>(data['data']);
+    }
+    if (dataClassName == 'JourneyDetail') {
+      return deserialize<_iknanxwr.JourneyDetail>(data['data']);
+    }
+    if (dataClassName == 'JourneyStop') {
+      return deserialize<_igofjck1.JourneyStop>(data['data']);
+    }
+    if (dataClassName == 'JourneyWeatherPoint') {
+      return deserialize<_ibs4q8yo.JourneyWeatherPoint>(data['data']);
+    }
+    if (dataClassName == 'PlaceCandidate') {
+      return deserialize<_ino3yrjt.PlaceCandidate>(data['data']);
+    }
+    if (dataClassName == 'RouteAlert') {
+      return deserialize<_izwu4g79.RouteAlert>(data['data']);
+    }
+    if (dataClassName == 'RouteAlternative') {
+      return deserialize<_iidrek38.RouteAlternative>(data['data']);
+    }
+    if (dataClassName == 'RouteDepartureOption') {
+      return deserialize<_ixslv2d7.RouteDepartureOption>(data['data']);
+    }
+    if (dataClassName == 'RouteLeg') {
+      return deserialize<_inhn4us6.RouteLeg>(data['data']);
+    }
+    if (dataClassName == 'RoutePlan') {
+      return deserialize<_ize64pbg.RoutePlan>(data['data']);
+    }
+    if (dataClassName == 'RoutePlanWithWeather') {
+      return deserialize<_i1mr55ne.RoutePlanWithWeather>(data['data']);
+    }
+    if (dataClassName == 'RouteStop') {
+      return deserialize<_ia9lknw1.RouteStop>(data['data']);
+    }
+    if (dataClassName == 'RouteWeatherReport') {
+      return deserialize<_ipvx79ch.RouteWeatherReport>(data['data']);
+    }
+    if (dataClassName == 'RouteWeatherSample') {
+      return deserialize<_iodoclik.RouteWeatherSample>(data['data']);
+    }
     if (dataClassName == 'ApiException') {
       return deserialize<_iatey69s.ApiException>(data['data']);
     }
@@ -1917,6 +2616,12 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _ie2y0yiy.Reflection.t;
       case _iyriup1i.SelfMessage:
         return _iyriup1i.SelfMessage.t;
+      case _is36joid.Journey:
+        return _is36joid.Journey.t;
+      case _igofjck1.JourneyStop:
+        return _igofjck1.JourneyStop.t;
+      case _ibs4q8yo.JourneyWeatherPoint:
+        return _ibs4q8yo.JourneyWeatherPoint.t;
       case _i7z01835.WeatherSnapshot:
         return _i7z01835.WeatherSnapshot.t;
     }

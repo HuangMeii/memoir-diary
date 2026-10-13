@@ -1,0 +1,11 @@
+### One stop of a planned route: the origin, a waypoint, or the destination.
+class: RouteStop
+fields:
+  ### Display name, e.g. "Đà Lạt".
+  name: String
+  lat: double
+  lon: double
+  ### Minutes spent here. Only waypoints and the destination use it.
+  dwellMinutes: int, default=0
+  ### origin | waypoint | destination
+  kind: String

@@ -1,0 +1,23 @@
+### The forecast snapshot saved with a journey, so a past trip keeps the summary
+### it was planned with even after the provider's data moved on.
+class: JourneyWeatherPoint
+table: journey_weather_points
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  journeyId: UuidValue, relation(parent=journeys, onDelete=Cascade)
+  seq: int, unique(per=journeyId)
+  sampleAt: DateTime
+  lat: double
+  lon: double
+  label: String?
+  weatherCode: int?
+  ### `weathers.code` group of [weatherCode].
+  weatherGroup: String?
+  weatherId: int?
+  tempC: double?
+  precipitationMm: double?
+  precipitationProbability: int?
+  windSpeedKmh: double?
+  ### info | caution | warning
+  severity: String?
+  fetchedAt: DateTime, default=now
