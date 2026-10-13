@@ -158,13 +158,11 @@ class WeatherForecastRegions extends StatelessWidget {
   }
 }
 
-/// The supporting column: the day/hour preview, the flood estimate and the
-/// journal note. Pass a null [top] when the main column already shows the
-/// preview.
+/// The supporting column: the day/hour preview and the journal note.
+///
+/// Pass a null [top] when the main column already shows the preview.
 Widget supportingColumn({
   Widget? top,
-  required String dateLabel,
-  required double rainMm,
   required double scale,
 }) =>
     Column(
@@ -174,15 +172,6 @@ Widget supportingColumn({
           WeatherPanel(scale: scale, child: top),
           SizedBox(height: MemoirSpace.s4 * scale),
         ],
-        WeatherPanel(
-          scale: scale,
-          child: FloodEstimateCard(
-            scale: scale,
-            dateLabel: dateLabel,
-            rainMm: rainMm,
-          ),
-        ),
-        SizedBox(height: MemoirSpace.s4 * scale),
         WeatherPanel(scale: scale, child: ForecastContextCard(scale: scale)),
       ],
     );
@@ -373,8 +362,6 @@ class WeatherWeekTab extends StatelessWidget {
               actionLabel: 'Xem ngày & từng giờ',
               onAction: onOpenDay,
             ),
-      dateLabel: selected == null ? '' : shortDate(selected.date),
-      rainMm: selected == null ? 0 : rainTotalMm(selected),
       scale: scale,
     );
 
@@ -575,8 +562,6 @@ class WeatherDayTab extends StatelessWidget {
     return WeatherForecastRegions(
       main: main,
       supporting: supportingColumn(
-        dateLabel: shortDate(day.date),
-        rainMm: rainTotalMm(day),
         scale: scale,
       ),
       scale: scale,
@@ -759,8 +744,6 @@ class WeatherHourTab extends StatelessWidget {
       main: main,
       supporting: supportingColumn(
         top: _selectedHourPanel(context, selected),
-        dateLabel: shortDate(day.date),
-        rainMm: rainTotalMm(day),
         scale: scale,
       ),
       scale: scale,

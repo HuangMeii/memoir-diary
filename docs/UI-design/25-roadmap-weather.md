@@ -24,8 +24,8 @@ Cần có states loading, permission denied, API unavailable và stale cache.
   nguồn cuối trang.
 - **Tuần** (`WeatherWeekTab`): bảng `Dự báo 7 ngày` (`Cao / thấp · °C`; mỗi
   hàng có thứ/ngày, icon, điều kiện, `mm` và `Xác suất %`) và chart `Lượng mưa
-  trong tuần`; cột phụ `NGÀY ĐANG CHỌN` (4 chỉ số + `Xem ngày & từng giờ`),
-  `Dự kiến ngập`, `BẦU TRỜI & NHẬT KÝ`.
+  trong tuần`; cột phụ `NGÀY ĐANG CHỌN` (4 chỉ số + `Xem ngày & từng giờ`) và
+  `BẦU TRỜI & NHẬT KÝ`.
 - **Ngày** (`WeatherDayTab`): `HÔM NAY` (nhiệt độ, điều kiện, 4 chỉ số),
   `Nhịp trời trong ngày` (6 thẻ giờ 06:00–21:00) và `Lượng mưa theo giờ`.
 - **Theo giờ** (`WeatherHourTab`): `Mưa & nhiệt độ · 24 giờ` (bar mưa + line
@@ -40,10 +40,14 @@ Cần có states loading, permission denied, API unavailable và stale cache.
 
 Backend chỉ trả `current` + 7 ngày `daily`, còn các frame thời tiết là mockup
 (`Dữ liệu minh họa · Chưa kết nối API`), nên phần **theo giờ, lượng mưa, xác
-suất, gió, độ ẩm và "Dự kiến ngập"** lấy từ `weather_illustrative.dart`: các
-hàm thuần, tất định theo ngày (có unit test trong
-`test/weather_illustrative_test.dart`). Khi dữ liệu giờ là minh họa, màn ghi rõ
-`Số liệu theo giờ và lượng mưa là minh họa` ở dòng nguồn.
+suất, gió và độ ẩm** lấy từ `weather_illustrative.dart`: các hàm thuần, tất
+định theo ngày (có unit test trong `test/weather_illustrative_test.dart`). Khi
+dữ liệu giờ là minh họa, màn ghi rõ `Số liệu theo giờ và lượng mưa là minh họa`
+ở dòng nguồn.
+
+> Ngoài ra backend **đã** lấy mưa thật (`precipitation_sum` →
+> `WeatherDay.precipitationMm`, có trong `weather_snapshots`) nhưng Flutter chưa
+> map field đó, nên UI đang dùng số minh họa ở trên. Nối lại là việc riêng.
 
 ## Khác Figma (có chủ ý)
 
@@ -53,4 +57,13 @@ hàm thuần, tất định theo ngày (có unit test trong
   đầu từ hôm nay, chưa có kỳ khác để chuyển tới.
 - Định vị tự động chưa nối (app không có plugin geolocation), nên `Tiếp tục`
   trong card quyền nói rõ chưa xác định được vị trí thay vì giả vờ.
+- **Bỏ card `Dự kiến ngập`** (và class `FloodEstimateCard`): không có nguồn nào
+  cho ngập đường phố/đô thị. Open-Meteo có **Flood API** nhưng chỉ trả
+  `river_discharge` (GloFAS v4, ~5 km — lưu lượng **sông**), không phải ngập
+  đường phố, và không có ngưỡng/return period để phân mức `Thấp / Vừa / Cao`.
+  Card cũ chỉ là callout tĩnh nên đã gỡ; cột phụ còn preview ngày/giờ +
+  `BẦU TRỜI & NHẬT KÝ`.
+- **Bỏ `Rain value` trên đỉnh cột** của các chart mưa: giá trị trùng với nhãn
+  trục dọc và với tổng ở tiêu đề, mà với cột cao thì nhãn nằm ngay trên đỉnh
+  cột. `RainChart` giờ chỉ vẽ trục + cột + nhãn chân cột (`_topPad` 18 → 8).
 

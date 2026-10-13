@@ -8,8 +8,8 @@ import '../tokens.dart';
 /// Height of the label gutter on the left of both charts, in design pixels.
 const double _axisGutter = 30;
 
-/// Room above the plot for the value labels and below it for the axis labels.
-const double _topPad = 18;
+/// Breathing room above the plot, and the band below it for the axis labels.
+const double _topPad = 8;
 const double _bottomPad = 22;
 
 /// The value the top gridline of a rain chart carries.
@@ -183,19 +183,9 @@ class _RainChartPainter extends CustomPainter {
           ..color = selected ? barColor : barColor.withValues(alpha: 0.45),
       );
 
-      if (value > 0) {
-        final text = _format(value);
-        _label(
-          canvas,
-          text,
-          centerX - _textWidth(text) / 2,
-          // Keep the label inside the plot even when the bar fills it.
-          math.max(
-            plotTop,
-            plotBottom - barHeight - _textHeight() - 2 * scale,
-          ),
-        );
-      }
+      // The bars carry no value label: the axis on the left and the card's
+      // total already give the magnitude, and a label on a tall bar would sit
+      // right on top of it.
       if (labelEvery > 0 && i % labelEvery == 0 && i < labels.length) {
         final text = labels[i];
         _label(
