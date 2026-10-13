@@ -5,6 +5,8 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 
 | File | Nội dung |
 |---|---|
+| `jira-full-backlog.csv` | ✅ **File tổng** — 50 issue toàn backlog (15 Epic + 19 Story + 11 Spike + 1 Bug + 4 Subtask), có cột `Parent (sau import)` để ghi chú epic/story cha; sinh lại bằng `build-full-csv.ps1` |
+| `build-full-csv.ps1` | Script gộp các file con thành `jira-full-backlog.csv` (lưu UTF-8 BOM cho PowerShell 5.1) |
 | `03-backlog-import.csv` | 15 Epic để import (không có cột `Project Key`) |
 | `03-backlog-import.min.csv` | Bản tối giản 2 cột (`Summary`, `Issue Type`) để thử import khi bị lỗi |
 | `00-conventions.md` | Issue types, phân cấp, DoR/DoD, naming, labels, estimate, chính sách import |
