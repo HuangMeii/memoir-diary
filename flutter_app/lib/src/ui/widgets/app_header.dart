@@ -164,32 +164,66 @@ class AppHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              // The middle slot holds the navigation when there is room for it
-              // and acts as the spacer when there is not. It scrolls instead of
-              // overflowing, so a font wider than the design's never breaks the
-              // row.
+              // The middle slot holds the navigation and the utility pills when
+              // there is room for them, and acts as the spacer when there is
+              // not. Each half scrolls inside its own share instead of
+              // overflowing, so a second utility (or a font wider than the
+              // design's) can never push the navigation out of reach.
               Expanded(
-                child: showNav
-                    ? SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: MemoirSpace.s6 * scale),
-                          child: _Navigation(
-                            active: destination,
-                            onNavigate: onNavigate,
-                            scale: scale,
+                child: !showNav && !showPills
+                    ? const SizedBox.shrink()
+                    : Row(
+                        children: [
+                          // The navigation gets twice the pills' share: it is the
+                          // wider block and the one the reader clicks through.
+                          Expanded(
+                            flex: 2,
+                            child: showNav
+                                ? SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: MemoirSpace.s6 * scale,
+                                      ),
+                                      child: _Navigation(
+                                        active: destination,
+                                        onNavigate: onNavigate,
+                                        scale: scale,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                          // Utilities: the same entries the phone layout keeps
+                          // at the end of the page, folded into the header on
+                          // wider screens. Right-aligned so they stay next to
+                          // the account actions, and reversed so the last pill
+                          // is the one that stays visible when the band is
+                          // tight.
+                          if (showPills)
+                            Flexible(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  reverse: true,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (final item in utilityItems) ...[
+                                        SizedBox(
+                                          width: MemoirSpace.s6 * scale,
+                                        ),
+                                        UtilityPill(item: item),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
               ),
-              // Utilities: the same entries the phone layout keeps at the end
-              // of the page, folded into the header on wider screens.
-              if (showPills)
-                for (final item in utilityItems) ...[
-                  UtilityPill(item: item),
-                  SizedBox(width: MemoirSpace.s2 * scale),
-                ],
               _Account(
                 initials: initials,
                 name: showName ? name : null,

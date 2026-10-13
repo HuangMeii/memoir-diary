@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'screens/route_weather_screen.dart';
 import 'screens/weather_screen.dart';
 
 /// One entry in the "Tiện ích" bar.
@@ -12,6 +13,7 @@ class UtilityItem {
     required this.label,
     required this.builder,
     this.iconAsset,
+    this.shortLabel,
   });
 
   /// Material fallback icon, used when [iconAsset] is null.
@@ -22,15 +24,31 @@ class UtilityItem {
   final String? iconAsset;
 
   final String label;
+
+  /// Shorter wording for the header pill.
+  ///
+  /// The header has a fixed budget: the wordmark, the navigation, the pills and
+  /// the account actions share one row, and the navigation starts scrolling (and
+  /// stops being tappable) as soon as the pills grow past it. A long label is
+  /// fine on the page, where the utilities wrap and scroll, so the two wordings
+  /// are kept apart instead of shortening both.
+  final String? shortLabel;
+
   final Widget Function() builder;
 }
 
-/// The utilities shown in the top bar. Weather is the first; more will follow.
+/// The utilities shown in the top bar and in the page's "Tiện ích" block.
 const List<UtilityItem> utilityItems = [
   UtilityItem(
     icon: Icons.wb_sunny_outlined,
     iconAsset: 'weather',
     label: 'Xem thời tiết',
     builder: WeatherScreen.new,
+  ),
+  UtilityItem(
+    icon: Icons.route_outlined,
+    label: 'Thời tiết hành trình',
+    shortLabel: 'Hành trình',
+    builder: RouteWeatherScreen.new,
   ),
 ];

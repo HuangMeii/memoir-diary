@@ -46,7 +46,7 @@ class UtilityPill extends StatelessWidget {
               Icon(item.icon, size: 18 * scale, color: brand),
             SizedBox(width: MemoirSpace.custom6 * scale),
             Text(
-              item.label,
+              item.shortLabel ?? item.label,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: brand,
                 fontSize: MemoirType.body,
