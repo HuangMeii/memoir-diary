@@ -41,12 +41,12 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 - **UI**: text field 1 dòng trong editor.
 - **Lưu**: `diary_entries.other_perspective`.
 
-## 6. Câu nhắn nhủ tương lai (hoặc câu hỏi)
+## 6. Câu nhắn nhủ tương lai (hoặc câu hỏi) — ĐÃ BỎ KHỎI EDITOR
 
-- **Mô tả**: Viết **1 câu** gửi tới bản thân tương lai, hoặc 1 câu hỏi.
-- **UI**: text field trong editor.
-- **Lưu**: `diary_entries.future_message`.
-- **Liên kết**: câu này có thể được dùng làm nguồn cho `self_messages`.
+> Ô nhập này đã được gỡ khỏi `JOURNAL-02`. Cột `diary_entries.future_message` **vẫn được giữ**: editor đọc và ghi lại nguyên giá trị cũ mỗi lần lưu, nên nội dung đã viết **không bị xoá** và ô nhập có thể được dựng lại sau này mà không mất gì.
+> Hai hệ quả:
+> - Trang nhật ký còn **8 mục nội dung** (`DiaryEntry.contentFieldCount` = 8).
+> - Lưới "Nhịp viết của bạn" chia 5 mức theo **tỉ lệ** đã điền chứ không theo số mục cố định, để mức đậm nhất vẫn đạt được khi số mục đổi (`ActivityDay.level`).
 
 ## 7. Kho câu + Câu ngẫu nhiên + Phản tư
 
@@ -193,7 +193,7 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 | Cảm xúc | diary_entries | mood_id → moods |
 | Lưới tháng | diary_entries | (entry_date, mood_id, weather_id) |
 | Góc nhìn khác | diary_entries | other_perspective |
-| Nhắn nhủ tương lai | diary_entries | future_message |
+| ~~Nhắn nhủ tương lai~~ *(đã bỏ khỏi editor; cột vẫn giữ nguyên giá trị)* | diary_entries | future_message |
 | Kho câu + random + phản tư | quotes, self_messages, reflections | text / content / thought |
 | Tự chăm sóc | diary_entries | self_care |
 | Hi vọng ngày mai | diary_entries | tomorrow_hope |

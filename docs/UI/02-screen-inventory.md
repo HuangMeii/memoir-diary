@@ -24,7 +24,6 @@ Các trường của `JOURNAL-02`:
 
 - Nội dung nhật ký.
 - Góc nhìn khác.
-- Nhắn nhủ tương lai / câu hỏi.
 - Tự chăm sóc hôm nay.
 - Hi vọng ngày mai.
 - Lòng biết ơn.

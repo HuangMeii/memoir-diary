@@ -13,7 +13,7 @@ Tài liệu này mô tả lộ trình xây dựng ứng dụng nhật ký **Memo
 Xây dựng ứng dụng nhật ký đa người dùng, cho phép:
 - Ghi nhật ký hằng ngày kèm ảnh, thời tiết và cảm xúc.
 - Trực quan hóa cảm xúc/thời tiết theo tháng bằng lưới đổ màu.
-- Lưu giữ các mục phản tư cá nhân (góc nhìn khác, nhắn nhủ tương lai, biết ơn, giấc mơ...).
+- Lưu giữ các mục phản tư cá nhân (góc nhìn khác, biết ơn, giấc mơ...).
 - Nuôi dưỡng động lực bằng kho câu động viên (CRUD) + câu ngẫu nhiên + phản tư.
 - Quản lý ghi chú, todo, sự kiện, lịch biểu và theo dõi sức khỏe.
 - Biến thời gian học thành động lực: vòng tập trung (timer) → coin/EXP → gieo hạt đậu nảy mầm → mua nước/phân bón → bảng xếp hạng và sự kiện (đặc tả: [docs/09-focus-garden.md](docs/09-focus-garden.md)).

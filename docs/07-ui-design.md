@@ -85,7 +85,6 @@ flowchart TD
 │ 🖼️ Ảnh:  [+] (upload)        │
 ├───────────────────────────────┤
 │ 🧭 Góc nhìn khác:  [______]   │
-│ 🔮 Nhắn nhủ tương lai: [____] │
 │ 🌱 Tự chăm sóc:    [______]   │
 │ 🌅 Hi vọng ngày mai:[______]  │
 │ 🙏 Biết ơn:        [______]   │

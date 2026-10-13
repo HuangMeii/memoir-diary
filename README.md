@@ -14,7 +14,6 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 - 😀 **Chọn cảm xúc** qua icon (5 trạng thái): `vui`, `buồn`, `chán`, `bình thường`, `giận`.
 - 🗓️ **2 lưới tháng** (mood + weather) đổ màu từng ô theo ngày.
 - 🧭 **Câu quan điểm từ góc nhìn khác**.
-- 🔮 **Câu nhắn nhủ tương lai** (hoặc câu hỏi).
 - 💬 **Kho 100 câu động viên/giáo dục** (CRUD được) + **câu ngẫu nhiên của bản thân** + ô **phản tư**.
 - 🌱 **Tự chăm sóc bản thân hôm nay**.
 - 🌅 **Hi vọng cho ngày mai**.

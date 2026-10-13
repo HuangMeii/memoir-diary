@@ -51,7 +51,7 @@ Bố cục bám theo frame Figma `HOME-01 · Web · Đã có mood-weather`:
   `ui/home/activity_heatmap.dart` trên lưới dùng chung
   `ui/widgets/month_heatmap.dart`): lưới tháng kiểu contribution, cột = tuần
   (Chủ nhật đầu tuần), hàng = thứ; độ đậm = số mục đã điền
-  (`DiaryEntry.filledFields` / 9), ô hôm nay viền, ngày tương lai nhạt.
+  (`DiaryEntry.filledFields` / 8), ô hôm nay viền, ngày tương lai nhạt.
   Dữ liệu lấy từ `GET /entries?month=` (không cần đổi backend).
 - **Hai ô nhập đã chuyển sang `JOURNAL-02`** (`entry_editor.dart`): “Câu hỏi
   gửi gắm tương lai” (lưu thành self message) và “Suy nghĩ về 2 câu hôm nay”.

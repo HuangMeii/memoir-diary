@@ -10,12 +10,11 @@
 4. Nội dung nhật ký nhiều dòng.
 5. Ảnh đính kèm.
 6. Góc nhìn khác.
-7. Nhắn nhủ tương lai / câu hỏi.
-8. Tự chăm sóc hôm nay.
-9. Hi vọng ngày mai.
-10. Lòng biết ơn.
-11. Giấc mơ.
-12. Phản tư về câu nói.
+7. Tự chăm sóc hôm nay.
+8. Hi vọng ngày mai.
+9. Lòng biết ơn.
+10. Giấc mơ.
+11. Phản tư về câu nói.
 
 ## Hành vi
 
@@ -144,7 +143,6 @@ với Figma (`99:460` nút lưu, `99:574` banner đã lưu, `99:232` dialog rờ
 | --- | --- | --- | --- |
 | `book-open` | Nội dung nhật ký | — | textarea ~220 |
 | `eye` | Góc nhìn khác | Nếu nhìn sự việc này từ góc khác thì sao? | 3 dòng |
-| `mail` | Nhắn nhủ tương lai (hoặc một câu hỏi) | Bạn muốn nói gì với chính mình ngày mai? | 3 dòng |
 | `spa` | Hôm nay bạn đã tự chăm sóc mình thế nào? | — | 3 dòng |
 | `sunset` | Bạn hi vọng điều gì vào ngày mai? | — | 3 dòng |
 | `heart` | Bày tỏ lòng biết ơn | Điều gì khiến bạn biết ơn hôm nay? | 3 dòng |

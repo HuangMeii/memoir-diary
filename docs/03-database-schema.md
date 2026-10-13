@@ -99,7 +99,7 @@ erDiagram
 | weather_id | smallint | FK→weathers(id), NULL | Thời tiết |
 | diary_text | text | NULL | Nội dung nhật ký |
 | other_perspective | text | NULL | 1 câu quan điểm từ góc nhìn khác |
-| future_message | text | NULL | 1 câu nhắn nhủ tương lai (hoặc câu hỏi) |
+| future_message | text | NULL | 1 câu nhắn nhủ tương lai (hoặc câu hỏi). **Không còn ô nhập trong editor** — giá trị cũ vẫn được giữ và ghi lại nguyên vẹn, xem [05-features.md §6](05-features.md) |
 | self_care | text | NULL | Hôm nay tự chăm sóc bản thân thế nào |
 | tomorrow_hope | text | NULL | Hi vọng cho ngày mai |
 | gratitude | text | NULL | Lòng biết ơn |

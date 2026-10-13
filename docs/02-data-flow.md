@@ -51,7 +51,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     U->>U: Chọn ngày, thời tiết (icon), cảm xúc (icon)
-    U->>U: Điền text: nhật ký, góc nhìn khác, nhắn nhủ tương lai,
+    U->>U: Điền text: nhật ký, góc nhìn khác,
     note over U: tự chăm sóc, hi vọng ngày mai, biết ơn, giấc mơ
     U->>A: POST /entries (JSON) hoặc PUT /entries/{id}
     A->>A: validate (mood_id, weather_id tồn tại)
