@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -14,12 +13,12 @@ import '../home/home_scale.dart';
 import '../home/journal_prompt_card.dart';
 import '../home/month_activity_card.dart';
 import '../home/picker_card.dart';
-import '../home/saved_bar.dart';
 import '../home/shortcut_cards.dart';
 import '../icons.dart';
 import '../tokens.dart';
 import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
+import 'calendar_screen.dart';
 import 'entry_editor.dart';
 import 'month_grids_screen.dart';
 
@@ -45,29 +44,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  /// Message of the "saved" bar, or null while the bar is hidden.
-  String? _saved;
-  Timer? _savedTimer;
-
-  @override
-  void dispose() {
-    _savedTimer?.cancel();
-    super.dispose();
-  }
-
-  void _showSaved(String message) {
-    _savedTimer?.cancel();
-    setState(() => _saved = message);
-    _savedTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) setState(() => _saved = null);
-    });
-  }
-
-  void _hideSaved() {
-    _savedTimer?.cancel();
-    setState(() => _saved = null);
-  }
-
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -125,6 +101,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const MonthGridsScreen(),
+                            ),
+                          );
+                        } else if (destination == AppDestination.eventHistory) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const CalendarScreen(),
                             ),
                           );
                         }
@@ -219,10 +201,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-        if (_saved != null) ...[
-          SizedBox(height: MemoirSpace.s3 * scale),
-          SavedBar(message: _saved!, onClose: _hideSaved),
-        ],
         SizedBox(height: MemoirSpace.s4 * scale),
         const DailyQuoteCard(),
         SizedBox(height: MemoirSpace.s4 * scale),
@@ -275,27 +253,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final today = DateTime.now();
     final iso = dayKey(today);
     try {
-      final existing = await ref.read(entryByDateProvider(iso).future);
       final body = <String, dynamic>{
-        'mood_id': field == 'mood' ? value : existing?.moodId,
-        'weather_id': field == 'weather' ? value : existing?.weatherId,
-        'diary_text': existing?.diaryText,
-        'other_perspective': existing?.otherPerspective,
-        'future_message': existing?.futureMessage,
-        'self_care': existing?.selfCare,
-        'tomorrow_hope': existing?.tomorrowHope,
-        'gratitude': existing?.gratitude,
-        'dream': existing?.dream,
+        'mood_id': field == 'mood' ? value : null,
+        'weather_id': field == 'weather' ? value : null,
       };
-      if (existing == null) {
-        await ref.read(entryRepositoryProvider).create(
-              {'entry_date': iso, ...body},
-            );
-      } else {
-        await ref.read(entryRepositoryProvider).update(existing.id, body);
-      }
+      final existing = await ref.read(entryByDateProvider(iso).future);
+      body
+        ..['mood_id'] = field == 'mood' ? value : existing?.moodId
+        ..['weather_id'] = field == 'weather' ? value : existing?.weatherId
+        ..['diary_text'] = existing?.diaryText
+        ..['other_perspective'] = existing?.otherPerspective
+        ..['future_message'] = existing?.futureMessage
+        ..['self_care'] = existing?.selfCare
+        ..['tomorrow_hope'] = existing?.tomorrowHope
+        ..['gratitude'] = existing?.gratitude
+        ..['dream'] = existing?.dream;
+      await ref.read(entryRepositoryProvider).saveForDate(iso, body);
       refreshEntryData(ref);
-      if (mounted) _showSaved('Đã lưu cảm xúc và thời tiết hôm nay');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -319,4 +293,3 @@ class ErrorText extends StatelessWidget {
     );
   }
 }
-

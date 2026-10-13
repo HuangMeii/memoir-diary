@@ -24,6 +24,30 @@ class EntryRepository {
   Future<void> update(String id, Map<String, dynamic> body) =>
       _source.put('/entries/$id', data: body);
 
+  /// Saves the entry for [isoDate], recovering when another request creates
+  /// the same day between the lookup and the create.
+  Future<DiaryEntry> saveForDate(
+    String isoDate,
+    Map<String, dynamic> body,
+  ) async {
+    var existing = await byDate(isoDate);
+    if (existing != null) {
+      final data = await _source.put('/entries/${existing.id}', data: body);
+      return DiaryEntry.fromJson((data as Map).cast<String, dynamic>());
+    }
+
+    try {
+      final data = await create({'entry_date': isoDate, ...body});
+      return DiaryEntry.fromJson(data);
+    } on ApiException catch (error) {
+      if (!error.isConflict) rethrow;
+      existing = await byDate(isoDate);
+      if (existing == null) rethrow;
+      final data = await _source.put('/entries/${existing.id}', data: body);
+      return DiaryEntry.fromJson((data as Map).cast<String, dynamic>());
+    }
+  }
+
   /// Every entry of one month (`YYYY-MM`), newest first.
   ///
   /// The server already exposes `entries.list(month:)`, so this needs no
