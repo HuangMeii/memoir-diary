@@ -62,10 +62,17 @@ class EntriesEndpoint extends Endpoint {
       where: (t) => t.userId.equals(userId) & t.entryDate.equals(day),
     );
     if (existing != null) {
-      throw ApiException(
-        message: 'An entry for this date already exists',
-        code: 'conflict',
-      );
+      existing.moodId = moodId;
+      existing.weatherId = weatherId;
+      existing.diaryText = diaryText;
+      existing.otherPerspective = otherPerspective;
+      existing.futureMessage = futureMessage;
+      existing.selfCare = selfCare;
+      existing.tomorrowHope = tomorrowHope;
+      existing.gratitude = gratitude;
+      existing.dream = dream;
+      existing.updatedAt = DateTime.now().toUtc();
+      return DiaryEntry.db.updateRow(session, existing);
     }
     return DiaryEntry.db.insertRow(
       session,
