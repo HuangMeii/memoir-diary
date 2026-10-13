@@ -162,7 +162,11 @@ class _RainChartPainter extends CustomPainter {
     }
 
     final slot = (plotRight - plotLeft) / values.length;
-    final barWidth = math.min(slot * 0.34, 34 * scale);
+    // The 24-hour plot packs narrow slots, so its bars take a bigger share of
+    // the slot than the seven-day one — the design draws 18/33 there against
+    // 34/114 for the week.
+    final ratio = values.length > 12 ? 0.55 : 0.34;
+    final barWidth = math.min(slot * ratio, 34 * scale);
 
     for (var i = 0; i < values.length; i++) {
       final value = values[i];

@@ -66,19 +66,36 @@ int _seed(WeatherDay day) =>
     day.date.year * 10000 + day.date.month * 100 + day.date.day;
 
 /// The hours a rainy day concentrates its rain in, by condition wording.
+///
+/// The windows are wide enough that a day's total draws a shape rather than a
+/// few tall spikes: a storm keeps its rain in the afternoon and evening, a
+/// heavy day starts in the morning, and drizzle can run all day.
 List<int> _rainyHours(String condition) {
   final c = condition.toLowerCase();
   if (_has(c, const ['giông', 'bão', 'storm', 'thunder'])) {
-    return const [15, 16, 17, 18];
+    return const [13, 14, 15, 16, 17, 18, 19];
   }
   if (_has(c, const ['nhiều', 'heavy', 'to'])) {
-    return const [12, 13, 14, 15, 16, 17, 18, 19, 20];
+    return const [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
   }
   if (_has(c, const ['nhẹ', 'drizzle', 'light'])) {
-    return const [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+    return const [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
   }
-  return const [14, 15, 16, 17];
+  return const [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 }
+
+/// Rain weights across [hours]: a hump centred on the middle of the window, so
+/// the bars rise and fall instead of forming a flat row.
+List<double> _rainShape(List<int> hours) {
+  final middle = (hours.first + hours.last) / 2;
+  return [
+    for (final hour in hours)
+      math.exp(-0.5 * math.pow((hour - middle) / 1.8, 2)),
+  ];
+}
+
+/// Rounds to one decimal, the resolution the rain charts show.
+double _round1(double value) => (value * 10).round() / 10;
 
 /// Rain chance for [day], as a whole percentage (0–100).
 int rainChance(WeatherDay day) {
@@ -131,8 +148,8 @@ String windDirection(WeatherDay day) => _windDirections[_seed(day) % 8];
 /// The 24 illustrative hours of [day], oldest first.
 ///
 /// The temperature follows a smooth daily curve between the day's low and
-/// high — the low around 02:00, the high around 14:00 — and the rain is spread
-/// evenly over the hours the condition calls for.
+/// high — the low around 02:00, the high around 14:00 — and the rain follows
+/// the hump [_rainShape] draws over the hours the condition calls for.
 List<WeatherHour> hourlySeries(WeatherDay day) {
   final low = day.tempMin ?? 24;
   final high = day.tempMax ?? math.max(low, 32);
@@ -140,15 +157,22 @@ List<WeatherHour> hourlySeries(WeatherDay day) {
           isStormyCondition(day.condition)
       ? _rainyHours(day.condition)
       : const <int>[];
-  final total = rainTotalMm(day);
-  final perHour = rainyHours.isEmpty
-      ? 0.0
-      : ((total / rainyHours.length) * 10).round() / 10;
+  final shape = rainyHours.isEmpty
+      ? const <double>[]
+      : _rainShape(rainyHours);
+  final weightTotal = shape.fold<double>(0, (sum, weight) => sum + weight);
+  final total = rainyHours.isEmpty ? 0.0 : rainTotalMm(day);
+  final weightByHour = <int, double>{
+    for (var i = 0; i < rainyHours.length; i++) rainyHours[i]: shape[i],
+  };
 
   return List<WeatherHour>.generate(24, (hour) {
     final phase = (hour - 14) / 24 * 2 * math.pi;
     final factor = (math.cos(phase) + 1) / 2;
-    final rain = rainyHours.contains(hour) ? perHour : 0.0;
+    final weight = weightByHour[hour];
+    final rain = weight == null || weightTotal <= 0
+        ? 0.0
+        : _round1(total * weight / weightTotal);
     final wet = rain > 0;
     return WeatherHour(
       hour: hour,
@@ -166,27 +190,34 @@ List<WeatherHour> hourlySeries(WeatherDay day) {
 double rainTotalWeekMm(List<WeatherDay> days) =>
     days.fold(0, (sum, day) => sum + rainTotalMm(day));
 
-/// A round top for a rain axis: the next multiple of [step] above [values].
-double axisTop(Iterable<double> values, {double step = 10, double minimum = 20}) {
-  var top = minimum;
-  for (final value in values) {
-    if (value > top) top = value;
-  }
-  return (top / step).ceil() * step;
-}
+/// The "nice" steps a rain axis may use, in millimetres.
+const List<double> _rainSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200];
 
 /// Evenly spaced axis values from 0 to [top], inclusive.
 List<double> axisTicks(double top, {int segments = 5}) =>
     List<double>.generate(segments + 1, (i) => top / segments * i);
 
-/// Axis values for a rain chart: whole [step]s from 0 up to [top].
+/// A rain axis: its top value plus the gridlines from 0 up to it.
 ///
-/// The design labels the weekly plot `0, 10, 20 …` and the hourly one
-/// `0, 1, 2`, so the tick count follows the step instead of a fixed five
-/// segments.
-List<double> rainAxisTicks(double top, {double step = 10}) {
-  final segments = top <= 0 ? 1 : math.max(1, (top / step).round());
-  return axisTicks(top, segments: segments);
+/// The step is the smallest one in [_rainSteps] that keeps the grid down to
+/// [maxSegments] lines. Without that a 10 mm hour draws a comb of twelve 1 mm
+/// rules, while the weekly plot still wants its 10 mm steps.
+({double top, List<double> ticks}) rainAxis(
+  Iterable<double> values, {
+  int maxSegments = 5,
+}) {
+  var max = 0.0;
+  for (final value in values) {
+    if (value > max) max = value;
+  }
+  final needed = max / maxSegments;
+  final step = _rainSteps.firstWhere(
+    (candidate) => candidate >= needed,
+    orElse: () => _rainSteps.last,
+  );
+  // At least two segments, so an all-dry week still has a readable scale.
+  final top = math.max(step * 2, (max / step).ceil() * step);
+  return (top: top, ticks: axisTicks(top, segments: (top / step).round()));
 }
 
 /// The hours the `Nhịp trời trong ngày` strip previews, in order.
