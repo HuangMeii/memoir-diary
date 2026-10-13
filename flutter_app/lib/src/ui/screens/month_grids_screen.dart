@@ -14,6 +14,7 @@ import '../tokens.dart';
 import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import '../widgets/period_control.dart';
+import 'calendar_screen.dart';
 import 'entry_editor.dart';
 
 /// Content width of the `Lưới tháng · Web` frame: 1280 minus its 36 px gutters.
@@ -113,6 +114,12 @@ class _MonthGridsScreenState extends ConsumerState<MonthGridsScreen> {
                         if (destination == AppDestination.home) {
                           Navigator.of(context)
                               .popUntil((route) => route.isFirst);
+                        } else if (destination == AppDestination.eventHistory) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const CalendarScreen(),
+                            ),
+                          );
                         }
                       },
                       showUtilities: sideBySide,

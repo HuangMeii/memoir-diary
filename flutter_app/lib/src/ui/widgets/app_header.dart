@@ -60,10 +60,6 @@ enum AppDestination {
   const AppDestination(this.label);
 
   final String label;
-
-  /// Destinations with no screen behind them yet render dimmed instead of
-  /// pretending to navigate.
-  bool get isBuilt => this != AppDestination.eventHistory;
 }
 
 /// The app header: the Memoir wordmark, today's date, the navigation, the
@@ -212,8 +208,8 @@ class AppHeader extends StatelessWidget {
 /// The `Trang chủ · Lưới tháng · Lịch sử kiện` row the design puts next to the
 /// wordmark.
 ///
-/// The current screen is emphasised and not tappable, destinations with no
-/// screen behind them yet stay dimmed, and everything else calls [onNavigate].
+/// The current screen is emphasised and not tappable; every other destination
+/// calls [onNavigate].
 class _Navigation extends StatelessWidget {
   const _Navigation({
     required this.active,
@@ -228,7 +224,6 @@ class _Navigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = MemoirPalette.of(context);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -243,9 +238,7 @@ class _Navigation extends StatelessWidget {
               fontSize: MemoirType.label,
               color: destination == active
                   ? theme.colorScheme.primary
-                  : destination.isBuilt
-                      ? theme.colorScheme.onSurfaceVariant
-                      : palette.textDisabled,
+                  : theme.colorScheme.onSurfaceVariant,
               fontWeight:
                   destination == active ? FontWeight.w600 : FontWeight.w400,
             ),
@@ -260,17 +253,12 @@ class _Navigation extends StatelessWidget {
     AppDestination destination,
     TextStyle style,
   ) {
-    final tappable = destination.isBuilt &&
-        destination != active &&
-        onNavigate != null;
+    final tappable = destination != active && onNavigate != null;
 
     Widget child = Padding(
       padding: EdgeInsets.symmetric(vertical: MemoirSpace.s2 * scale),
       child: Text(destination.label, style: style),
     );
-    if (!destination.isBuilt) {
-      child = Tooltip(message: 'Sẽ có sau', child: child);
-    }
     if (tappable) {
       child = InkWell(
         borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
