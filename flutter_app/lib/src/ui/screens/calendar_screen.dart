@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth_provider.dart';
 import '../../data/providers.dart';
+import '../calendar/calendar_views.dart';
 import '../home/home_scale.dart';
 import '../theme.dart';
 import '../tokens.dart';
 import '../widgets/app_header.dart';
+import '../widgets/segmented_tabs.dart';
 import 'month_grids_screen.dart';
 
 /// One event as `/events` returns it.
@@ -97,7 +99,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   List<PlannerEvent> _events = [];
   bool _loading = true;
   String? _errorMessage;
-  DateTime? _picked;
+
+  /// Which of the design's three views is on.
+  CalendarView _view = CalendarView.month;
+
+  /// The day the `Ngày` and `Tuần` views — and the month grid's selection —
+  /// point at.
+  DateTime _anchor = _today();
+
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
 
   @override
   void initState() {
@@ -110,22 +123,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   DateTime get _month => ref.read(selectedMonthProvider);
 
-  /// Fetches the browsed month plus a month of future events in one call, so
-  /// the grid's dots and the "sắp tới" list never go out of sync.
+  /// Fetches the events of the window the current view shows plus a month of
+  /// future events, so the grid's dots and the "sắp tới" list never go out of
+  /// sync.
   Future<void> _load() async {
-    final month = _month;
-    final today = DateTime.now();
-    final first = DateTime(month.year, month.month, 1);
-    final monthEnd = DateTime(month.year, month.month + 1, 1)
-        .subtract(const Duration(days: 1));
-    final horizon =
-        DateTime(today.year, today.month, today.day).add(const Duration(days: 30));
-    final to = monthEnd.isAfter(horizon) ? monthEnd : horizon;
+    final (visibleFrom, visibleTo) = _visibleRange;
+    // A week of lead-in keeps the neighbouring weeks painted, and a month of
+    // future events keeps the upcoming list whole.
+    final from = visibleFrom.subtract(const Duration(days: 7));
+    final horizon = _today().add(const Duration(days: 30));
+    final to = visibleTo.isAfter(horizon) ? visibleTo : horizon;
 
     setState(() => _loading = true);
     try {
       final rows =
-          await ref.read(plannerRepositoryProvider).eventsBetween(first, to);
+          await ref.read(plannerRepositoryProvider).eventsBetween(from, to);
       if (!mounted) return;
       setState(() {
         _events = eventsFromRows(rows);
@@ -145,6 +157,79 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     ref.read(selectedMonthProvider.notifier).state =
         DateTime(month.year, month.month);
     _load();
+  }
+
+  /// The first and last day the current view shows.
+  (DateTime, DateTime) get _visibleRange {
+    switch (_view) {
+      case CalendarView.day:
+        return (_anchor, _anchor);
+      case CalendarView.week:
+        final monday = mondayOf(_anchor);
+        return (monday, monday.add(const Duration(days: 6)));
+      case CalendarView.month:
+        final month = _month;
+        return (
+          DateTime(month.year, month.month, 1),
+          DateTime(month.year, month.month + 1, 0),
+        );
+    }
+  }
+
+  /// The loaded events in the shape the `Ngày`/`Tuần` views want.
+  List<CalendarEntry> get _entries => [
+        for (final event in _events)
+          CalendarEntry(
+            id: event.id,
+            title: event.title,
+            start: event.startAt,
+            end: event.endAt ?? event.startAt.add(const Duration(hours: 1)),
+          ),
+      ];
+
+  /// Points the calendar at [day] and reloads the window behind it.
+  void _setAnchor(DateTime day) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    final movedMonth = !_sameMonth(normalized, _month);
+    setState(() => _anchor = normalized);
+    if (movedMonth) {
+      ref.read(selectedMonthProvider.notifier).state =
+          DateTime(normalized.year, normalized.month);
+    }
+    _load();
+  }
+
+  /// The `Hôm nay` pill.
+  void _goToday() => _setAnchor(_today());
+
+  /// The previous/next chevrons: a day, a week or a month, by view.
+  void _shiftPeriod(int steps) {
+    switch (_view) {
+      case CalendarView.day:
+        _setAnchor(_anchor.add(Duration(days: steps)));
+      case CalendarView.week:
+        _setAnchor(_anchor.add(Duration(days: 7 * steps)));
+      case CalendarView.month:
+        _goToMonth(DateTime(_month.year, _month.month + steps));
+    }
+  }
+
+  /// The Lora period heading: `Chủ nhật, 11 tháng 10`, `5 – 11 tháng 10` or
+  /// `Tháng 10`.
+  String _periodTitle() {
+    switch (_view) {
+      case CalendarView.day:
+        return '${weekdayName(_anchor)}, ${_anchor.day} tháng ${_anchor.month}';
+      case CalendarView.week:
+        final monday = mondayOf(_anchor);
+        final sunday = monday.add(const Duration(days: 6));
+        return monday.month == sunday.month
+            ? '${monday.day} – ${sunday.day} tháng ${monday.month}'
+            : '${monday.day} tháng ${monday.month} – ${sunday.day} tháng '
+                '${sunday.month}';
+      case CalendarView.month:
+        return 'Tháng ${_month.month}';
+    }
   }
 
   /// Opens the `Tạo sự kiện` dialog (Figma `42:27239`) and reloads on success.
@@ -192,13 +277,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
   }
 
-  /// The day the calendar points at: today while the browsed month holds
-  /// today, otherwise whatever day was picked in that month.
+  /// The day the month grid points at: the anchor while the browsed month holds
+  /// it, otherwise today, otherwise the first of the month.
   DateTime _selectedDay() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
     final month = _month;
-    if (_picked != null && _sameMonth(_picked!, month)) return _picked!;
+    if (_sameMonth(_anchor, month)) return _anchor;
+    final today = _today();
     if (_sameMonth(today, month)) return today;
     return DateTime(month.year, month.month, 1);
   }
@@ -349,7 +433,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           children: [
             Expanded(
               child: Text(
-                'Tháng ${month.month}',
+                _periodTitle(),
                 style: TextStyle(
                   fontFamily: serifFamily,
                   fontSize: MemoirType.headingEditorial,
@@ -373,9 +457,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               child: InkWell(
                 borderRadius:
                     BorderRadius.circular(MemoirRadius.control * scale),
-                onTap: () => _goToMonth(
-                  DateTime(DateTime.now().year, DateTime.now().month),
-                ),
+                onTap: _goToday,
                 child: Text(
                   'Hôm nay',
                   style: theme.textTheme.labelLarge?.copyWith(
@@ -387,7 +469,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             SizedBox(width: MemoirSpace.s1 * scale),
             IconButton(
-              onPressed: () => _goToMonth(DateTime(month.year, month.month - 1)),
+              tooltip: 'Kỳ trước',
+              onPressed: () => _shiftPeriod(-1),
               icon: Icon(
                 Icons.chevron_left,
                 size: 18 * scale,
@@ -395,12 +478,27 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
             ),
             IconButton(
-              onPressed: () => _goToMonth(DateTime(month.year, month.month + 1)),
+              tooltip: 'Kỳ sau',
+              onPressed: () => _shiftPeriod(1),
               icon: Icon(
                 Icons.chevron_right,
                 size: 18 * scale,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+            SizedBox(width: MemoirSpace.s3 * scale),
+            // `View control`: `Ngày | Tuần | Tháng`.
+            SegmentedTabs<CalendarView>(
+              scale: scale,
+              options: [
+                for (final view in CalendarView.values)
+                  SegmentedTab(view, view.label),
+              ],
+              selected: _view,
+              onChanged: (view) {
+                setState(() => _view = view);
+                _load();
+              },
             ),
           ],
         ),
@@ -417,12 +515,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  /// The two-region workspace of `Lịch tháng · Web`: a 220 px sidebar (mini
-  /// date picker, calendar visibility, reminders) beside the month grid. They
-  /// stack into one column on narrow screens.
+  /// The two-region workspace of `Lịch ngày/tuần/tháng · Web`: the 220 px
+  /// sidebar (mini date picker, calendar visibility, reminders) beside the body
+  /// of the current view — the month grid, the week canvas or the day timeline.
+  /// They stack into one column on narrow screens.
   Widget _workspace(BuildContext context, double scale) {
     final sidebar = _sidebar(context, scale);
-    final calendar = _calendarCard(context, scale);
+    final body = switch (_view) {
+      CalendarView.day => _canvasCard(
+          context,
+          CalendarDaySchedule(date: _anchor, entries: _entries, scale: scale),
+        ),
+      CalendarView.week => _canvasCard(
+          context,
+          CalendarWeekGrid(anchor: _anchor, entries: _entries, scale: scale),
+        ),
+      CalendarView.month => _calendarCard(context, scale),
+    };
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth >= 960 * scale) {
@@ -431,19 +540,36 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             children: [
               SizedBox(width: 232 * scale, child: sidebar),
               SizedBox(width: MemoirSpace.s5 * scale),
-              Expanded(child: calendar),
+              Expanded(child: body),
             ],
           );
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            calendar,
+            body,
             SizedBox(height: MemoirSpace.s4 * scale),
             sidebar,
           ],
         );
       },
+    );
+  }
+
+  /// The white card the `Ngày`/`Tuần` canvases sit in.
+  ///
+  /// Unlike the sidebar cards it has no padding: the timeline and its hairlines
+  /// run to the card's edges, the way the frames draw them.
+  Widget _canvasCard(BuildContext context, Widget child) {
+    final theme = Theme.of(context);
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(MemoirRadius.card),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: child,
     );
   }
 
@@ -563,10 +689,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return SizedBox(
       height: 24,
       child: InkWell(
-        onTap: () {
-          setState(() => _picked = day);
-          _goToMonth(day);
-        },
+        onTap: () => _setAnchor(day),
         borderRadius: BorderRadius.circular(100),
         child: Center(
           child: Container(
@@ -812,7 +935,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: InkWell(
-        onTap: () => setState(() => _picked = day),
+        onTap: () => setState(() => _anchor = day),
         borderRadius: BorderRadius.circular(10 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
