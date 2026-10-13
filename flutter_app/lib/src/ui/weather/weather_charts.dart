@@ -12,6 +12,19 @@ const double _axisGutter = 30;
 const double _topPad = 18;
 const double _bottomPad = 22;
 
+/// The value the top gridline of a rain chart carries.
+///
+/// [axisTicks] runs from 0 upward, so the scale has to come from the largest
+/// tick: taking the first one leaves the top at 0, falls back to 1 and blows
+/// every bar far past the canvas.
+double rainAxisTop(List<double> ticks) {
+  var top = 0.0;
+  for (final tick in ticks) {
+    if (tick > top) top = tick;
+  }
+  return top <= 0 ? 1 : top;
+}
+
 /// Bar chart of rain accumulation.
 ///
 /// Used for the `Lượng mưa trong tuần` and `Lượng mưa theo giờ` plots: a light
@@ -59,18 +72,22 @@ class RainChart extends StatelessWidget {
     final chart = SizedBox(
       width: double.infinity,
       height: plotHeight * scale,
-      child: RepaintBoundary(
-        child: CustomPaint(
-          painter: _RainChartPainter(
-            values: values,
-            labels: labels,
-            ticks: ticks,
-            selectedIndex: selectedIndex,
-            labelEvery: labelEvery,
-            scale: scale,
-            barColor: palette.rainChart,
-            gridColor: theme.colorScheme.outlineVariant,
-            labelColor: theme.colorScheme.onSurfaceVariant,
+      // Whatever the caller's axis says, a bar stays inside the plot instead of
+      // bleeding over the cards around it.
+      child: ClipRect(
+        child: RepaintBoundary(
+          child: CustomPaint(
+            painter: _RainChartPainter(
+              values: values,
+              labels: labels,
+              ticks: ticks,
+              selectedIndex: selectedIndex,
+              labelEvery: labelEvery,
+              scale: scale,
+              barColor: palette.rainChart,
+              gridColor: theme.colorScheme.outlineVariant,
+              labelColor: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),
@@ -133,7 +150,7 @@ class _RainChartPainter extends CustomPainter {
     if (plotRight <= plotLeft || plotBottom <= plotTop) return;
 
     final plotHeight = plotBottom - plotTop;
-    final top = ticks.isEmpty || ticks.first <= 0 ? 1.0 : ticks.first;
+    final top = rainAxisTop(ticks);
     final line = Paint()
       ..color = gridColor
       ..strokeWidth = MemoirStroke.weather1;
@@ -172,7 +189,11 @@ class _RainChartPainter extends CustomPainter {
           canvas,
           text,
           centerX - _textWidth(text) / 2,
-          plotBottom - barHeight - _textHeight() - 2 * scale,
+          // Keep the label inside the plot even when the bar fills it.
+          math.max(
+            plotTop,
+            plotBottom - barHeight - _textHeight() - 2 * scale,
+          ),
         );
       }
       if (labelEvery > 0 && i % labelEvery == 0 && i < labels.length) {
@@ -258,18 +279,20 @@ class TemperatureChart extends StatelessWidget {
     final chart = SizedBox(
       width: double.infinity,
       height: plotHeight * scale,
-      child: RepaintBoundary(
-        child: CustomPaint(
-          painter: _TemperatureChartPainter(
-            values: values,
-            labels: labels,
-            ticks: ticks,
-            selectedIndex: selectedIndex,
-            labelEvery: labelEvery,
-            scale: scale,
-            lineColor: theme.colorScheme.primary,
-            gridColor: theme.colorScheme.outlineVariant,
-            labelColor: theme.colorScheme.onSurfaceVariant,
+      child: ClipRect(
+        child: RepaintBoundary(
+          child: CustomPaint(
+            painter: _TemperatureChartPainter(
+              values: values,
+              labels: labels,
+              ticks: ticks,
+              selectedIndex: selectedIndex,
+              labelEvery: labelEvery,
+              scale: scale,
+              lineColor: theme.colorScheme.primary,
+              gridColor: theme.colorScheme.outlineVariant,
+              labelColor: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),
@@ -332,8 +355,8 @@ class _TemperatureChartPainter extends CustomPainter {
     final plotHeight = plotBottom - plotTop;
     if (plotRight <= plotLeft || plotHeight <= 0) return;
 
-    final top = ticks.first;
-    final bottom = ticks.last;
+    final top = ticks.reduce(math.max);
+    final bottom = ticks.reduce(math.min);
     final span = top - bottom;
     if (span <= 0) return;
 

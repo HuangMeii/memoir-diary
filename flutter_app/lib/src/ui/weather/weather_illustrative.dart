@@ -179,5 +179,15 @@ double axisTop(Iterable<double> values, {double step = 10, double minimum = 20})
 List<double> axisTicks(double top, {int segments = 5}) =>
     List<double>.generate(segments + 1, (i) => top / segments * i);
 
+/// Axis values for a rain chart: whole [step]s from 0 up to [top].
+///
+/// The design labels the weekly plot `0, 10, 20 …` and the hourly one
+/// `0, 1, 2`, so the tick count follows the step instead of a fixed five
+/// segments.
+List<double> rainAxisTicks(double top, {double step = 10}) {
+  final segments = top <= 0 ? 1 : math.max(1, (top / step).round());
+  return axisTicks(top, segments: segments);
+}
+
 /// The hours the `Nhịp trời trong ngày` strip previews, in order.
 const List<int> previewHours = [6, 9, 12, 15, 18, 21];

@@ -342,7 +342,7 @@ class WeatherWeekTab extends StatelessWidget {
               RainChart(
                 values: rain,
                 labels: [for (final day in days) '${day.date.day}'],
-                ticks: axisTicks(axisTop(rain)),
+                ticks: rainAxisTicks(axisTop(rain)),
                 selectedIndex: index,
                 onBarTap: onSelectDay,
                 scale: scale,
@@ -557,7 +557,7 @@ class WeatherDayTab extends StatelessWidget {
               RainChart(
                 values: rainValues,
                 labels: [for (final hour in hours) '${hour.hour}'],
-                ticks: axisTicks(rainTop, segments: rainTop.round()),
+                ticks: rainAxisTicks(rainTop, step: 1),
                 labelEvery: 6,
                 scale: scale,
               ),
@@ -680,7 +680,7 @@ class WeatherHourTab extends StatelessWidget {
               RainChart(
                 values: rainValues,
                 labels: [for (final hour in hours) '${hour.hour}'],
-                ticks: axisTicks(rainTop, segments: rainTop.round()),
+                ticks: rainAxisTicks(rainTop, step: 1),
                 selectedIndex: index,
                 onBarTap: onSelectHour,
                 labelEvery: 6,
