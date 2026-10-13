@@ -48,13 +48,20 @@ class EntryEditorScreen extends ConsumerStatefulWidget {
 class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   final _diary = TextEditingController();
   final _perspective = TextEditingController();
-  final _future = TextEditingController();
   final _selfCare = TextEditingController();
   final _hope = TextEditingController();
   final _gratitude = TextEditingController();
   final _dream = TextEditingController();
   final _reflection = TextEditingController();
   final _selfMessage = TextEditingController();
+
+  /// The `Nhắn nhủ tương lai` field was taken out of the editor on request.
+  ///
+  /// The column is still read and written back unchanged, for two reasons: the
+  /// server clears any field the client leaves out, so dropping it here would
+  /// wipe text people already wrote, and keeping the value around means the
+  /// field can come back without losing anything.
+  String? _futureMessage;
 
   int? _moodId;
   int? _weatherId;
@@ -93,7 +100,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   List<TextEditingController> get _allControllers => [
         _diary,
         _perspective,
-        _future,
         _selfCare,
         _hope,
         _gratitude,
@@ -141,7 +147,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
   String _snapshot() => [
         _diary.text,
         _perspective.text,
-        _future.text,
         _selfCare.text,
         _hope.text,
         _gratitude.text,
@@ -159,7 +164,7 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
     if (entry != null) {
       _diary.text = entry.diaryText ?? '';
       _perspective.text = entry.otherPerspective ?? '';
-      _future.text = entry.futureMessage ?? '';
+      _futureMessage = entry.futureMessage;
       _selfCare.text = entry.selfCare ?? '';
       _hope.text = entry.tomorrowHope ?? '';
       _gratitude.text = entry.gratitude ?? '';
@@ -193,7 +198,9 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
         'entry_date': iso,
         'diary_text': _text(_diary),
         'other_perspective': _text(_perspective),
-        'future_message': _text(_future),
+        // Sent back untouched: the field is gone from the editor, but the
+        // server clears whatever the client leaves out.
+        'future_message': _futureMessage,
         'self_care': _text(_selfCare),
         'tomorrow_hope': _text(_hope),
         'gratitude': _text(_gratitude),
@@ -569,11 +576,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
             label: 'Góc nhìn khác',
             controller: _perspective,
             hint: 'Nếu nhìn sự việc này từ góc khác thì sao?'),
-        _Field(
-            icon: Icons.mark_email_unread_outlined,
-            label: 'Nhắn nhủ tương lai (hoặc một câu hỏi)',
-            controller: _future,
-            hint: 'Bạn muốn nói gì với chính mình ngày mai?'),
         _Field(
             icon: Icons.spa_outlined,
             label: 'Hôm nay bạn đã tự chăm sóc mình thế nào?',

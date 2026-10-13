@@ -17,11 +17,15 @@ class ActivityDay {
 
   /// 1..5, or 0 when the day has no entry at all.
   ///
-  /// Only tapping the mood and the weather lands on level 1 ("Ít"); a page with
-  /// every question answered lands on level 5.
+  /// The five steps split the page rather than count its fields: tapping only
+  /// the mood and the weather stays level 1 ("Ít") whatever the editor asks for,
+  /// and a page with every slot filled always reaches level 5. Reading the ratio
+  /// is what keeps the darkest shade reachable when a question is added to or
+  /// taken out of the editor.
   int get level {
     if (filled <= 0) return 0;
-    return (((filled - 1) ~/ 2) + 1).clamp(1, 5);
+    if (total <= 0) return 1;
+    return ((((filled - 1) / total) * 5).floor() + 1).clamp(1, 5);
   }
 }
 

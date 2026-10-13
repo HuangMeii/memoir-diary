@@ -349,19 +349,22 @@ class DiaryEntry {
       );
 
   /// Every content slot of a day, in the order the editor asks for them.
-  static const int contentFieldCount = 9;
+  ///
+  /// `Nhắn nhủ tương lai` used to be one of them; the field left the editor, so
+  /// it no longer counts towards how complete a page is (the column is kept, see
+  /// `entry_editor.dart`).
+  static const int contentFieldCount = 8;
 
   /// How many of the [contentFieldCount] slots this day actually fills.
   ///
   /// The home heatmap colours a day by completeness: a day where only the
-  /// weather and the mood were tapped scores 2, a fully written page scores 9.
+  /// weather and the mood were tapped scores 2, a fully written page scores 8.
   int get filledFields {
     var filled = 0;
     if (moodId != null) filled++;
     if (weatherId != null) filled++;
     if (_filled(diaryText)) filled++;
     if (_filled(otherPerspective)) filled++;
-    if (_filled(futureMessage)) filled++;
     if (_filled(selfCare)) filled++;
     if (_filled(tomorrowHope)) filled++;
     if (_filled(gratitude)) filled++;

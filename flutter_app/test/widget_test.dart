@@ -347,7 +347,7 @@ void main() {
       );
 
       expect(entry.filledFields, 3);
-      expect(DiaryEntry.contentFieldCount, 9);
+      expect(DiaryEntry.contentFieldCount, 8);
     });
 
     test('reports 0 for a day with no content at all', () {
@@ -358,7 +358,7 @@ void main() {
 
   group('ActivityDay', () {
     test('maps how full a day is onto the five shades', () {
-      int level(int filled) => ActivityDay(filled: filled, total: 9).level;
+      int level(int filled) => ActivityDay(filled: filled, total: 8).level;
 
       expect(level(0), 0, reason: 'nothing written is not a shade');
       expect(level(1), 1);
@@ -366,7 +366,7 @@ void main() {
       expect(level(3), 2);
       expect(level(5), 3);
       expect(level(7), 4);
-      expect(level(9), 5);
+      expect(level(8), 5, reason: 'a full page reaches the darkest shade');
     });
   });
 
