@@ -114,6 +114,22 @@ void main() {
       expect(axisTicks(50), [0, 10, 20, 30, 40, 50]);
       expect(axisTicks(2, segments: 2), [0, 1, 2]);
     });
+
+    test('rainAxisTicks step by the unit the design labels', () {
+      expect(rainAxisTicks(50), [0, 10, 20, 30, 40, 50]);
+      expect(rainAxisTicks(20), [0, 10, 20]);
+      expect(rainAxisTicks(2, step: 1), [0, 1, 2]);
+    });
+
+    test('rainAxisTop reads the scale from the largest tick', () {
+      // axisTicks opens on 0; taking the first tick as the scale flattens the
+      // chart and pushes every bar past the canvas.
+      expect(rainAxisTicks(20).first, 0);
+      expect(rainAxisTop(rainAxisTicks(20)), 20);
+      expect(rainAxisTop(rainAxisTicks(2, step: 1)), 2);
+      expect(rainAxisTop(const <double>[]), 1);
+      expect(rainAxisTop(const [0]), 1);
+    });
   });
 
   group('weather labels', () {
