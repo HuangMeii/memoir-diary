@@ -181,10 +181,16 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                         decoration: const InputDecoration(labelText: 'Ghi chú'),
                       ),
                       const SizedBox(height: 14),
-                      FilledButton.icon(
-                        onPressed: _saving ? null : _save,
-                        icon: const Icon(Icons.save_outlined),
-                        label: Text(_saving ? 'Đang lưu...' : 'Lưu'),
+                      // Spans the card: `filledButtonTheme` only pins the
+                      // height, so a button that must fill its column asks for
+                      // it explicitly.
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _saving ? null : _save,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(_saving ? 'Đang lưu...' : 'Lưu'),
+                        ),
                       ),
                     ],
                   ),
