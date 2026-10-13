@@ -1,5 +1,10 @@
 # 01 — Kiến trúc hệ thống
 
+> ⚠️ **Cập nhật 2026-10-11:** backend FastAPI đã bị gỡ; backend hiện tại là
+> **Serverpod/Dart** trong `memoir_server/`. Sơ đồ và đường dẫn `/api/v1/...`
+> bên dưới mô tả **bản FastAPI cũ** — tham chiếu lịch sử, xem
+> [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
+
 ## 1. Tổng quan
 
 Memoir được thiết kế theo mô hình **client–server 3 tầng**:

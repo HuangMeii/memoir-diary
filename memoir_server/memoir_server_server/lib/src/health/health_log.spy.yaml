@@ -1,0 +1,14 @@
+### Daily health tracking. One row per user per day.
+class: HealthLog
+table: health_logs
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  logDate: DateTime, unique(per=userId)
+  steps: int?
+  workoutMinutes: int?
+  waterMl: int?
+  sleepHours: double?
+  weightKg: double?
+  note: String?
+  createdAt: DateTime, default=now

@@ -1,0 +1,8 @@
+### The stored daily pair expanded with its quote rows.
+class: DailyQuotePair
+fields:
+  id: UuidValue
+  quoteDate: DateTime
+  quote: Quote?
+  quote2: Quote?
+  selfMessage: SelfMessage?

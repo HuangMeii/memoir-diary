@@ -1,0 +1,14 @@
+### Weekly goal / todo.
+class: Todo
+table: todos
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  title: String
+  notes: String?
+  dueDate: DateTime?
+  weekLabel: String?
+  priority: int, default=2
+  isDone: bool, default=false
+  completedAt: DateTime?
+  createdAt: DateTime, default=now

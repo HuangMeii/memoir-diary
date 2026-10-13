@@ -1,285 +1,307 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
 import '../../core/auth_provider.dart';
+import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../home/daily_quote_card.dart';
+import '../home/dashboard_columns.dart';
+import '../home/home_greeting.dart';
+import '../home/home_scale.dart';
+import '../home/journal_prompt_card.dart';
+import '../home/month_activity_card.dart';
+import '../home/picker_card.dart';
+import '../home/saved_bar.dart';
+import '../home/shortcut_cards.dart';
+import '../icons.dart';
+import '../tokens.dart';
+import '../widgets/app_footer.dart';
+import '../widgets/app_header.dart';
 import 'entry_editor.dart';
 import 'month_grids_screen.dart';
-import 'notes_screen.dart';
-import 'planner_screen.dart';
-import '../widgets/icon_picker_row.dart';
 
-/// Home = today's overview: quick mood/weather pick, the daily quote pair,
-/// and shortcuts into the editor, grids and the other journals.
-class HomeScreen extends ConsumerWidget {
+/// Content width of the web layout: the design's 1024 px dashboard centred on
+/// an 1120 px page with 48 px gutters.
+///
+/// Every size here is in design pixels; [homeScaleFor] decides how far the
+/// whole thing is zoomed up to fill the window.
+const double kHomeContentWidth = 1024;
+
+/// Home = today's overview, laid out like the design's `HOME-01 · Web` frames.
+///
+/// A wide screen gets the header — which carries the utilities — and two
+/// dashboard columns: the main column records today (quick picks, quote,
+/// writing rhythm) and the secondary one holds everything that navigates away
+/// (the journal invitation and the shortcuts). Narrow screens stack the same
+/// blocks in one column.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  /// Message of the "saved" bar, or null while the bar is hidden.
+  String? _saved;
+  Timer? _savedTimer;
+
+  @override
+  void dispose() {
+    _savedTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showSaved(String message) {
+    _savedTimer?.cancel();
+    setState(() => _saved = message);
+    _savedTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _saved = null);
+    });
+  }
+
+  void _hideSaved() {
+    _savedTimer?.cancel();
+    setState(() => _saved = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final today = DateTime.now();
+    final auth = ref.watch(authProvider);
+    // Watched before the data providers below so a guarded provider never runs
+    // while the stored token is still being read.
+    ref.watch(authReadyProvider);
+
+    if (auth.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final moods = ref.watch(moodsProvider);
     final weathers = ref.watch(weathersProvider);
-    final entry = ref.watch(entryByDateProvider(today));
-    final user = ref.watch(authProvider).user;
+    final entry = ref.watch(entryByDateProvider(dayKey(today)));
+    final displayName = auth.user?['display_name'] as String?;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Memoir'),
-        actions: [
-          IconButton(
-            tooltip: 'Đăng xuất',
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => refreshEntryData(ref),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            Text(
-              user != null && user['display_name'] != null
-                  ? 'Xin chào, ${user['display_name']} 👋'
-                  : 'Xin chào 👋',
-              style: theme.textTheme.titleMedium,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Zoom the design so the 1120 px Figma frame fills the window. At
+          // 1536 px that is 1.37, which removes the wide empty gutters.
+          final scale = homeScaleFor(constraints.maxWidth);
+          // The type only follows part of the way (1.1x cap), so the same
+          // window does not render a 17.8 px body and a 49 px greeting.
+          final textScale = homeTextScaleFor(constraints.maxWidth);
+          final horizontal = math.max(
+            16.0,
+            (constraints.maxWidth - kHomeContentWidth * scale) / 2,
+          );
+          final contentWidth = constraints.maxWidth - 2 * horizontal;
+          final wide = contentWidth >= kDashboardBreakpoint * scale;
+          final media = MediaQuery.of(context);
+
+          return MediaQuery(
+            data: media.copyWith(
+              textScaler: textScale == 1
+                  ? media.textScaler
+                  : HomeTextScaler(base: media.textScaler, factor: textScale),
             ),
-            Text(
-              'Hôm nay ${today.day}/${today.month}/${today.year}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+            child: HomeScale(
+              factor: scale,
+              textFactor: textScale,
+              child: SafeArea(
+                bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    weathers.when(
-                      loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => ErrorText('$e'),
-                      data: (items) => IconPickerRow(
-                        label: 'THỜI TIẾT',
-                        items: items,
-                        selectedId: entry.valueOrNull?.weatherId,
-                        onSelected: (id) => _pick(context, ref, weather: id),
-                      ),
+                    AppHeader(
+                      date: today,
+                      initials: initialsOf(displayName),
+                      name: displayName,
+                      destination: AppDestination.home,
+                      onNavigate: (destination) {
+                        if (destination == AppDestination.monthGrid) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const MonthGridsScreen(),
+                            ),
+                          );
+                        }
+                      },
+                      showUtilities: wide,
+                      gutter: horizontal,
+                      onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
-                    const SizedBox(height: 18),
-                    moods.when(
-                      loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => ErrorText('$e'),
-                      data: (items) => IconPickerRow(
-                        label: 'CẢM XÚC',
-                        items: items,
-                        selectedId: entry.valueOrNull?.moodId,
-                        onSelected: (id) => _pick(context, ref, mood: id),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async => refreshEntryData(ref),
+                        child: ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontal,
+                            MemoirSpace.s6 * scale,
+                            horizontal,
+                            MemoirSpace.s8 * scale,
+                          ),
+                          children: [
+                            HomeGreeting(
+                              date: today,
+                              userName: displayName,
+                              onRefresh: () => refreshEntryData(ref),
+                            ),
+                            SizedBox(height: MemoirSpace.s5 * scale),
+                            DashboardColumns(
+                              main: _mainColumn(
+                                context,
+                                today,
+                                entry,
+                                weathers,
+                                moods,
+                              ),
+                              side: _sideColumn(context, today, entry),
+                            ),
+                            if (!wide) ...[
+                              SizedBox(height: MemoirSpace.s8 * scale),
+                              // The header only carries the utilities on a wide
+                              // screen; the narrow layout keeps them here.
+                              const UtilitiesSection(),
+                            ],
+                            SizedBox(height: MemoirSpace.s6 * scale),
+                            const PrivacyNote(),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            const QuotePairCard(),
-            const SizedBox(height: 14),
-            const ShortcutGrid(),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => EntryEditorScreen(date: today),
-              )),
-              icon: const Icon(Icons.edit_note),
-              label: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Text('Viết nhật ký hôm nay',
-                    style: TextStyle(fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
+    );
+  }
+  /// The recording half of the dashboard: quick picks, the saved bar, the
+  /// daily quote and this month's writing rhythm.
+  Widget _mainColumn(
+    BuildContext context,
+    DateTime today,
+    AsyncValue<DiaryEntry?> entry,
+    AsyncValue<List<LookupItem>> weathers,
+    AsyncValue<List<LookupItem>> moods,
+  ) {
+    final scale = HomeScale.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        WeatherMoodRow(
+          weather: weathers.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => ErrorText('$e'),
+            data: (items) => PickerCard(
+              title: 'Thời tiết hôm nay',
+              items: items,
+              iconName: (item) => weatherIcon(item.code),
+              selectedId: entry.valueOrNull?.weatherId,
+              onSelected: (id) => _pick(context, field: 'weather', value: id),
+            ),
+          ),
+          mood: moods.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => ErrorText('$e'),
+            data: (items) => PickerCard(
+              title: 'Cảm xúc hôm nay',
+              items: items,
+              iconName: (item) => moodIcon(item.code),
+              selectedId: entry.valueOrNull?.moodId,
+              onSelected: (id) => _pick(context, field: 'mood', value: id),
+            ),
+          ),
+        ),
+        if (_saved != null) ...[
+          SizedBox(height: MemoirSpace.s3 * scale),
+          SavedBar(message: _saved!, onClose: _hideSaved),
+        ],
+        SizedBox(height: MemoirSpace.s4 * scale),
+        const DailyQuoteCard(),
+        SizedBox(height: MemoirSpace.s4 * scale),
+        MonthActivityCard(month: DateTime(today.year, today.month)),
+      ],
+    );
+  }
+
+  /// The navigation half: the invitation to today's page and the shortcuts.
+  Widget _sideColumn(
+    BuildContext context,
+    DateTime today,
+    AsyncValue<DiaryEntry?> entry,
+  ) {
+    final scale = HomeScale.of(context);
+    final written = (entry.valueOrNull?.diaryText ?? '').trim().isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        JournalPromptCard(
+          date: today,
+          written: written,
+          onOpen: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => EntryEditorScreen(date: today),
+            ),
+          ),
+        ),
+        SizedBox(height: MemoirSpace.s6 * scale),
+        const ShortcutCards(),
+      ],
     );
   }
 
   /// Saves the quick mood/weather pick straight away.
+  ///
+  /// There is no `PUT /entries/by-date/...` route: the API only exposes
+  /// `GET /entries/by-date/{date}`, `POST /entries` and `PUT /entries/{id}`,
+  /// so the day is created first when it is missing.
+  ///
+  /// [field] names the half that changed and [value] is its new id (`null`
+  /// clears it). The whole entry is sent because the server assigns every
+  /// field it receives, so a partial body would clear the rest.
   Future<void> _pick(
-    BuildContext context,
-    WidgetRef ref, {
-    int? mood,
-    int? weather,
+    BuildContext context, {
+    required String field,
+    required int? value,
   }) async {
+    final today = DateTime.now();
+    final iso = dayKey(today);
     try {
-      await ref.read(apiClientProvider).put('/entries/by-date/today', data: {
-        if (mood != null) 'mood_id': mood,
-        if (weather != null) 'weather_id': weather,
-      });
-      refreshEntryData(ref);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Đã lưu')));
+      final existing = await ref.read(entryByDateProvider(iso).future);
+      final body = <String, dynamic>{
+        'mood_id': field == 'mood' ? value : existing?.moodId,
+        'weather_id': field == 'weather' ? value : existing?.weatherId,
+        'diary_text': existing?.diaryText,
+        'other_perspective': existing?.otherPerspective,
+        'future_message': existing?.futureMessage,
+        'self_care': existing?.selfCare,
+        'tomorrow_hope': existing?.tomorrowHope,
+        'gratitude': existing?.gratitude,
+        'dream': existing?.dream,
+      };
+      if (existing == null) {
+        await ref.read(entryRepositoryProvider).create(
+              {'entry_date': iso, ...body},
+            );
+      } else {
+        await ref.read(entryRepositoryProvider).update(existing.id, body);
       }
+      refreshEntryData(ref);
+      if (mounted) _showSaved('Đã lưu cảm xúc và thời tiết hôm nay');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('$e')));
       }
     }
-  }
-}
-
-/// Shows one quote from the library + one of the user's own messages.
-class QuotePairCard extends ConsumerWidget {
-  const QuotePairCard({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final pair = ref.watch(randomPairProvider);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text('💬 Câu hôm nay', style: theme.textTheme.titleSmall),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Câu khác',
-                  icon: const Icon(Icons.refresh, size: 20),
-                  onPressed: () => ref.invalidate(randomPairProvider),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            pair.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (e, _) => ErrorText('$e'),
-              data: (data) {
-                if (data == null) {
-                  return Text(
-                    'Thêm ít nhất một câu nhắn của riêng bạn để nhận cặp câu.',
-                    style: theme.textTheme.bodySmall,
-                  );
-                }
-                final quote = data['quote'];
-                final mine = data['self_message'];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('“${quote?['text'] ?? ''}”',
-                        style: theme.textTheme.bodyMedium),
-                    Text(
-                      '— ${quote?['author'] ?? 'Thư viện'}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const Divider(height: 24),
-                    Text('💌 Của bạn: “${mine?['text'] ?? ''}”',
-                        style: theme.textTheme.bodyMedium),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () => showReflectionDialog(context, ref),
-              icon: const Icon(Icons.psychology_outlined, size: 18),
-              label: const Text('Suy nghĩ của bạn về 2 câu này?'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Lets the user record what they think about the two quotes above.
-void showReflectionDialog(BuildContext context, WidgetRef ref) {
-  final controller = TextEditingController();
-  showDialog<void>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Suy nghĩ của bạn'),
-      content: TextField(
-        controller: controller,
-        maxLines: 4,
-        decoration: const InputDecoration(hintText: 'Viết suy nghĩ...'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Hủy'),
-        ),
-        FilledButton(
-          onPressed: () async {
-            if (controller.text.trim().isEmpty) return;
-            try {
-              await ref
-                  .read(apiClientProvider)
-                  .post('/reflections', data: {'text': controller.text.trim()});
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            } catch (e) {
-              if (!dialogContext.mounted) return;
-              ScaffoldMessenger.of(dialogContext)
-                  .showSnackBar(SnackBar(content: Text('$e')));
-            }
-          },
-          child: const Text('Lưu'),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Navigation tiles to the other parts of the journal.
-class ShortcutGrid extends StatelessWidget {
-  const ShortcutGrid({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = <(IconData, String, Widget)>[
-      (Icons.calendar_month, 'Lưới tháng', const MonthGridsScreen()),
-      (Icons.sticky_note_2_outlined, 'Ghi chú', const NotesScreen()),
-      (Icons.checklist, 'Todo & Sự kiện', const PlannerScreen()),
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: items.map((item) {
-        return SizedBox(
-          width: (MediaQuery.of(context).size.width - 42) / 2,
-          child: Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => item.$3),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(item.$1, size: 26),
-                    const SizedBox(height: 10),
-                    Text(item.$2, style: Theme.of(context).textTheme.titleSmall),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
   }
 }
 
@@ -297,3 +319,4 @@ class ErrorText extends StatelessWidget {
     );
   }
 }
+

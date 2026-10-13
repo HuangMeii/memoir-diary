@@ -1,0 +1,9 @@
+### Mood lookup (5 rows, seeded).
+class: Mood
+table: moods
+fields:
+  code: String, unique
+  labelVi: String
+  colorHex: String
+  icon: String
+  sortOrder: int, default=0

@@ -1,0 +1,12 @@
+### One forecast day, mapped onto the five weather groups.
+class: WeatherDay
+fields:
+  date: DateTime
+  weatherCode: int
+  weatherId: int?
+  condition: String
+  icon: String
+  tempMin: double?
+  tempMax: double?
+  tempAvg: double?
+  precipitationMm: double?

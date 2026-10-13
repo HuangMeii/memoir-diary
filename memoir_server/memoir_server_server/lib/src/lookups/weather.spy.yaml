@@ -1,0 +1,9 @@
+### Weather lookup (5 rows, seeded).
+class: Weather
+table: weathers
+fields:
+  code: String, unique
+  labelVi: String
+  colorHex: String
+  icon: String
+  sortOrder: int, default=0

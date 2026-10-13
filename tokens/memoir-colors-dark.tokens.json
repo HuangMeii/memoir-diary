@@ -1,0 +1,501 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "Memoir · Colors": {
+    "background": {
+      "canvas": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.101961,
+            0.117647,
+            0.105882
+          ],
+          "hex": "#1a1e1b"
+        }
+      },
+      "page": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.121569,
+            0.137255,
+            0.12549
+          ],
+          "hex": "#1f2320"
+        }
+      }
+    },
+    "text": {
+      "brand": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.560784,
+            0.647059,
+            0.560784
+          ],
+          "hex": "#8fa58f"
+        }
+      },
+      "primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.968627,
+            0.956863,
+            0.933333
+          ],
+          "hex": "#f7f4ee"
+        }
+      },
+      "secondary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.682353,
+            0.717647,
+            0.658824
+          ],
+          "hex": "#aeb7a8"
+        }
+      },
+      "on-primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.968627,
+            0.956863,
+            0.933333
+          ],
+          "hex": "#f7f4ee"
+        }
+      },
+      "disabled": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.478431,
+            0.517647,
+            0.470588
+          ],
+          "hex": "#7a8478"
+        }
+      }
+    },
+    "status": {
+      "default": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.560784,
+            0.647059,
+            0.560784
+          ],
+          "hex": "#8fa58f"
+        }
+      }
+    },
+    "border": {
+      "default": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.227451,
+            0.258824,
+            0.227451
+          ],
+          "hex": "#3a423a"
+        }
+      },
+      "error": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.545098,
+            0.352941,
+            0.290196
+          ],
+          "hex": "#8b5a4a"
+        }
+      }
+    },
+    "icon": {
+      "primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.968627,
+            0.956863,
+            0.933333
+          ],
+          "hex": "#f7f4ee"
+        }
+      },
+      "brand": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.560784,
+            0.647059,
+            0.560784
+          ],
+          "hex": "#8fa58f"
+        }
+      },
+      "secondary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.682353,
+            0.717647,
+            0.658824
+          ],
+          "hex": "#aeb7a8"
+        }
+      },
+      "disabled": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.478431,
+            0.517647,
+            0.470588
+          ],
+          "hex": "#7a8478"
+        }
+      },
+      "on-primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.968627,
+            0.956863,
+            0.933333
+          ],
+          "hex": "#f7f4ee"
+        }
+      }
+    },
+    "surface": {
+      "brand-subtle": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.168627,
+            0.203922,
+            0.176471
+          ],
+          "hex": "#2b342d"
+        }
+      },
+      "input": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.14902,
+            0.168627,
+            0.156863
+          ],
+          "hex": "#262b28"
+        }
+      },
+      "disabled": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.164706,
+            0.188235,
+            0.168627
+          ],
+          "hex": "#2a302b"
+        }
+      },
+      "illustration": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.14902,
+            0.168627,
+            0.156863
+          ],
+          "hex": "#262b28"
+        }
+      },
+      "card": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.14902,
+            0.168627,
+            0.156863
+          ],
+          "hex": "#262b28"
+        }
+      }
+    },
+    "action": {
+      "primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.286275,
+            0.388235,
+            0.301961
+          ],
+          "hex": "#49634d"
+        }
+      },
+      "disabled": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.164706,
+            0.188235,
+            0.168627
+          ],
+          "hex": "#2a302b"
+        }
+      }
+    },
+    "feedback": {
+      "error": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.85098,
+            0.545098,
+            0.431373
+          ],
+          "hex": "#d98b6e"
+        }
+      },
+      "error-background": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.227451,
+            0.164706,
+            0.141176
+          ],
+          "hex": "#3a2a24"
+        }
+      },
+      "warning-background": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.227451,
+            0.2,
+            0.14902
+          ],
+          "hex": "#3a3326"
+        }
+      },
+      "warning": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.780392,
+            0.647059,
+            0.415686
+          ],
+          "hex": "#c7a56a"
+        }
+      },
+      "session-background": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.168627,
+            0.203922,
+            0.176471
+          ],
+          "hex": "#2b342d"
+        }
+      }
+    },
+    "illustration": {
+      "backdrop": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.184314,
+            0.211765,
+            0.192157
+          ],
+          "hex": "#2f3631"
+        }
+      },
+      "shadow": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.109804,
+            0.129412,
+            0.117647
+          ],
+          "hex": "#1c211e"
+        }
+      },
+      "paper": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.968627,
+            0.956863,
+            0.933333
+          ],
+          "hex": "#f7f4ee"
+        }
+      },
+      "page-outline": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.227451,
+            0.258824,
+            0.227451
+          ],
+          "hex": "#3a423a"
+        }
+      },
+      "writing": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.682353,
+            0.717647,
+            0.658824
+          ],
+          "hex": "#aeb7a8"
+        }
+      },
+      "botanical": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.490196,
+            0.568627,
+            0.431373
+          ],
+          "hex": "#7d916e"
+        }
+      },
+      "bookmark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.690196,
+            0.72549,
+            0.6
+          ],
+          "hex": "#b0b999"
+        }
+      }
+    },
+    "elevation": {
+      "drop-shadow-3": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.2,
+            0.254902,
+            0.180392
+          ],
+          "hex": "#33412e",
+          "alpha": 0.0314
+        }
+      }
+    },
+    "heatmap": {
+      "mood": {
+        "very-sad": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.background.page}"
+        },
+        "sad": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.border.default}"
+        },
+        "neutral": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.surface.brand-subtle}"
+        },
+        "happy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.botanical}"
+        },
+        "very-happy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}"
+        }
+      },
+      "weather": {
+        "sunny": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.feedback.warning}"
+        },
+        "cloudy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.border.default}"
+        },
+        "rainy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.botanical}"
+        },
+        "windy": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.illustration.bookmark}"
+        },
+        "storm": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}"
+        }
+      }
+    },
+    "chart": {
+      "weather": {
+        "rain-accumulation": {
+          "$type": "color",
+          "$value": "{Memoir · Colors.action.primary}",
+          "$description": "Weather semantic color extracted from existing design."
+        }
+      }
+    }
+  }
+}

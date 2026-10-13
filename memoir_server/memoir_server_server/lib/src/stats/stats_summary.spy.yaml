@@ -1,0 +1,9 @@
+### Monthly summary response, mirroring FastAPI `StatsSummaryOut`.
+class: StatsSummary
+fields:
+  month: String
+  daysLogged: int
+  moodCounts: Map<String, int>
+  weatherCounts: Map<String, int>
+  totalSteps: int
+  totalWorkoutMinutes: int

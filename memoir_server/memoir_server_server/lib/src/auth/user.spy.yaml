@@ -1,0 +1,19 @@
+### User account (multi-user). Mirrors the FastAPI `users` table.
+class: User
+table: users
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  email: String, unique
+  username: String, unique
+  ### Never sent to the client.
+  passwordHash: String?, scope=serverOnly
+  displayName: String?
+  isActive: bool, default=true
+  ### "user" | "admin" (plain string, not an enum, so adding one is a code change).
+  role: String, default='user'
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now
+  ### Optional weather location; null falls back to the configured default.
+  weatherLat: double?
+  weatherLon: double?
+  weatherLocationName: String?

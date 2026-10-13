@@ -1,0 +1,9 @@
+### Opaque session token issued at login. Stored so logout can revoke it.
+class: AuthToken
+table: auth_tokens
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue
+  token: String, unique
+  expiresAt: DateTime
+  createdAt: DateTime, default=now

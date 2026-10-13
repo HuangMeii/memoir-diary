@@ -1,0 +1,16 @@
+### Per-day weather snapshot so a past day's weather survives API outages.
+class: WeatherSnapshot
+table: weather_snapshots
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  forecastDate: DateTime, unique(per=userId)
+  ### Raw WMO code from the API.
+  weatherCode: int
+  ### Matching row in the weathers lookup.
+  weatherId: int?
+  tempMin: double?
+  tempMax: double?
+  tempAvg: double?
+  precipitationMm: double?
+  fetchedAt: DateTime, default=now

@@ -1,6 +1,6 @@
-# 📔 Memoir — Nhật ký số (Digital Diary)
+﻿# 📔 Memoir — Nhật ký số (Digital Diary)
 
-> Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **FastAPI**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
+> Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **Serverpod/Dart**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
 
 ---
 
@@ -24,6 +24,10 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 - ✅ **Todo list**: mục tiêu tuần, sự kiện đặc biệt, lịch biểu.
 - ❤️ **Theo dõi sức khỏe**: số bước chân, thời gian tập luyện.
 - 👤 **Multi-user**: đăng ký / đăng nhập / cách ly dữ liệu theo tài khoản.
+- 🔐 **Quản trị (admin)**: thêm/sửa/xoá câu trong **kho câu dùng chung**, xem danh sách tài khoản, khoá/mở tài khoản, nâng/hạ quyền. Tài khoản thường không sửa được câu dùng chung.
+- 🌳 **Khu vườn học tập** *(đang phát triển — xem [docs/09-focus-garden.md](docs/09-focus-garden.md))*: timer tập trung có chống gian lân → đổi thời gian học thành **coin/EXP** → gieo **hạt đậu nảy mầm** → mua **nước, phân bón** → **bảng xếp hạng** và **sự kiện** do admin tổ chức.
+- 📆 **Calendar** *(đặc tả xong, chưa code — xem [docs/10-calendar.md](docs/10-calendar.md))*: xem lịch **ngày / tuần / tháng**, **timeline theo giờ**, tạo/sửa/xoá sự kiện, **lặp lại**, **nhắc nhở**, liên kết với Study Garden và nhật ký, thống kê thời gian đã lên lịch vs thực tế học.
+- 🌦️ **Dự báo thời tiết thật** *(đặc tả xong, chưa code — xem [docs/11-weather-forecast.md](docs/11-weather-forecast.md))*: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện nhiệt độ và dự báo, gợi ý chọn thời tiết khi viết nhật ký.
 
 ---
 
@@ -31,7 +35,7 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 
 ```
 Flutter App (Android/iOS) ─┐
-                           ├──(HTTPS: JSON + multipart upload)──▶ FastAPI
+                           ├──(HTTPS: Serverpod RPC + binary upload)──▶ Serverpod/Dart
 Flutter Web (build web)   ─┘                                      │
                                                        ┌──────────┴───────────┐
                                                        ▼                      ▼
@@ -42,6 +46,13 @@ Flutter Web (build web)   ─┘                                      │
                                                                            reflections, notes, todos,
                                                                            events, schedule_items,
                                                                            health_logs
+                                                                            · Phase 8-13 (chua co):
+                                                                            ·   focus_sessions, garden_profiles,
+                                                                            ·   garden_plots, shop_items, user_inventory,
+                                                                            ·   garden_challenges, garden_challenge_progress
+                                                                            · Phase 14-20 (chua co):
+                                                                            ·   weather_snapshots,
+                                                                            ·   events (sau khi gop schedule_items)
 ```
 
 - **1 codebase Flutter** build ra cả **app** (`flutter build apk/appbundle`, iOS) và **web** (`flutter build web`).
@@ -53,9 +64,9 @@ Flutter Web (build web)   ─┘                                      │
 
 | Tầng | Công nghệ |
 |---|---|
-| Frontend | Flutter (Material 3), Riverpod, go_router, dio, image_picker/file_picker, flutter_secure_storage, table_calendar, fl_chart |
-| Backend | Python 3.12, FastAPI, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic v2, boto3, psycopg |
-| Auth | JWT (HS256) + bcrypt (passlib), OAuth2 password flow |
+| Frontend | Flutter 3.47 (Material 3), Riverpod, go_router, dio, image_picker, flutter_secure_storage, fl_chart |
+| Backend | Dart 3.13, Serverpod 4.0 (RPC sinh sẵn), PostgreSQL, storage gateway cho ảnh |
+| Auth | JWT (HS256) + bcrypt, OAuth2 password flow, phân quyền `role` (`user` / `admin`) |
 | Database | PostgreSQL (Neon serverless) |
 | Object Storage | Neon Object Storage (S3-compatible) |
 | Tooling | Git, winget, Docker (tùy chọn) |
@@ -76,12 +87,37 @@ Memoir/
 │  ├─ 05-features.md
 │  ├─ 06-setup-deploy.md
 │  ├─ 07-ui-design.md
-│  └─ 08-quotes-seed.md
-├─ backend/        # FastAPI (Phase 1)
+│  ├─ UI/
+│  │  ├─ README.md
+│  │  ├─ 01-information-architecture.md
+│  │  ├─ 02-screen-inventory.md
+│  │  ├─ 03-user-flows.md
+│  │  ├─ 04-wireframes.md
+│  │  ├─ 05-design-system.md
+│  │  └─ 06-figma-handoff.md
+│  ├─ UI-design/
+│  │  ├─ README.md
+│  │  ├─ 01-auth-login.md
+│  │  ├─ ...
+│  │  └─ 26-shared-components.md
+│  ├─ convert/
+│  │  ├─ README.md
+│  │  ├─ 00-decision-and-risks.md
+│  │  ├─ 01-current-backend-inventory.md
+│  │  ├─ 02-target-architecture.md
+│  │  ├─ 03-api-to-flutter-mapping.md
+│  │  ├─ 04-data-and-storage-migration.md
+│  │  ├─ 05-execution-phases.md
+│  │  └─ 06-testing-and-cutover.md
+│  ├─ 08-quotes-seed.md
+│  ├─ 09-focus-garden.md
+│  ├─ 10-calendar.md
+│  └─ 11-weather-forecast.md
+├─ memoir_server/  # Backend Serverpod/Dart (client + server)
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **tài liệu/thiết kế** đã hoàn thành. Code backend và Flutter nằm ở các Phase tiếp theo (xem `PLAN.md`).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18) và phần còn lại của dự báo thời tiết (Phase 19–20) đã có đặc tả nhưng chưa viết code; riêng Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng xong cùng màn hình Home theo Figma, và dự báo thời tiết chỉ nằm trong mục Tiện ích.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -96,30 +132,39 @@ Memoir/
 | [docs/05-features.md](docs/05-features.md) | Đặc tả tính năng → màn hình |
 | [docs/06-setup-deploy.md](docs/06-setup-deploy.md) | Cài đặt, cấu hình, migrate, seed, build |
 | [docs/07-ui-design.md](docs/07-ui-design.md) | Wireframe, bảng màu mood/weather |
+| [docs/UI/README.md](docs/UI/README.md) | Bộ đặc tả giao diện Figma: IA, màn hình, flow, wireframe, design system, handoff |
+| [docs/UI-design/README.md](docs/UI-design/README.md) | Brief riêng cho từng trang/màn hình để dựng Figma |
+| [docs/convert/README.md](docs/convert/README.md) | Kế hoạch chuyển backend sang Serverpod/Dart — **đã cutover**, FastAPI đã gỡ |
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
+| [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
+| [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |
+| [docs/11-weather-forecast.md](docs/11-weather-forecast.md) | **Dự báo thời tiết** *(chưa triển khai)*: tích hợp Open-Meteo, cache 2 tầng, ánh xạ mã WMO |
 
 ---
 
 ## 6. Quick start (sau khi code xong)
 
 ```bash
-# Backend
-cd backend
-python -m venv .venv && .venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env      # điền DATABASE_URL, S3_*, JWT_SECRET
-alembic upgrade head
-python -m app.seed.seed
-uvicorn app.main:app --reload
+# Backend (Serverpod/Dart)
+cd memoir_server
+dart pub get
+serverpod start          # tự quản PostgreSQL nhúng, apply migration khi boot
+# API: http://localhost:8080 · Insights: http://localhost:8081
 
 # Flutter web
 cd flutter_app
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome    # mặc định trỏ tới http://127.0.0.1:8080
 
 # Flutter app
 flutter build apk --release
 ```
+
+**Tài khoản admin** (quản lý kho câu dùng chung):
+
+Quyền admin giờ do server Dart quyết định (`memoir_server_server/lib/src/admin/`);
+nhóm endpoint admin chỉ chấp nhận role phù hợp, tài khoản thường sẽ bị từ chối.
+Các script `seed`/`admin` bằng Python đã bị gỡ cùng backend FastAPI.
 
 Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 
@@ -127,14 +172,30 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 
 ## 7. Roadmap
 
-- [x] Phase 0 — Tài liệu & thiết kế (tài liệu này)
-- [ ] Phase 1 — Backend FastAPI + DB + Auth
-- [ ] Phase 2 — Seed dữ liệu (moods, weathers, 100 quotes)
-- [ ] Phase 3 — Flutter scaffold
-- [ ] Phase 4 — Flutter features
-- [ ] Phase 5 — Upload ảnh end-to-end
-- [ ] Phase 6 — Build web + app
+- [x] Phase 0 — Tài liệu & thiết kế
+- [x] Phase 1 — Backend FastAPI + DB + Auth
+- [x] Phase 2 — Seed dữ liệu (moods, weathers, 100 quotes)
+- [x] Phase 3 — Flutter scaffold
+- [x] Phase 4 — Flutter features
+- [x] Phase 5 — Upload ảnh end-to-end
+- [ ] Phase 6 — Build apk *(web đã xong; apk cần cài Android SDK)*
 - [ ] Phase 7 — Kiểm thử & deploy
+- [ ] Phase 8 — Backend Focus Garden: timer + session *(đặc tả đã xong, chưa code)*
+- [ ] Phase 9 — Chống gian lân + coin/EXP
+- [ ] Phase 10 — Vườn, shop, vật phẩm
+- [ ] Phase 11 — Bảng xếp hạng + sự kiện
+- [ ] Phase 12 — Flutter: timer + hub vườn
+- [ ] Phase 13 — Flutter: shop, leaderboard, sự kiện
+- [ ] Phase 14 — Calendar: gộp bảng `schedule_items` → `events` *(đặc tả xong, chưa code)*
+- [ ] Phase 15 — Backend Calendar: CRUD + lặp + thống kê
+- [ ] Phase 16 — Flutter: timeline ngày + form tạo/sửa
+- [ ] Phase 17 — Calendar: tuần/tháng + nhắc nhở
+- [ ] Phase 18 — Calendar: liên kết Study + Journal
+- [ ] Phase 19 — Backend: API thời tiết Open-Meteo *(đặc tả xong, chưa code)*
+- [ ] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí
+- [x] Phase 21 — UI: thời tiết & cảm xúc cùng một hàng *(đã dựng ở `home/picker_card.dart`; dự báo thời tiết chỉ nằm trong Tiện ích)*
+
+> Các phase 8–20 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md) và [docs/11-weather-forecast.md](docs/11-weather-forecast.md).
 
 ---
 

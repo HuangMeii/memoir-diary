@@ -1,0 +1,30 @@
+services:
+  # Development services
+  postgres:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: memoir_server
+      POSTGRES_PASSWORD: "lxxx4c4pUjmS0yoStW3FF2W7XkZxMtnh"
+    volumes:
+      - memoir_server_data:/var/lib/postgresql/data
+
+
+  # Test services
+  postgres_test:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "9090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: memoir_server_test
+      POSTGRES_PASSWORD: "TII7ST3eN-FweAMsTOVJO9AE_5V0y3wP"
+    volumes:
+      - memoir_server_test_data:/var/lib/postgresql/data
+
+
+volumes:
+  memoir_server_data:
+  memoir_server_test_data:

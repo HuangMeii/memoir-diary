@@ -87,7 +87,7 @@ Ví dụ:
 feat(backend): add JWT auth endpoints
 fix(flutter): correct mood color on month grid
 docs(api): document /random-pair response
-chore(deps): bump fastapi to 0.115
+chore(deps): bump serverpod to 4.0.5
 ```
 
 ---

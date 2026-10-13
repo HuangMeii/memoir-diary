@@ -1,1 +1,0 @@
-"""Seed data package: reference lookups + the 100-quote library."""

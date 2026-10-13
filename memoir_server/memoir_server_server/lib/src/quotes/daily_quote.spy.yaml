@@ -1,0 +1,12 @@
+### The quote pair shown on a given day. One row per user per day.
+class: DailyQuote
+table: daily_quotes
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  quoteDate: DateTime, unique(per=userId)
+  quoteId: UuidValue?
+  ### Second library quote; set when the user has too few self messages.
+  quoteId2: UuidValue?
+  selfMessageId: UuidValue?
+  createdAt: DateTime, default=now

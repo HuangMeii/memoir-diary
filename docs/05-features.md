@@ -1,5 +1,9 @@
 # 05 — Đặc tả tính năng (Features)
 
+> ⚠️ **Cập nhật 2026-10-11:** backend FastAPI đã bị gỡ; backend hiện tại là
+> **Serverpod/Dart**. Đặc tả hành vi/UI vẫn đúng, chỉ phần gọi API là đã đổi —
+> xem [convert/09-remove-fastapi.md](convert/09-remove-fastapi.md).
+
 Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widget trong Flutter.
 
 ---
@@ -47,9 +51,11 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 ## 7. Kho câu + Câu ngẫu nhiên + Phản tư
 
 - **Kho câu**: 100 câu động viên/giáo dục thu thập từ mạng xã hội (xem [08-quotes-seed.md](08-quotes-seed.md)); **CRUD được** (`features/quotes/quote_manager_screen.dart`).
-- **Hiển thị hằng ngày**: `GET /random-pair` trả **1 câu từ kho** + **1 câu từ lời nhắn nhủ của bản thân**.
+- **Hiển thị hằng ngày**: `GET /daily-quotes/today` trả **1 câu từ kho** + **1 câu từ lời nhắn nhủ của bản thân**.
+- **Lưu theo ngày**: cặp câu được ghi vào `daily_quotes` (1 dòng / ngày / user) nên mở app nhiều lần trong ngày vẫn thấy cùng câu. Nút 🔄 xoá dòng hôm nay để quay câu khác.
+- **Lịch sử**: màn hình "Lịch sử câu nói" xem lại theo tháng, gồm cả `quote_id` để tra ngược câu gốc.
 - **Phản tư**: ô "Suy nghĩ như thế nào về 2 câu trên?" → lưu `reflections.thought`.
-- **UI**: `features/quotes/daily_quote_card.dart` (2 thẻ + ô phản tư).
+- **UI**: `QuotePairCard` trong `home_screen.dart` + `quote_history_screen.dart`.
 
 ## 8. Hôm nay bạn đã tự chăm sóc mình như thế nào?
 
@@ -95,7 +101,90 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ---
 
-## 15. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
+## 15. Khu vườn học tập (Focus Garden) — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Thiết kế đầy đủ: [09-focus-garden.md](09-focus-garden.md).
+> Lộ trình: [Phase 8–13](../PLAN.md).
+
+- **Mô tả**: vòng lặp "học → được thưởng": timer tập trung có chống gian lân → đổi thời gian học thành coin/EXP → gieo hạt đậu nảy mầm → mua nước, phân bón → xếp hạng và sự kiện.
+- **Dữ liệu**: `focus_sessions`, `garden_profiles`, `garden_plots`, `shop_items`, `user_inventory`, `garden_challenges`, `garden_challenge_progress`.
+
+### 15.1. Timer tập trung
+- **Mô tả**: chọn thời lượng, bấm START, đếm ngồi. Mỗi 30s gửi **heartbeat** lên server.
+- **UI**: `focus_timer_screen.dart` — đồng hồ đếm ngược + 4 nút: **Pause** (tạm dừng → Resume), **Reset** (hủy → 0 coin), **Thoát app** (hủy), **Hoàn thành**.
+- **Luồng**: START → Focus → *(Pause | Thoát app | Reset)* → *(Tạm dừng | Hủy session)* → *(Resume)* → Hoàn thành → **kiểm tra gian lân** → **kiểm tra giới hạn ngày** → **tính Study Time** → **tính Coin/EXP**.
+- **Quy tắc**: server đo thời gian; quãng > 90s không heartbeat bị loại khỏi `credited_minutes`; phiên < 60s không được thưởng.
+- **Mất mạng**: hiện cảnh báo và **tự pause** (không đếm rồi mất thưởng).
+
+### 15.2. Gieo hạt đậu — cây nảy mầm
+- **Mô tả**: mỗi phiên hoàn thành tự tưới và cộng `credited_minutes` vào cây đang lớn.
+- **5 giai đoạn**: `seed` (hạt) → `sprout` (nảy mầm, 30) → `young` (cây non, 90) → `mature` (cây lớn, 180) → `bloom` (nở hoa, 300).
+- **Thu hoạch**: chỉ khi `bloom` → thưởng EXP, cây đánh dấu `harvested_at`.
+- **UI**: `garden_screen.dart` (hub) + `plant_view.dart` (vẽ cây theo stage bằng `CustomPainter`).
+
+### 15.3. Shop: coin → nước, phân bón, hạt
+- **Giá**: nước **5** · phân bón **10** · hạt đậu **3** coin.
+- **Tỉ lệ**: `coin = floor(credited_minutes / 5)`, `exp = credited_minutes`, `level = 1 + exp // 300`.
+- **UI**: `garden_shop_screen.dart` — danh mục + số coin hiện có + túi vật phẩm.
+
+### 15.4. Bảng xếp hạng
+- **Mô tả**: xếp theo phút học đã được tính thưởng, kỳ `day` / `week` / `all`.
+- **UI**: `leaderboard_screen.dart` — luôn hiển thị **hạng của chính mình** dù ngoài top.
+- **Riêng tư**: chỉ hiện `username`, không lộ email hay nội dung nhật ký.
+
+### 15.5. Sự kiện (tổ chức bởi admin)
+- **Mô tả**: admin tạo sự kiện có mốc (`metric`, `target`) và phần thưởng trong cửa sổ thời gian; tiến độ user **tự động** tăng theo hoạt động thật.
+- **Nhận thưởng**: nút claim khi đủ điều kiện (`claimed_at` chống nhận 2 lần).
+- **UI**: `garden_events_screen.dart` (user) + API `/admin/garden/challenges` (admin).
+
+---
+
+## 16. Module Calendar — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Xem [10-calendar.md](10-calendar.md). Lộ trình: [Phase 14–18](../PLAN.md).
+
+- **Mô tả**: quản lý lịch ở mức phù hợp app nhật ký — ngang hàng với Study Garden.
+- **Dữ liệu**: `events` (sau khi hợp nhất `schedule_items`), liên kết `entry_id` + `focus_session_id`.
+
+### 16.1. Xem lịch theo 3 chế độ
+- **Ngày**: timeline theo giờ 06:00 → 23:00, sự kiện nằm đúng vị trí.
+- **Tuần**: 7 cột, tuần bắt đầu **thứ Hai**.
+- **Tháng**: lưới ngày, sự kiện hiện chấm nhỏ trong ô.
+
+### 16.2. Quản lý sự kiện
+- **Tạo / sửa / xoá** — tiêu đề, giờ bắt đầu–kết thúc, mô tả, địa điểm, màu, cả ngày hay không.
+- **Lặp lại**: hằng ngày / tuần / tháng, có `recurrence_until`.
+- **Trạng thái**: `planned` → `done` hoặc `skipped`; xem lịch chia **đã qua / đang diễn ra / sắp tới**.
+
+### 16.3. Nhắc nhở (cả 2 kiểu)
+- **Trong lúc app đang mở**: banner/snackbar khi tới giờ nhắc (5/15/30/60 phút).
+- **Khi mở app**: danh sách "sắp tới cần chú ý" trong 24h tới.
+- Server tính sẵn `remind_at`; web **không có push** nên đóng app thì không nhắc được — đã chấp nhận.
+
+### 16.4. Liên kết & thống kê
+- **Study**: mở Focus Timer ngay từ sự kiện "học buổi sáng" (cần Phase 8).
+- **Journal**: "Ghi nhật ký sau sự kiện".
+- **Thống kê**: tổng phút **đã lên lịch** so với **thực tế học**.
+
+### 16.5. Quyết định thiết kế
+- Sự kiện lặp lưu **một hàng + quy tắc**, bung ra khi đọc — không nhân bản hàng.
+- Sửa/xoá **một lần lặp đơn lẻ** trả `409`; chỉ sửa được cả chuỗi.
+
+---
+
+## 17. Dự báo thời tiết (Open-Meteo) — CHƯA TRIỂN KHAI
+
+> **Đặc tả, chưa có trong mã nguồn.** Xem [11-weather-forecast.md](11-weather-forecast.md). Lộ trình: [Phase 19–20](../PLAN.md).
+
+- **Mô tả**: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện thời tiết thật.
+- **Dữ liệu**: bảng `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) + vị trí lưu trên `users`.
+- **UI**: thẻ thời tiết trên Home + màn hình đổi vị trí + nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết.
+- **Quy tắc**: backend gọi API (không cho client gọi thẳng), **cache 2 tầng**, timeout 5s, lỗi thì trả dữ liệu cache kèm nhãn "cập nhật lúc HH:mm".
+- **Ánh xạ**: mã WMO → 5 nhóm `weathers` sẵn có (nắng/râm/mưa/bão/khác).
+
+---
+
+## 18. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
 
 | Yêu cầu | Bảng | Cột/Trường |
 |---|---|---|
@@ -115,3 +204,12 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 | Sự kiện đặc biệt | events | title, start_at, end_at |
 | Lịch biểu | schedule_items | title, start_at, recurrence_rule |
 | Sức khỏe | health_logs | steps, workout_minutes |
+| *(P8–13)* Timer tập trung | focus_sessions | planned_minutes, elapsed_seconds, credited_minutes, stall_count |
+| *(P8–13)* Ví coin/EXP | garden_profiles | coins, exp, level, streak_days |
+| *(P8–13)* Cây nảy mầm | garden_plots | stage, growth, water_level, fertilizer_level |
+| *(P8–13)* Mua nước/phân bón/hạt | shop_items, user_inventory | price_coins, item_code, quantity |
+| *(P8–13)* Bảng xếp hạng | garden_profiles, focus_sessions | (SUM credited_minutes theo kỳ) |
+| *(P8–13)* Sự kiện | garden_challenges, garden_challenge_progress | metric, target, progress, reward_coins |
+| *(P14–18)* Lịch / sự kiện | events (gộp schedule_items) | start_at, end_at, recurrence_rule, reminder_minutes, status |
+| *(P14–18)* Liên kết lịch ↔ nhật ký / học | events | entry_id, focus_session_id |
+| *(P19–20)* Dự báo thời tiết | weather_snapshots, users | weather_code, temp_max, temp_min, weather_lat, weather_lon |
