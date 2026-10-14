@@ -1,0 +1,12 @@
+### Many-to-many link between a note and the diary entries it references.
+class: NoteEntryLink
+table: note_entry_links
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  noteId: UuidValue, relation(parent=notes, onDelete=Cascade)
+  entryId: UuidValue, relation(parent=diary_entries, onDelete=Cascade)
+  createdAt: DateTime, default=now
+indexes:
+  note_entry_unique_idx:
+    fields: noteId, entryId
+    unique: true

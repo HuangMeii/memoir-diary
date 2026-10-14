@@ -23,6 +23,8 @@ import 'package:memoir_server_client/src/protocol/lookups/mood.dart'
 import 'package:memoir_server_client/src/protocol/lookups/weather.dart'
     as _icswdq95;
 import 'package:memoir_server_client/src/protocol/notes/note.dart' as _i8gjk5qx;
+import 'package:memoir_server_client/src/protocol/notes/note_checklist_item.dart'
+    as _izn2v3c7;
 import 'package:memoir_server_client/src/protocol/planner/event.dart'
     as _ijprwagz;
 import 'package:memoir_server_client/src/protocol/planner/schedule_item.dart'
@@ -53,6 +55,9 @@ import 'journal/image_upload_ticket.dart' as _ir6xzchz;
 import 'lookups/mood.dart' as _ie2xden6;
 import 'lookups/weather.dart' as _i262ionk;
 import 'notes/note.dart' as _iylmodbg;
+import 'notes/note_checklist_item.dart' as _iv4f5jvm;
+import 'notes/note_detail.dart' as _i7hg4pp3;
+import 'notes/note_entry_link.dart' as _ifh3czcz;
 import 'planner/event.dart' as _itmremj5;
 import 'planner/schedule_item.dart' as _ixsuwyrb;
 import 'planner/todo.dart' as _ila1vkid;
@@ -78,6 +83,9 @@ export 'journal/image_upload_ticket.dart';
 export 'lookups/mood.dart';
 export 'lookups/weather.dart';
 export 'notes/note.dart';
+export 'notes/note_checklist_item.dart';
+export 'notes/note_detail.dart';
+export 'notes/note_entry_link.dart';
 export 'planner/event.dart';
 export 'planner/schedule_item.dart';
 export 'planner/todo.dart';
@@ -161,6 +169,15 @@ class Protocol extends _isc.SerializationManager {
     if (t == _iylmodbg.Note) {
       return _iylmodbg.Note.fromJson(data) as T;
     }
+    if (t == _iv4f5jvm.NoteChecklistItem) {
+      return _iv4f5jvm.NoteChecklistItem.fromJson(data) as T;
+    }
+    if (t == _i7hg4pp3.NoteDetail) {
+      return _i7hg4pp3.NoteDetail.fromJson(data) as T;
+    }
+    if (t == _ifh3czcz.NoteEntryLink) {
+      return _ifh3czcz.NoteEntryLink.fromJson(data) as T;
+    }
     if (t == _itmremj5.Event) {
       return _itmremj5.Event.fromJson(data) as T;
     }
@@ -238,6 +255,17 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_iylmodbg.Note?>()) {
       return (data != null ? _iylmodbg.Note.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_iv4f5jvm.NoteChecklistItem?>()) {
+      return (data != null ? _iv4f5jvm.NoteChecklistItem.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_i7hg4pp3.NoteDetail?>()) {
+      return (data != null ? _i7hg4pp3.NoteDetail.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ifh3czcz.NoteEntryLink?>()) {
+      return (data != null ? _ifh3czcz.NoteEntryLink.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_itmremj5.Event?>()) {
       return (data != null ? _itmremj5.Event.fromJson(data) : null) as T;
     }
@@ -281,6 +309,27 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_i7z01835.WeatherSnapshot?>()) {
       return (data != null ? _i7z01835.WeatherSnapshot.fromJson(data) : null)
+          as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == _isc.getType<List<String>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<String>(e)).toList()
+              : null)
+          as T;
+    }
+    if (t == List<_iv4f5jvm.NoteChecklistItem>) {
+      return (data as List)
+              .map((e) => deserialize<_iv4f5jvm.NoteChecklistItem>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_isn947xq.DiaryEntry>) {
+      return (data as List)
+              .map((e) => deserialize<_isn947xq.DiaryEntry>(e))
+              .toList()
           as T;
     }
     if (t == Map<String, int>) {
@@ -333,6 +382,41 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == List<_i8gjk5qx.Note>) {
       return (data as List).map((e) => deserialize<_i8gjk5qx.Note>(e)).toList()
+          as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == _isc.getType<List<String>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<String>(e)).toList()
+              : null)
+          as T;
+    }
+    if (t == List<_izn2v3c7.NoteChecklistItem>) {
+      return (data as List)
+              .map((e) => deserialize<_izn2v3c7.NoteChecklistItem>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_izn2v3c7.NoteChecklistItem>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_izn2v3c7.NoteChecklistItem>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_isc.UuidValue>) {
+      return (data as List).map((e) => deserialize<_isc.UuidValue>(e)).toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_isc.UuidValue>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_isc.UuidValue>(e))
+                    .toList()
+              : null)
           as T;
     }
     if (t == List<_ijprwagz.Event>) {
@@ -395,6 +479,9 @@ class Protocol extends _isc.SerializationManager {
       _ie2xden6.Mood => 'Mood',
       _i262ionk.Weather => 'Weather',
       _iylmodbg.Note => 'Note',
+      _iv4f5jvm.NoteChecklistItem => 'NoteChecklistItem',
+      _i7hg4pp3.NoteDetail => 'NoteDetail',
+      _ifh3czcz.NoteEntryLink => 'NoteEntryLink',
       _itmremj5.Event => 'Event',
       _ixsuwyrb.ScheduleItem => 'ScheduleItem',
       _ila1vkid.Todo => 'Todo',
@@ -448,6 +535,12 @@ class Protocol extends _isc.SerializationManager {
         return 'Weather';
       case _iylmodbg.Note():
         return 'Note';
+      case _iv4f5jvm.NoteChecklistItem():
+        return 'NoteChecklistItem';
+      case _i7hg4pp3.NoteDetail():
+        return 'NoteDetail';
+      case _ifh3czcz.NoteEntryLink():
+        return 'NoteEntryLink';
       case _itmremj5.Event():
         return 'Event';
       case _ixsuwyrb.ScheduleItem():
@@ -518,6 +611,15 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'Note') {
       return deserialize<_iylmodbg.Note>(data['data']);
+    }
+    if (dataClassName == 'NoteChecklistItem') {
+      return deserialize<_iv4f5jvm.NoteChecklistItem>(data['data']);
+    }
+    if (dataClassName == 'NoteDetail') {
+      return deserialize<_i7hg4pp3.NoteDetail>(data['data']);
+    }
+    if (dataClassName == 'NoteEntryLink') {
+      return deserialize<_ifh3czcz.NoteEntryLink>(data['data']);
     }
     if (dataClassName == 'Event') {
       return deserialize<_itmremj5.Event>(data['data']);

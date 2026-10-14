@@ -16,6 +16,7 @@ health:
   - save:
 entries:
   - list:
+  - get:
   - byDate:
   - create:
   - update:
@@ -30,8 +31,12 @@ lookups:
   - weathers:
 notes:
   - list:
+  - get:
   - create:
   - update:
+  - restore:
+  - archive:
+  - purge:
   - delete:
 events:
   - list:

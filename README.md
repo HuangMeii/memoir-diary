@@ -124,6 +124,7 @@ Memoir/
 
 | Tài liệu | Nội dung |
 |---|---|
+| [Jira — Board MD (Backlog)](https://huynhmai2755.atlassian.net/jira/software/projects/MD/boards/4/backlog?atlOrigin=eyJpIjoiMjQzNWI4NzFlNjQ5NDBkZmI0YWU4YTg4OGUzZGRhMmMiLCJwIjoiaiJ9) | Bảng backlog / trạng thái công việc của dự án trên Jira |
 | [docs/01-architecture.md](docs/01-architecture.md) | Kiến trúc, thành phần, triển khai |
 | [docs/02-data-flow.md](docs/02-data-flow.md) | Luồng hoạt động (auth, lưu nhật ký, upload ảnh, câu ngẫu nhiên, lưới tháng) |
 | [docs/03-database-schema.md](docs/03-database-schema.md) | Chi tiết bảng, cột, khóa, ERD |

@@ -59,7 +59,12 @@ class ServerpodDataSource implements BackendDataSource {
       case '/reflections':
         return (await _client.reflections.list()).map(_reflectionMap).toList();
       case '/notes':
-        return (await _client.notes.list()).map(_noteMap).toList();
+        return (await _client.notes.list(
+          includeArchived: query?['archived'] != 'false',
+          trashedOnly: query?['trashed'] == 'true',
+        ))
+            .map(_noteMap)
+            .toList();
       case '/todos':
         return (await _client.todos.list()).map(_todoMap).toList();
       case '/events':
@@ -103,6 +108,26 @@ class ServerpodDataSource implements BackendDataSource {
         path.length - '/images'.length,
       );
       return _imagesForEntry(entryId);
+    }
+    if (path.startsWith('/notes/')) {
+      final id = path.substring('/notes/'.length);
+      if (id.isNotEmpty && !id.contains('/')) {
+        return _noteDetailMap(
+          await _request(() => _client.notes.get(_uuid(id))),
+        );
+      }
+    }
+    if (path.startsWith('/entries/') &&
+        !path.endsWith('/images') &&
+        !path.contains('/by-date')) {
+      final id = path.substring('/entries/'.length);
+      if (id.isNotEmpty && !id.contains('/')) {
+        final entry = await _request(() => _client.entries.get(_uuid(id)));
+        if (entry == null) {
+          throw ApiException('Entry not found', statusCode: 404);
+        }
+        return _entryMap(entry);
+      }
     }
     if (path.startsWith('/images/') && path.endsWith('/url')) {
       final imageId = path.substring(
@@ -157,11 +182,16 @@ class ServerpodDataSource implements BackendDataSource {
           selfMessageId: _uuidOrNull(body['self_message_id']),
         ));
       case '/notes':
-        return _noteMap(await _client.notes.create(
-          content: body['content'] as String? ?? '',
-          title: body['title'] as String?,
-          color: body['color'] as String?,
-          isPinned: body['is_pinned'] as bool?,
+        return _noteMap(await _request(
+          () => _client.notes.create(
+            content: body['content'] as String? ?? '',
+            title: body['title'] as String?,
+            color: body['color'] as String?,
+            tags: _stringList(body['tags']),
+            isPinned: body['is_pinned'] as bool?,
+            checklist: _checklistInput(body['checklist']),
+            entryIds: _uuidList(body['entry_ids']),
+          ),
         ));
       case '/todos':
         return _todoMap(await _client.todos.create(
@@ -199,6 +229,14 @@ class ServerpodDataSource implements BackendDataSource {
           weightKg: (body['weight_kg'] as num?)?.toDouble(),
           note: body['note'] as String?,
         ));
+    }
+    if (path.startsWith('/notes/') && path.endsWith('/restore')) {
+      final noteId = path.substring(
+        '/notes/'.length,
+        path.length - '/restore'.length,
+      );
+      await _request(() => _client.notes.restore(_uuid(noteId)));
+      return null;
     }
     throw ApiException('ServerpodDataSource: unsupported POST $path');
   }
@@ -271,6 +309,33 @@ class ServerpodDataSource implements BackendDataSource {
         reminderMinutes: body['reminder_minutes'] as int?,
       ));
     }
+    if (path.startsWith('/notes/') && path.endsWith('/archive')) {
+      final noteId = path.substring(
+        '/notes/'.length,
+        path.length - '/archive'.length,
+      );
+      return _noteMap(await _request(() => _client.notes.archive(
+            _uuid(noteId),
+            body['is_archived'] as bool? ?? false,
+          )));
+    }
+    if (path.startsWith('/notes/')) {
+      final noteId = _idOf(path);
+      return _noteMap(await _request(
+        () => _client.notes.update(
+          id: _uuid(noteId),
+          title: body['title'] as String?,
+          content: body['content'] as String?,
+          color: body['color'] as String?,
+          tags: _stringList(body['tags']),
+          isPinned: body['is_pinned'] as bool?,
+          isArchived: body['is_archived'] as bool?,
+          isTrashed: body['is_trashed'] as bool?,
+          checklist: _checklistInput(body['checklist']),
+          entryIds: _uuidList(body['entry_ids']),
+        ),
+      ));
+    }
     if (path == '/weather/location') {
       await _client.weather.setLocation(
         lat: (body['lat'] as num).toDouble(),
@@ -311,6 +376,14 @@ class ServerpodDataSource implements BackendDataSource {
     final id = _uuid(_idOf(path));
     if (path.startsWith('/entries/')) return _client.entries.delete(id);
     if (path.startsWith('/images/')) return _client.images.delete(id);
+    if (path.startsWith('/notes/') && path.endsWith('/purge')) {
+      final noteId = path.substring(
+        '/notes/'.length,
+        path.length - '/purge'.length,
+      );
+      await _request(() => _client.notes.purge(_uuid(noteId)));
+      return null;
+    }
     if (path.startsWith('/notes/')) return _client.notes.delete(id);
     if (path.startsWith('/daily-quotes/')) {
       return _client.dailyQuotes.reshuffle(id);
@@ -424,7 +497,37 @@ Map<String, dynamic> _entryMap(sp.DiaryEntry e) => {
       'tomorrow_hope': e.tomorrowHope,
       'gratitude': e.gratitude,
       'dream': e.dream,
+      'created_at': e.createdAt.toIso8601String(),
+      'updated_at': e.updatedAt.toIso8601String(),
     };
+
+List<String>? _stringList(dynamic value) {
+  if (value == null) return null;
+  return (value as List).map((e) => '$e').toList();
+}
+
+List<sp.UuidValue>? _uuidList(dynamic value) {
+  if (value == null) return null;
+  return (value as List)
+      .map((e) => sp.UuidValue.fromString(e as String))
+      .toList();
+}
+
+List<sp.NoteChecklistItem>? _checklistInput(dynamic value) {
+  if (value == null) return null;
+  return (value as List).map((raw) {
+    final map = (raw as Map).cast<String, dynamic>();
+    final id = map['id'] as String?;
+    return sp.NoteChecklistItem(
+      id: id == null ? null : sp.UuidValue.fromString(id),
+      // The server ignores this and fills in the parent note id itself.
+      noteId: sp.UuidValue.fromString('00000000-0000-0000-0000-000000000000'),
+      text: map['text'] as String? ?? '',
+      isDone: map['is_done'] as bool? ?? false,
+      sortOrder: map['sort_order'] as int? ?? 0,
+    );
+  }).toList();
+}
 
 Map<String, dynamic> _gridCellMap(sp.GridCell c) => {
       'date': _dateOnly(c.date),
@@ -478,11 +581,29 @@ Map<String, dynamic> _reflectionMap(sp.Reflection r) => {
 
 Map<String, dynamic> _noteMap(sp.Note n) => {
       'id': n.id?.toString(),
+      'title': n.title,
       'content': n.content,
       'color': n.color,
+      'tags': n.tags ?? const <String>[],
       'is_pinned': n.isPinned,
+      'is_archived': n.isArchived,
+      'is_trashed': n.isTrashed,
       'created_at': n.createdAt.toIso8601String(),
       'updated_at': n.updatedAt.toIso8601String(),
+    };
+
+Map<String, dynamic> _checklistMap(sp.NoteChecklistItem i) => {
+      'id': i.id?.toString(),
+      'note_id': i.noteId.toString(),
+      'text': i.text,
+      'is_done': i.isDone,
+      'sort_order': i.sortOrder,
+    };
+
+Map<String, dynamic> _noteDetailMap(sp.NoteDetail d) => {
+      'note': _noteMap(d.note),
+      'checklist': d.checklist.map(_checklistMap).toList(),
+      'entries': d.entries.map(_entryMap).toList(),
     };
 
 Map<String, dynamic> _todoMap(sp.Todo t) => {

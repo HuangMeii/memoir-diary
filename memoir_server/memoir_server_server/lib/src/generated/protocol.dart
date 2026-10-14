@@ -24,6 +24,8 @@ import 'package:memoir_server_server/src/generated/lookups/weather.dart'
     as _i1e4r54y;
 import 'package:memoir_server_server/src/generated/notes/note.dart'
     as _ikw68uhq;
+import 'package:memoir_server_server/src/generated/notes/note_checklist_item.dart'
+    as _i6aehc7v;
 import 'package:memoir_server_server/src/generated/planner/event.dart'
     as _ispcnwj0;
 import 'package:memoir_server_server/src/generated/planner/schedule_item.dart'
@@ -55,6 +57,9 @@ import 'journal/image_upload_ticket.dart' as _ir6xzchz;
 import 'lookups/mood.dart' as _ie2xden6;
 import 'lookups/weather.dart' as _i262ionk;
 import 'notes/note.dart' as _iylmodbg;
+import 'notes/note_checklist_item.dart' as _iv4f5jvm;
+import 'notes/note_detail.dart' as _i7hg4pp3;
+import 'notes/note_entry_link.dart' as _ifh3czcz;
 import 'planner/event.dart' as _itmremj5;
 import 'planner/schedule_item.dart' as _ixsuwyrb;
 import 'planner/todo.dart' as _ila1vkid;
@@ -80,6 +85,9 @@ export 'journal/image_upload_ticket.dart';
 export 'lookups/mood.dart';
 export 'lookups/weather.dart';
 export 'notes/note.dart';
+export 'notes/note_checklist_item.dart';
+export 'notes/note_detail.dart';
+export 'notes/note_entry_link.dart';
 export 'planner/event.dart';
 export 'planner/schedule_item.dart';
 export 'planner/todo.dart';
@@ -707,6 +715,155 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'note_checklist_items',
+      dartName: 'NoteChecklistItem',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'noteId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'text',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'isDone',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sortOrder',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'note_checklist_items_fk_0',
+          columns: ['noteId'],
+          referenceTable: 'notes',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'idx_note_checklist_note',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'noteId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'sortOrder',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'note_entry_links',
+      dartName: 'NoteEntryLink',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'noteId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'entryId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'note_entry_links_fk_0',
+          columns: ['noteId'],
+          referenceTable: 'notes',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'note_entry_links_fk_1',
+          columns: ['entryId'],
+          referenceTable: 'diary_entries',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'note_entry_unique_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'noteId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'entryId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'notes',
       dartName: 'Note',
       schema: 'public',
@@ -726,6 +883,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'UuidValue',
         ),
         _isp.ColumnDefinition(
+          name: 'title',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
           name: 'content',
           columnType: _isp.ColumnType.text,
           isNullable: false,
@@ -738,7 +901,27 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'String?',
         ),
         _isp.ColumnDefinition(
+          name: 'tags',
+          columnType: _isp.ColumnType.json,
+          isNullable: true,
+          dartType: 'List<String>?',
+        ),
+        _isp.ColumnDefinition(
           name: 'isPinned',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+        _isp.ColumnDefinition(
+          name: 'isArchived',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+        _isp.ColumnDefinition(
+          name: 'isTrashed',
           columnType: _isp.ColumnType.boolean,
           isNullable: false,
           dartType: 'bool',
@@ -771,7 +954,46 @@ class Protocol extends _is.DatabaseSerializationManager {
           matchType: null,
         ),
       ],
-      indexes: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'idx_notes_user_updated',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'updatedAt',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'idx_notes_user_flags',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'isTrashed',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'isArchived',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -1464,6 +1686,15 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _iylmodbg.Note) {
       return _iylmodbg.Note.fromJson(data) as T;
     }
+    if (t == _iv4f5jvm.NoteChecklistItem) {
+      return _iv4f5jvm.NoteChecklistItem.fromJson(data) as T;
+    }
+    if (t == _i7hg4pp3.NoteDetail) {
+      return _i7hg4pp3.NoteDetail.fromJson(data) as T;
+    }
+    if (t == _ifh3czcz.NoteEntryLink) {
+      return _ifh3czcz.NoteEntryLink.fromJson(data) as T;
+    }
     if (t == _itmremj5.Event) {
       return _itmremj5.Event.fromJson(data) as T;
     }
@@ -1541,6 +1772,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_iylmodbg.Note?>()) {
       return (data != null ? _iylmodbg.Note.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_iv4f5jvm.NoteChecklistItem?>()) {
+      return (data != null ? _iv4f5jvm.NoteChecklistItem.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_i7hg4pp3.NoteDetail?>()) {
+      return (data != null ? _i7hg4pp3.NoteDetail.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ifh3czcz.NoteEntryLink?>()) {
+      return (data != null ? _ifh3czcz.NoteEntryLink.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_itmremj5.Event?>()) {
       return (data != null ? _itmremj5.Event.fromJson(data) : null) as T;
     }
@@ -1584,6 +1826,27 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_i7z01835.WeatherSnapshot?>()) {
       return (data != null ? _i7z01835.WeatherSnapshot.fromJson(data) : null)
+          as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == _is.getType<List<String>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<String>(e)).toList()
+              : null)
+          as T;
+    }
+    if (t == List<_iv4f5jvm.NoteChecklistItem>) {
+      return (data as List)
+              .map((e) => deserialize<_iv4f5jvm.NoteChecklistItem>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_isn947xq.DiaryEntry>) {
+      return (data as List)
+              .map((e) => deserialize<_isn947xq.DiaryEntry>(e))
+              .toList()
           as T;
     }
     if (t == Map<String, int>) {
@@ -1636,6 +1899,41 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == List<_ikw68uhq.Note>) {
       return (data as List).map((e) => deserialize<_ikw68uhq.Note>(e)).toList()
+          as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == _is.getType<List<String>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<String>(e)).toList()
+              : null)
+          as T;
+    }
+    if (t == List<_i6aehc7v.NoteChecklistItem>) {
+      return (data as List)
+              .map((e) => deserialize<_i6aehc7v.NoteChecklistItem>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_i6aehc7v.NoteChecklistItem>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_i6aehc7v.NoteChecklistItem>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_is.UuidValue>) {
+      return (data as List).map((e) => deserialize<_is.UuidValue>(e)).toList()
+          as T;
+    }
+    if (t == _is.getType<List<_is.UuidValue>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_is.UuidValue>(e))
+                    .toList()
+              : null)
           as T;
     }
     if (t == List<_ispcnwj0.Event>) {
@@ -1701,6 +1999,9 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ie2xden6.Mood => 'Mood',
       _i262ionk.Weather => 'Weather',
       _iylmodbg.Note => 'Note',
+      _iv4f5jvm.NoteChecklistItem => 'NoteChecklistItem',
+      _i7hg4pp3.NoteDetail => 'NoteDetail',
+      _ifh3czcz.NoteEntryLink => 'NoteEntryLink',
       _itmremj5.Event => 'Event',
       _ixsuwyrb.ScheduleItem => 'ScheduleItem',
       _ila1vkid.Todo => 'Todo',
@@ -1754,6 +2055,12 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'Weather';
       case _iylmodbg.Note():
         return 'Note';
+      case _iv4f5jvm.NoteChecklistItem():
+        return 'NoteChecklistItem';
+      case _i7hg4pp3.NoteDetail():
+        return 'NoteDetail';
+      case _ifh3czcz.NoteEntryLink():
+        return 'NoteEntryLink';
       case _itmremj5.Event():
         return 'Event';
       case _ixsuwyrb.ScheduleItem():
@@ -1829,6 +2136,15 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'Note') {
       return deserialize<_iylmodbg.Note>(data['data']);
     }
+    if (dataClassName == 'NoteChecklistItem') {
+      return deserialize<_iv4f5jvm.NoteChecklistItem>(data['data']);
+    }
+    if (dataClassName == 'NoteDetail') {
+      return deserialize<_i7hg4pp3.NoteDetail>(data['data']);
+    }
+    if (dataClassName == 'NoteEntryLink') {
+      return deserialize<_ifh3czcz.NoteEntryLink>(data['data']);
+    }
     if (dataClassName == 'Event') {
       return deserialize<_itmremj5.Event>(data['data']);
     }
@@ -1903,6 +2219,10 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _i262ionk.Weather.t;
       case _iylmodbg.Note:
         return _iylmodbg.Note.t;
+      case _iv4f5jvm.NoteChecklistItem:
+        return _iv4f5jvm.NoteChecklistItem.t;
+      case _ifh3czcz.NoteEntryLink:
+        return _ifh3czcz.NoteEntryLink.t;
       case _itmremj5.Event:
         return _itmremj5.Event.t;
       case _ixsuwyrb.ScheduleItem:

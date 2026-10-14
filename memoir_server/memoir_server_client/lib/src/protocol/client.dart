@@ -30,6 +30,10 @@ import 'package:memoir_server_client/src/protocol/lookups/mood.dart'
 import 'package:memoir_server_client/src/protocol/lookups/weather.dart'
     as _icswdq95;
 import 'package:memoir_server_client/src/protocol/notes/note.dart' as _i8gjk5qx;
+import 'package:memoir_server_client/src/protocol/notes/note_checklist_item.dart'
+    as _izn2v3c7;
+import 'package:memoir_server_client/src/protocol/notes/note_detail.dart'
+    as _iz4r32s3;
 import 'package:memoir_server_client/src/protocol/planner/event.dart'
     as _ijprwagz;
 import 'package:memoir_server_client/src/protocol/planner/schedule_item.dart'
@@ -269,6 +273,13 @@ class EndpointEntries extends _isc.EndpointRef {
     },
   );
 
+  _ida.Future<_i7ztga34.DiaryEntry?> get(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_i7ztga34.DiaryEntry?>(
+        'entries',
+        'get',
+        {'id': id},
+      );
+
   _ida.Future<_i7ztga34.DiaryEntry?> byDate(String isoDate) =>
       caller.callServerEndpoint<_i7ztga34.DiaryEntry?>(
         'entries',
@@ -427,6 +438,9 @@ class EndpointLookups extends _isc.EndpointRef {
 }
 
 /// Quick notes CRUD, mirroring FastAPI `/notes`.
+///
+/// Supports title, tags, pin/archive/trash flags, interactive checklist
+/// ([NoteChecklistItem]) and many-to-many diary links ([NoteEntryLink]).
 /// {@category Endpoint}
 class EndpointNotes extends _isc.EndpointRef {
   EndpointNotes(_isc.EndpointCaller caller) : super(caller);
@@ -434,18 +448,33 @@ class EndpointNotes extends _isc.EndpointRef {
   @override
   String get name => 'notes';
 
-  _ida.Future<List<_i8gjk5qx.Note>> list() =>
-      caller.callServerEndpoint<List<_i8gjk5qx.Note>>(
+  _ida.Future<List<_i8gjk5qx.Note>> list({
+    required bool includeArchived,
+    required bool trashedOnly,
+  }) => caller.callServerEndpoint<List<_i8gjk5qx.Note>>(
+    'notes',
+    'list',
+    {
+      'includeArchived': includeArchived,
+      'trashedOnly': trashedOnly,
+    },
+  );
+
+  _ida.Future<_iz4r32s3.NoteDetail> get(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_iz4r32s3.NoteDetail>(
         'notes',
-        'list',
-        {},
+        'get',
+        {'id': id},
       );
 
   _ida.Future<_i8gjk5qx.Note> create({
     required String content,
     String? title,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    List<_izn2v3c7.NoteChecklistItem>? checklist,
+    List<_isc.UuidValue>? entryIds,
   }) => caller.callServerEndpoint<_i8gjk5qx.Note>(
     'notes',
     'create',
@@ -453,24 +482,64 @@ class EndpointNotes extends _isc.EndpointRef {
       'content': content,
       'title': title,
       'color': color,
+      'tags': tags,
       'isPinned': isPinned,
+      'checklist': checklist,
+      'entryIds': entryIds,
     },
   );
 
   _ida.Future<_i8gjk5qx.Note> update({
     required _isc.UuidValue id,
+    String? title,
     String? content,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
+    List<_izn2v3c7.NoteChecklistItem>? checklist,
+    List<_isc.UuidValue>? entryIds,
   }) => caller.callServerEndpoint<_i8gjk5qx.Note>(
     'notes',
     'update',
     {
       'id': id,
+      'title': title,
       'content': content,
       'color': color,
+      'tags': tags,
       'isPinned': isPinned,
+      'isArchived': isArchived,
+      'isTrashed': isTrashed,
+      'checklist': checklist,
+      'entryIds': entryIds,
     },
+  );
+
+  _ida.Future<void> restore(_isc.UuidValue id) =>
+      caller.callServerEndpoint<void>(
+        'notes',
+        'restore',
+        {'id': id},
+      );
+
+  _ida.Future<_i8gjk5qx.Note> archive(
+    _isc.UuidValue id,
+    bool isArchived,
+  ) => caller.callServerEndpoint<_i8gjk5qx.Note>(
+    'notes',
+    'archive',
+    {
+      'id': id,
+      'isArchived': isArchived,
+    },
+  );
+
+  _ida.Future<void> purge(_isc.UuidValue id) => caller.callServerEndpoint<void>(
+    'notes',
+    'purge',
+    {'id': id},
   );
 
   _ida.Future<void> delete(_isc.UuidValue id) =>

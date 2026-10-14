@@ -204,11 +204,16 @@ class MemoirPalette {
       : MemoirColorsLight.illustrationBotanical;
 }
 
-/// Five-step green ramp for the journal heatmap ("Nhịp viết của bạn").
+/// Five-step ramp for the journal heatmap ("Nhịp viết của bạn").
 ///
-/// Light mode reuses the mood heatmap tokens from Figma, which are already a
-/// light-to-dark green scale. There are no dark-mode heatmap tokens yet, so
-/// dark mode ramps the brand colour by opacity instead.
+/// Reads as a page warming up: the lightest step is a pale yellow (a quiet day)
+/// and the darkest is the sage green of a full one. Both ends are colours the
+/// design already has — `heatmap.weather.sunny` and `heatmap.mood.very-happy` —
+/// and the three steps between them are interpolated, so the ramp stays inside
+/// the palette instead of inventing a second set of greens.
+///
+/// Dark mode has no heatmap tokens yet, so it ramps the brand colour by opacity
+/// instead.
 List<Color> journalHeatmapScale(BuildContext context) {
   final dark = Theme.of(context).brightness == Brightness.dark;
   if (dark) {
@@ -217,11 +222,19 @@ List<Color> journalHeatmapScale(BuildContext context) {
         .map((o) => base.withValues(alpha: o))
         .toList(growable: false);
   }
-  return const [
-    MemoirColorsLight.heatmapMoodVerySad,
-    MemoirColorsLight.heatmapMoodSad,
-    MemoirColorsLight.heatmapMoodNeutral,
-    MemoirColorsLight.heatmapMoodHappy,
-    MemoirColorsLight.heatmapMoodVeryHappy,
+
+  // The yellow is taken part of the way to the paper at the light end, so the
+  // first step reads as "barely started" beside an empty cell rather than as a
+  // painted tile.
+  final quiet = Color.lerp(
+    MemoirColorsLight.heatmapWeatherSunny,
+    MemoirColorsLight.surfaceCard,
+    0.45,
+  )!;
+  const busy = MemoirColorsLight.heatmapMoodVeryHappy;
+
+  return [
+    for (var step = 0; step < 5; step++)
+      Color.lerp(quiet, busy, step / 4)!,
   ];
 }

@@ -10,6 +10,7 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:memoir_server_server/src/generated/protocol.dart' as _is9lv3rz;
 import 'package:serverpod/serverpod.dart' as _is;
 
 /// Quick note.
@@ -18,21 +19,31 @@ abstract class Note
   Note._({
     this.id,
     required this.userId,
+    this.title,
     required this.content,
     this.color,
+    this.tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : isPinned = isPinned ?? false,
+       isArchived = isArchived ?? false,
+       isTrashed = isTrashed ?? false,
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
   factory Note({
     _is.UuidValue? id,
     required _is.UuidValue userId,
+    String? title,
     required String content,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _NoteImpl;
@@ -43,11 +54,23 @@ abstract class Note
           ? null
           : _is.UuidValueJsonExtension.fromJson(jsonSerialization['id']),
       userId: _is.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
+      title: jsonSerialization['title'] as String?,
       content: jsonSerialization['content'] as String,
       color: jsonSerialization['color'] as String?,
+      tags: jsonSerialization['tags'] == null
+          ? null
+          : _is9lv3rz.Protocol().deserialize<List<String>>(
+              jsonSerialization['tags'],
+            ),
       isPinned: jsonSerialization['isPinned'] == null
           ? null
           : _is.BoolJsonExtension.fromJson(jsonSerialization['isPinned']),
+      isArchived: jsonSerialization['isArchived'] == null
+          ? null
+          : _is.BoolJsonExtension.fromJson(jsonSerialization['isArchived']),
+      isTrashed: jsonSerialization['isTrashed'] == null
+          ? null
+          : _is.BoolJsonExtension.fromJson(jsonSerialization['isTrashed']),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -66,11 +89,23 @@ abstract class Note
 
   _is.UuidValue userId;
 
+  /// Tiêu đề riêng; `content` giữ vai trò thân ghi chú.
+  String? title;
+
   String content;
 
   String? color;
 
+  /// Thẻ tự do, không phân cấp; UI hiển thị dạng `#tag`.
+  /// Serverpod không hỗ trợ `default` cho List nên để nullable,
+  /// endpoint sẽ chuẩn hoá null thành [] khi tạo/sửa.
+  List<String>? tags;
+
   bool isPinned;
+
+  bool isArchived;
+
+  bool isTrashed;
 
   DateTime createdAt;
 
@@ -85,9 +120,13 @@ abstract class Note
   Note copyWith({
     _is.UuidValue? id,
     _is.UuidValue? userId,
+    String? title,
     String? content,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
     DateTime? createdAt,
     DateTime? updatedAt,
   });
@@ -97,9 +136,13 @@ abstract class Note
       '__className__': 'Note',
       if (id != null) 'id': id?.toJson(),
       'userId': userId.toJson(),
+      if (title != null) 'title': title,
       'content': content,
       if (color != null) 'color': color,
+      if (tags != null) 'tags': tags?.toJson(),
       'isPinned': isPinned,
+      'isArchived': isArchived,
+      'isTrashed': isTrashed,
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
     };
@@ -111,9 +154,13 @@ abstract class Note
       '__className__': 'Note',
       if (id != null) 'id': id?.toJson(),
       'userId': userId.toJson(),
+      if (title != null) 'title': title,
       'content': content,
       if (color != null) 'color': color,
+      if (tags != null) 'tags': tags?.toJson(),
       'isPinned': isPinned,
+      'isArchived': isArchived,
+      'isTrashed': isTrashed,
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
     };
@@ -153,17 +200,25 @@ class _NoteImpl extends Note {
   _NoteImpl({
     _is.UuidValue? id,
     required _is.UuidValue userId,
+    String? title,
     required String content,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : super._(
          id: id,
          userId: userId,
+         title: title,
          content: content,
          color: color,
+         tags: tags,
          isPinned: isPinned,
+         isArchived: isArchived,
+         isTrashed: isTrashed,
          createdAt: createdAt,
          updatedAt: updatedAt,
        );
@@ -175,18 +230,26 @@ class _NoteImpl extends Note {
   Note copyWith({
     Object? id = _Undefined,
     _is.UuidValue? userId,
+    Object? title = _Undefined,
     String? content,
     Object? color = _Undefined,
+    Object? tags = _Undefined,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Note(
       id: id is _is.UuidValue? ? id : this.id,
       userId: userId ?? this.userId,
+      title: title is String? ? title : this.title,
       content: content ?? this.content,
       color: color is String? ? color : this.color,
+      tags: tags is List<String>? ? tags : this.tags?.map((e0) => e0).toList(),
       isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
+      isTrashed: isTrashed ?? this.isTrashed,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -202,6 +265,11 @@ class NoteUpdateTable extends _is.UpdateTable<NoteTable> {
         value,
       );
 
+  _is.ColumnValue<String, String> title(String? value) => _is.ColumnValue(
+    table.title,
+    value,
+  );
+
   _is.ColumnValue<String, String> content(String value) => _is.ColumnValue(
     table.content,
     value,
@@ -212,8 +280,24 @@ class NoteUpdateTable extends _is.UpdateTable<NoteTable> {
     value,
   );
 
+  _is.ColumnValue<List<String>, List<String>> tags(List<String>? value) =>
+      _is.ColumnValue(
+        table.tags,
+        value,
+      );
+
   _is.ColumnValue<bool, bool> isPinned(bool value) => _is.ColumnValue(
     table.isPinned,
+    value,
+  );
+
+  _is.ColumnValue<bool, bool> isArchived(bool value) => _is.ColumnValue(
+    table.isArchived,
+    value,
+  );
+
+  _is.ColumnValue<bool, bool> isTrashed(bool value) => _is.ColumnValue(
+    table.isTrashed,
     value,
   );
 
@@ -237,6 +321,10 @@ class NoteTable extends _is.Table<_is.UuidValue?> {
       'userId',
       this,
     );
+    title = _is.ColumnString(
+      'title',
+      this,
+    );
     content = _is.ColumnString(
       'content',
       this,
@@ -245,8 +333,22 @@ class NoteTable extends _is.Table<_is.UuidValue?> {
       'color',
       this,
     );
+    tags = _is.ColumnSerializable<List<String>>(
+      'tags',
+      this,
+    );
     isPinned = _is.ColumnBool(
       'isPinned',
+      this,
+      hasDefault: true,
+    );
+    isArchived = _is.ColumnBool(
+      'isArchived',
+      this,
+      hasDefault: true,
+    );
+    isTrashed = _is.ColumnBool(
+      'isTrashed',
       this,
       hasDefault: true,
     );
@@ -266,11 +368,23 @@ class NoteTable extends _is.Table<_is.UuidValue?> {
 
   late final _is.ColumnUuid userId;
 
+  /// Tiêu đề riêng; `content` giữ vai trò thân ghi chú.
+  late final _is.ColumnString title;
+
   late final _is.ColumnString content;
 
   late final _is.ColumnString color;
 
+  /// Thẻ tự do, không phân cấp; UI hiển thị dạng `#tag`.
+  /// Serverpod không hỗ trợ `default` cho List nên để nullable,
+  /// endpoint sẽ chuẩn hoá null thành [] khi tạo/sửa.
+  late final _is.ColumnSerializable<List<String>> tags;
+
   late final _is.ColumnBool isPinned;
+
+  late final _is.ColumnBool isArchived;
+
+  late final _is.ColumnBool isTrashed;
 
   late final _is.ColumnDateTime createdAt;
 
@@ -280,9 +394,13 @@ class NoteTable extends _is.Table<_is.UuidValue?> {
   List<_is.Column> get columns => [
     id,
     userId,
+    title,
     content,
     color,
+    tags,
     isPinned,
+    isArchived,
+    isTrashed,
     createdAt,
     updatedAt,
   ];

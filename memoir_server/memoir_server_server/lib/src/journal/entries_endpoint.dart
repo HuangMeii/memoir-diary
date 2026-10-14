@@ -33,6 +33,14 @@ class EntriesEndpoint extends Endpoint {
     );
   }
 
+  Future<DiaryEntry?> get(Session session, UuidValue id) async {
+    final entry = await DiaryEntry.db.findById(session, id);
+    if (entry == null || entry.userId != currentUserId(session)) {
+      return null;
+    }
+    return entry;
+  }
+
   Future<DiaryEntry?> byDate(Session session, String isoDate) async {
     final userId = currentUserId(session);
     final day = dateOnly(DateTime.parse(isoDate));
