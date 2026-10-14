@@ -580,11 +580,16 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   /// Shown when planning failed, with the message the server sent.
   ///
   /// The backend's codes get their own wording: a missing route is not the same
-  /// problem as a provider that refused too many requests.
+  /// problem as a provider that refused too many requests, and neither is the
+  /// same as a stop that was never given a position.
   Widget _errorCard(BuildContext context, double scale, Object error) {
     final theme = Theme.of(context);
     final code = error is ApiException ? error.code : null;
     final message = switch (code) {
+      // OSRM refused the request outright, which in practice means a stop is
+      // still sitting at 0,0 because its name was typed rather than searched.
+      'noPoints' => 'Điểm đi hoặc điểm đến chưa xác định được vị trí. Bấm nút '
+          'tìm kiếm rồi chọn từ danh sách, hoặc chọn trực tiếp trên bản đồ.',
       'noRoute' => 'Không tìm thấy tuyến đường giữa các điểm đã chọn. '
           'Thử đổi điểm hoặc phương tiện.',
       'rateLimited' =>
@@ -600,9 +605,11 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
         child: Column(
           children: [
             Icon(
-              code == 'noRoute'
-                  ? Icons.wrong_location_outlined
-                  : Icons.wifi_off_outlined,
+              code == 'noPoints'
+                  ? Icons.location_off_outlined
+                  : code == 'noRoute'
+                      ? Icons.wrong_location_outlined
+                      : Icons.wifi_off_outlined,
               size: 22 * scale,
               color: theme.colorScheme.error,
             ),

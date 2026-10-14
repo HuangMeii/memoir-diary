@@ -335,6 +335,7 @@ Cả ba bảng đều thuộc về một user (trực tiếp qua `user_id`, ho�
 | Mã | Khi nào | UI |
 |---|---|---|
 | `loading` | đang tính tuyến / đang lấy dự báo | skeleton ở bản đồ + timeline; khoá nút gửi để tránh bấm hai lần |
+| `noPoints` | OSRM trả `InvalidOptions` — điểm ở `0,0`, tức stop **chưa được gán toạ độ** | "Điểm đi hoặc điểm đến chưa xác định được vị trí. Bấm nút tìm kiếm rồi chọn từ danh sách, hoặc chọn trực tiếp trên bản đồ." |
 | `noRoute` | OSRM trả `NoRoute` / `NoSegment` | "Không tìm thấy tuyến đường giữa các điểm đã chọn. Thử đổi điểm hoặc phương tiện." |
 | `rateLimited` | HTTP 429 từ OSRM / Open-Meteo | "Đã vượt giới hạn truy vấn. Vui lòng thử lại sau ít phút." + nút **Thử lại** |
 | `unavailable` | nhà cung cấp lỗi / timeout 5 s và cache cũng không có | "Không tải được dữ liệu thời tiết." + nút **Thử lại**; tuyến vẫn hiển thị nếu đã có |
@@ -423,7 +424,7 @@ ROUTE_API_ENABLED=true
 | Loại | Nội dung |
 |---|---|
 | Unit (Dart thuần, không mạng) | haversine & khoảng cách tích luỹ; sinh điểm mẫu (bước 25 km, trần 25, **giữ đủ stop**); ETA (`dwell` chỉ áp ở stop); ghép index giờ; bảng quy tắc §6 (mọi ngưỡng + giá trị biên); vượt 16 ngày → `beyondRange` |
-| Widget | 5 trạng thái: loading / noRoute / unavailable / partial / beyondRange; chọn mục timeline → marker tương ứng được highlight |
+| Widget | 6 trạng thái: loading / noPoints / noRoute / unavailable / partial / beyondRange; chọn mục timeline → marker tương ứng được highlight |
 | Tích hợp (thủ công) | một tuyến thật TP.HCM → Đà Lạt: 4 mốc, có cảnh báo, lưu vào nhật ký, mở lại xem **bản tóm tắt đã lưu** tách khỏi dự báo mới |
 
 ---

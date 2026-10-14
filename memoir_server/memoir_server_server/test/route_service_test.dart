@@ -136,13 +136,20 @@ void main() {
       ]);
     });
 
-    test('keeps the country filter on every geocoding query', () {
+    test('sends the query untouched and filters by country parameter', () {
       final params = geocodingParams('Đà Lạt', 8);
-      expect(params['q'], 'Đà Lạt, vn');
+      // Nothing is appended: a comma would switch Nominatim to its structured
+      // form and demand an exact admin-area name.
+      expect(params['q'], 'Đà Lạt');
       expect(params['countrycodes'], 'vn');
       expect(params['accept-language'], 'vi');
-      // Diacritics survive: Nominatim matches them fine.
-      expect(params['q'], contains('Đà Lạt'));
+    });
+
+    test('keeps a comma in the query as the user typed it', () {
+      expect(
+        geocodingParams('140 Lê Trọng Tấn, Phường Tây Thạnh', 8)['q'],
+        '140 Lê Trọng Tấn, Phường Tây Thạnh',
+      );
     });
 
     test('clamps the geocoding limit', () {
@@ -202,6 +209,47 @@ void main() {
       expect(place.country, isNull);
       expect(place.lat, 0);
       expect(place.lon, 0);
+    });
+  });
+
+  group('routing failures', () {
+    test('a normal answer is not a failure', () {
+      expect(
+        routeFailureFor({'code': 'Ok', 'routes': [{'distance': 1}]}, [
+          {'distance': 1},
+        ]),
+        isNull,
+      );
+    });
+
+    test('an empty route list is noRoute', () {
+      expect(
+        routeFailureFor({'code': 'Ok', 'routes': const []}, const [])?.code,
+        'noRoute',
+      );
+    });
+
+    test('NoRoute is noRoute', () {
+      expect(
+        routeFailureFor({'code': 'NoRoute'}, const [])?.code,
+        'noRoute',
+      );
+    });
+
+    // OSRM refuses a point at 0,0 outright, which is what an unplaced stop
+    // looks like: a different problem from two places with no road between.
+    test('InvalidOptions says the points are missing, not that no road exists', () {
+      final failure = routeFailureFor({
+        'code': 'InvalidOptions',
+        'message': 'Welcome to Null Island...',
+      }, const []);
+
+      expect(failure?.code, 'noPoints');
+      expect(failure?.message, contains('chưa xác định được vị trí'));
+    });
+
+    test('a body that is not even JSON is noRoute, not a crash', () {
+      expect(routeFailureFor('nope', const [])?.code, 'noRoute');
     });
   });
 

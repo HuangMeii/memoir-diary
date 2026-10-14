@@ -483,9 +483,16 @@ Future<List<dynamic>> _getJsonList(Uri uri) async {
   return decoded;
 }
 
-/// The query Nominatim is called with, split out so the rule is testable
-/// without a network call.
-String geocodingQuery(String query) => '${query.trim()}, $routeGeocodingCountry';
+/// The query Nominatim is called with.
+///
+/// Sent as the user typed it, diacritics included: the live API matches those
+/// correctly. Nothing is appended to it either — a comma makes Nominatim switch
+/// to its structured form, where the text after it must name a real admin area
+/// exactly, so appending ", vn" turned "140 Lê Trọng Tấn, Phường Tây Thạnh"
+/// into a search restricted to an area that does not exist. The country filter
+/// is the `countrycodes` parameter below, which is a filter and not query
+/// syntax.
+String geocodingQuery(String query) => query.trim();
 
 /// The parameters of one geocoding request, in the order they matter.
 Map<String, String> geocodingParams(String query, int limit) => {
@@ -565,6 +572,31 @@ List<RouteStop> normalizeStops(List<RouteStop> stops) {
   ];
 }
 
+/// The failure to report for one routing answer, or null when it is a route.
+///
+/// OSRM answers `NoRoute` when no road connects the points, but it answers
+/// `InvalidOptions` for a request it refuses outright — most often a point left
+/// at 0,0, which is a buoy in the Atlantic rather than a place. Those are two
+/// different problems: the first means "pick somewhere else", the second means
+/// "a stop has no coordinates yet". Collapsing them into one code made an
+/// unplaced destination read as "no route exists", which sent people looking
+/// for the wrong fault.
+RouteFailure? routeFailureFor(dynamic body, List<dynamic> routes) {
+  if (routes.isNotEmpty && body is Map && body['code'] == 'Ok') return null;
+
+  final code = body is Map ? body['code'] : null;
+  if (code == 'InvalidOptions') {
+    return RouteFailure(
+      'noPoints',
+      'Điểm đi hoặc điểm đến chưa xác định được vị trí',
+    );
+  }
+  return RouteFailure(
+    'noRoute',
+    'Không tìm thấy tuyến đường giữa các điểm đã chọn',
+  );
+}
+
 /// Asks the routing engine for a route through [stops].
 ///
 /// Alternatives are requested only for a plain two-point route: OSRM returns
@@ -595,12 +627,9 @@ Future<RoutePlan> fetchRoutePlan({
 
   final body = await _getJsonMap(uri);
   final routes = (body['routes'] as List?) ?? const [];
-  if (body['code'] != 'Ok' || routes.isEmpty) {
-    throw RouteFailure(
-      'noRoute',
-      'Không tìm thấy tuyến đường giữa các điểm đã chọn',
-    );
-  }
+
+  final failure = routeFailureFor(body, routes);
+  if (failure != null) throw failure;
 
   final primary = routes.first;
   if (primary is! Map) {
