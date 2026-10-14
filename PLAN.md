@@ -177,7 +177,7 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 > Đặc tả đầy đủ: [docs/12-route-weather.md](docs/12-route-weather.md) · khác biệt so với đặc tả: [§18](docs/12-route-weather.md#18-bản-dựng-thực-tế-phase-2227)
 
 - [x] `route_service`: gọi **OSRM** (`car` / `bike` / `foot`), đọc `distance` / `duration` / `geometry` (GeoJSON) / `legs`, hỗ trợ `alternatives`
-- [x] Geocoding bằng **Open-Meteo Geocoding** — `searchPlaces(query)` (truy vấn được phi dấu trước khi gửi)
+- [x] Geocoding bằng **Nominatim** — `searchPlaces(query)` (chỉ Việt Nam, chạy khi bấm nút/Enter)
 - [x] Sinh **điểm mẫu dọc tuyến** (bước 25 km, trần 25 mẫu, luôn giữ đủ điểm dừng) + **ETA** từ `leg.duration` và `dwell`
 - [x] Gọi Open-Meteo **nhiều toạ độ trong một request**, ghép giờ ⇒ nhiệt độ / trạng thái / xác suất mưa / lượng mưa / gió (ghép theo khoảng cách gần nhất, không theo thứ tự trả về)
 - [x] `route_rules.dart`: ngưỡng đoạn bất lợi (`info` / `caution` / `warning`) + gộp thành dải cảnh báo
@@ -210,6 +210,7 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 ### ✅ Phase 27 — Đóng gói thời tiết hành trình (ĐÃ TRIỂN KHAI, còn bước vẽ Figma)
 - [x] `flutter analyze` sạch + `dart analyze` (workspace server) sạch; `flutter test` 99/99, `dart test` 31/31
 - [x] Attribution `© OpenStreetMap contributors · OSRM · Open-Meteo` (góc bản đồ + dòng nguồn) và dòng miễn trừ
+- [x] Tìm địa điểm chỉ chạy khi bấm nút / Enter, chặn 1,5 giây, lọc `countrycodes=vn` (Nominatim cấm auto-complete)
 - [x] Cập nhật docs: `12` (§18), `03-database-schema`, `05-features`, `UI/02-screen-inventory`, `UI-design/28`
 - [ ] Vẽ frame Figma `ROUTE-01` để đối chiếu (màn đã dựng theo ngôn ngữ thị giác, chưa có bản vẽ)
 - [ ] Verify trên thiết bị thật (`flutter run` web/mobile) — chưa chạy trong phiên này

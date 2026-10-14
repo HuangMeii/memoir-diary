@@ -118,7 +118,7 @@ Memoir/
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13) và Calendar (Phase 14–18) đã có đặc tả nhưng chưa viết code. Dự báo thời tiết (Phase 19–20) đã dựng xong**: backend `WeatherEndpoint` (Open-Meteo + bảng `weather_snapshots` + cache 2 tầng) và màn **Tiện ích → Thời tiết** (`ui/screens/weather_screen.dart`). **Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng cùng màn hình Home theo Figma; dự báo thời tiết không lặp lại trên Home. Thời tiết theo hành trình (Phase 22–27) đã dựng xong**: backend `RouteEndpoint` + `JourneysEndpoint` (OSRM + Open-Meteo) với 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình** (bản đồ OSM, biểu đồ mưa/nhiệt độ, timeline từng chặng, lưu vào nhật ký).** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13) và Calendar (Phase 14–18) đã có đặc tả nhưng chưa viết code. Dự báo thời tiết (Phase 19–20) đã dựng xong**: backend `WeatherEndpoint` (Open-Meteo + bảng `weather_snapshots` + cache 2 tầng) và màn **Tiện ích → Thời tiết** (`ui/screens/weather_screen.dart`). **Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng cùng màn hình Home theo Figma; dự báo thời tiết không lặp lại trên Home. Thời tiết theo hành trình (Phase 22–27) đã dựng xong**: backend `RouteEndpoint` + `JourneysEndpoint` (OSRM + Nominatim + Open-Meteo) với 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình** (bản đồ OSM, biểu đồ mưa/nhiệt độ, timeline từng chặng, lưu vào nhật ký).** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -141,7 +141,7 @@ Memoir/
 | [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |
 | [docs/11-weather-forecast.md](docs/11-weather-forecast.md) | **Dự báo thời tiết** *(đã triển khai)*: tích hợp Open-Meteo, cache 2 tầng, ánh xạ mã WMO |
-| [docs/12-route-weather.md](docs/12-route-weather.md) | **Thời tiết theo hành trình** *(đã triển khai)*: quản lý lộ trình (nhiều điểm dừng, chọn trên bản đồ), routing OSRM, dự báo dọc tuyến theo điểm mẫu + ETA, quy tắc đoạn bất lợi, lưu hành trình vào nhật ký |
+| [docs/12-route-weather.md](docs/12-route-weather.md) | **Thời tiết theo hành trình** *(đã triển khai)*: quản lý lộ trình (nhiều điểm dừng, chọn trên bản đồ), routing OSRM, tìm địa điểm bằng Nominatim, dự báo dọc tuyến theo điểm mẫu + ETA, quy tắc đoạn bất lợi, lưu hành trình vào nhật ký |
 
 ---
 
