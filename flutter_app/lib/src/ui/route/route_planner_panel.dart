@@ -439,8 +439,14 @@ class _StepButton extends StatelessWidget {
   }
 }
 
-/// The place search box. Typing looks places up through the backend, debounced
-/// so a fast typist sends one call instead of one per letter.
+/// The place search box. A search is sent only when the user asks for one —
+/// the Search button or Enter — never while they are still typing.
+///
+/// Nominatim's usage policy lists auto-complete search under Unacceptable
+/// Use and caps the public instance at 1 request per second, so the old
+/// 400 ms debounce is gone: [_throttle] blocks the next press for
+/// [_throttleSeconds] after every search instead. See
+/// docs/12-route-weather.md §11.
 class _PlaceSearch extends ConsumerStatefulWidget {
   const _PlaceSearch({required this.scale, required this.onPick});
 
@@ -451,24 +457,45 @@ class _PlaceSearch extends ConsumerStatefulWidget {
   ConsumerState<_PlaceSearch> createState() => _PlaceSearchState();
 }
 
+/// How long the Search button stays disabled after a search. Comfortably
+/// over the 1 second a Nominatim request may take, so presses can never
+/// queue up into a burst.
+const Duration _throttleSeconds = Duration(milliseconds: 1500);
+
 class _PlaceSearchState extends ConsumerState<_PlaceSearch> {
   final TextEditingController _controller = TextEditingController();
-  Timer? _debounce;
+  Timer? _throttle;
 
-  /// The term the request is made with, one pause behind the typing.
+  /// The term the last search was made with. Empty means "not searched yet",
+  /// which is what keeps results off the screen until the user asks.
   String _query = '';
 
   @override
   void dispose() {
-    _debounce?.cancel();
+    _throttle?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  void _onChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (mounted) setState(() => _query = value);
+  bool get _coolingDown => _throttle?.isActive ?? false;
+
+  /// True while the last search is still in flight, so a slow answer cannot be
+  /// overtaken by a second request once the throttle has expired.
+  bool get _inFlight =>
+      _query.isNotEmpty &&
+      ref.read(placeSearchProvider(_query)).isLoading;
+
+  void _search() {
+    if (_coolingDown || _inFlight) return;
+    final term = _controller.text.trim();
+    // Two characters is the server's own floor; asking with one is a wasted
+    // round trip that only burns into the throttle.
+    if (term.length < 2) return;
+
+    setState(() => _query = term);
+    _throttle?.cancel();
+    _throttle = Timer(_throttleSeconds, () {
+      if (mounted) setState(() {});
     });
   }
 
@@ -495,11 +522,23 @@ class _PlaceSearchState extends ConsumerState<_PlaceSearch> {
             TextField(
               controller: _controller,
               autofocus: true,
-              onChanged: _onChanged,
+              // Enter searches, exactly like the button beside it.
+              onSubmitted: (_) => _search(),
+              textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 isDense: true,
-                hintText: 'Tìm tỉnh / thành, ví dụ Đà Lạt',
-                prefixIcon: Icon(Icons.search, size: 16 * scale),
+                hintText: 'Tìm địa chỉ, ví dụ 140 Lê Trọng Tấn',
+                // A real button, not a decoration: Nominatim is only asked
+                // when the user asks for it.
+                prefixIcon: _query.isEmpty || _coolingDown
+                    ? Icon(Icons.search, size: 16 * scale)
+                    : IconButton(
+                        icon: Icon(Icons.search, size: 16 * scale),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Tìm kiếm',
+                        onPressed: _search,
+                      ),
                 border: OutlineInputBorder(
                   borderRadius:
                       BorderRadius.circular(MemoirRadius.input * scale),
@@ -509,6 +548,8 @@ class _PlaceSearchState extends ConsumerState<_PlaceSearch> {
                 fontSize: MemoirType.bodyInput,
               ),
             ),
+            // Nothing is fetched, and so nothing is shown, until a search has
+            // actually been asked for.
             if (_query.trim().length >= 2)
               ref.watch(placeSearchProvider(_query)).when(
                     loading: () => Padding(
