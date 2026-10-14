@@ -43,16 +43,24 @@ Color routeSeverityColor(BuildContext context, String severity) =>
       _ => Theme.of(context).colorScheme.primary,
     };
 
-/// The colour the route line is drawn with along a stretch of [severity].
+/// The colour the route line is drawn with along a stretch of [bucket].
 ///
-/// The line uses the same three colours as the chips and the timeline, so the
-/// map reads as one scale with the rest of the screen. A stretch the forecast
-/// does not cover is grey rather than green: missing data must never look like
-/// good news.
-Color routeLineColor(BuildContext context, String severity) =>
-    severity == routeSeverityUnknown
-        ? MemoirPalette.of(context).textDisabled
-        : routeSeverityColor(context, severity);
+/// The map answers one question - "will this stretch be ridden through rain?" -
+/// so the line carries the *weather*, not the severity: a wet stretch takes the
+/// teal of the rain bars in the chart just above the map, a dry one takes the
+/// route yellow. The chips, the safety callout and the departure comparison
+/// keep the severity scale ([routeSeverityColor]), which is another question.
+///
+/// A stretch the forecast does not cover is grey rather than yellow: missing
+/// data must never look like a dry, good stretch of road.
+Color routeWeatherLineColor(BuildContext context, String bucket) {
+  final palette = MemoirPalette.of(context);
+  return switch (bucket) {
+    RouteWeatherBucket.rain => palette.routeRainLine,
+    RouteWeatherBucket.sun => palette.routeSunLine,
+    _ => palette.textDisabled,
+  };
+}
 
 /// The background a severity paints its chip with.
 Color routeSeveritySurface(BuildContext context, String severity) =>

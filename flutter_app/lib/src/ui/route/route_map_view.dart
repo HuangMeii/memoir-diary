@@ -32,10 +32,11 @@ List<LatLng> decodeRoutePoints(String geoJson) {
 /// place markers, and a tap handler so a stop can be picked straight off the
 /// map.
 ///
-/// The way Google Maps paints traffic, the line is cut into stretches painted
-/// by how bad the weather is on them - brand green, amber, red - with the
-/// stretches the forecast does not cover dashed in grey. The stretches
-/// themselves come from `route_segments.dart`.
+/// The route is one unbroken line, cut into stretches painted for the weather
+/// they will be ridden through - rain teal, no rain yellow - with the stretches
+/// the forecast never reached left grey. The stretches themselves come from
+/// `route_segments.dart`; the pale bed and casing that hold them together are
+/// drawn by a single line underneath.
 ///
 /// Tiles come from OpenStreetMap and carry its attribution, just as the routing
 /// and weather providers carry theirs.
@@ -144,6 +145,7 @@ class _RouteMapViewState extends State<RouteMapView> {
                 if (segments.isNotEmpty)
                   PolylineLayer(
                     polylines: [
+                      _baseLine(context, line),
                       for (final segment in segments)
                         _routeLine(
                           context,
@@ -157,7 +159,12 @@ class _RouteMapViewState extends State<RouteMapView> {
                   ),
                 MarkerLayer(markers: _stopMarkers()),
                 if (selected != null)
-                  MarkerLayer(markers: _selectedMarkers(selected)),
+                  MarkerLayer(
+                    markers: _selectedMarkers(
+                      selected,
+                      _bucketAt(selected, segments),
+                    ),
+                  ),
               ],
             ),
             Positioned(
@@ -189,10 +196,38 @@ class _RouteMapViewState extends State<RouteMapView> {
     );
   }
 
-  /// One stretch of the route, drawn in the colour of its severity: a wide
-  /// stroke over a pale casing, so green, amber and red stay readable on the
-  /// OpenStreetMap tiles. A stretch the forecast does not cover is dashed, so a
-  /// gap in the data cannot pass for a good stretch of road.
+  /// The route drawn whole, under the painted stretches.
+  ///
+  /// It carries the pale casing and the bed the stretches sit on. Each stretch
+  /// is drawn without a casing of its own on purpose: the casing of one stretch
+  /// would bite a notch out of its neighbour wherever the weather changes, and
+  /// the line would read as a row of separate pieces. One unbroken line beneath
+  /// them keeps the road whole, colour change or not.
+  Polyline _baseLine(BuildContext context, List<LatLng> points) {
+    final palette = MemoirPalette.of(context);
+    return Polyline(
+      points: points,
+      strokeWidth: 4.5 * widget.scale,
+      color: palette.textDisabled.withValues(alpha: 0.45),
+      borderStrokeWidth: 2 * widget.scale,
+      borderColor: palette.surfaceCard,
+    );
+  }
+
+  /// The bucket of the stretch that holds [sample], so the ring the timeline
+  /// draws always matches the colour of the line under it.
+  String _bucketAt(RouteWeatherSample sample, List<RouteSegment> segments) {
+    final meters = sample.distanceFromStartMeters.toDouble();
+    for (final segment in segments) {
+      if (segment.covers(meters)) return segment.bucket;
+    }
+    return routeWeatherBucket(sample);
+  }
+
+  /// One stretch of the route, painted for the weather along it: rain teal, no
+  /// rain yellow, no forecast grey. Every stretch is a solid stroke - the route
+  /// is one continuous line, and the bed that keeps it that way comes from
+  /// [_baseLine].
   Polyline _routeLine(
     BuildContext context,
     RouteSegment segment, {
@@ -201,28 +236,17 @@ class _RouteMapViewState extends State<RouteMapView> {
       Polyline(
         points: segment.points,
         strokeWidth: (selected ? 7 : 4.5) * widget.scale,
-        color: routeLineColor(context, segment.severity),
-        borderStrokeWidth: 2 * widget.scale,
-        borderColor: MemoirPalette.of(context).surfaceCard,
-        pattern: segment.severity == routeSeverityUnknown
-            ? StrokePattern.dashed(
-                segments: [7 * widget.scale, 5 * widget.scale],
-                patternFit: PatternFit.scaleUp,
-              )
-            : const StrokePattern.solid(),
+        color: routeWeatherLineColor(context, segment.bucket),
       );
 
   /// A ring on the sample the timeline picked, so the way from a card to its
   /// spot on the route still shows now that the weather markers are gone.
-  List<Marker> _selectedMarkers(RouteWeatherSample sample) => [
+  List<Marker> _selectedMarkers(RouteWeatherSample sample, String bucket) => [
         Marker(
           point: LatLng(sample.lat, sample.lon),
           width: 18 * widget.scale,
           height: 18 * widget.scale,
-          child: _SelectedSampleDot(
-            severity: sample.severity,
-            scale: widget.scale,
-          ),
+          child: _SelectedSampleDot(bucket: bucket, scale: widget.scale),
         ),
       ];
 
@@ -250,14 +274,14 @@ class _RouteMapViewState extends State<RouteMapView> {
 /// A ring around the sample the timeline selected, drawn in the colour of the
 /// stretch under it so the selected spot reads at a glance.
 class _SelectedSampleDot extends StatelessWidget {
-  const _SelectedSampleDot({required this.severity, required this.scale});
+  const _SelectedSampleDot({required this.bucket, required this.scale});
 
-  final String severity;
+  final String bucket;
   final double scale;
 
   @override
   Widget build(BuildContext context) {
-    final color = routeLineColor(context, severity);
+    final color = routeWeatherLineColor(context, bucket);
 
     return Container(
       decoration: BoxDecoration(
@@ -278,18 +302,17 @@ class _SelectedSampleDot extends StatelessWidget {
 /// What the colours of the route mean, written on the map itself.
 ///
 /// The line carries the meaning now, so the scale has to be readable where it
-/// is read - and the dashed grey entry has to be there too, or a gap in the
-/// forecast would look like an ordinary stretch of road.
+/// is read - and the grey entry has to be there too, or a stretch the forecast
+/// never reached would read as a dry one.
 class _RouteMapLegend extends StatelessWidget {
   const _RouteMapLegend({required this.scale});
 
   final double scale;
 
   static const List<(String, String)> _entries = [
-    (RouteSeverity.info, 'Thuận lợi'),
-    (RouteSeverity.caution, 'Cần chú ý'),
-    (RouteSeverity.warning, 'Cảnh báo'),
-    (routeSeverityUnknown, 'Chưa có dự báo'),
+    (RouteWeatherBucket.rain, 'Mưa'),
+    (RouteWeatherBucket.sun, 'Nắng · không mưa'),
+    (RouteWeatherBucket.unknown, 'Chưa có dự báo'),
   ];
 
   @override
@@ -311,7 +334,7 @@ class _RouteMapLegend extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final (severity, label) in _entries)
+          for (final (bucket, label) in _entries)
             Padding(
               padding: EdgeInsets.symmetric(vertical: 2 * scale),
               child: Row(
@@ -321,7 +344,7 @@ class _RouteMapLegend extends StatelessWidget {
                     width: 16 * scale,
                     height: 4 * scale,
                     decoration: BoxDecoration(
-                      color: routeLineColor(context, severity),
+                      color: routeWeatherLineColor(context, bucket),
                       borderRadius: BorderRadius.circular(2 * scale),
                     ),
                   ),

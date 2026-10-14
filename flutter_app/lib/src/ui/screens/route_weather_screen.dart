@@ -635,10 +635,11 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       overline: 'Bản đồ lộ trình',
       title: 'Tuyến đường & trạm quan sát thời tiết',
       subtitle: role == null
-          ? 'Màu đường là mức bất lợi của thời tiết dự kiến; bấm vào một điểm '
-              'trên hành trình để xem chi tiết.'
-          : 'Màu đường là mức bất lợi của thời tiết dự kiến; bấm lên bản đồ '
-              'để đặt $role.',
+          ? 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
+              'mưa), xám – chưa có dự báo; bấm vào một điểm trên hành trình '
+              'để xem chi tiết.'
+          : 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
+              'mưa), xám – chưa có dự báo; bấm lên bản đồ để đặt $role.',
       scale: scale,
       trailing: _alternative == null
           ? null
