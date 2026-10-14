@@ -136,14 +136,120 @@ void main() {
       ]);
     });
 
-    test('folds Vietnamese search terms to ASCII', () {
-      expect(foldForSearch('Đà Lạt'), 'Da Lat');
-      expect(foldForSearch('Hà Nội'), 'Ha Noi');
-      expect(foldForSearch('Đèo Bảo Lộc'), 'Deo Bao Loc');
-      expect(foldForSearch('Đà Nẵng'), 'Da Nang');
-      expect(foldForSearch('Cần Thơ'), 'Can Tho');
-      // Everything outside the Vietnamese set is left alone.
-      expect(foldForSearch('AB 123 / Đà-Lạt'), 'AB 123 / Da-Lat');
+    test('sends the query untouched and filters by country parameter', () {
+      final params = geocodingParams('Đà Lạt', 8);
+      // Nothing is appended: a comma would switch Nominatim to its structured
+      // form and demand an exact admin-area name.
+      expect(params['q'], 'Đà Lạt');
+      expect(params['countrycodes'], 'vn');
+      expect(params['accept-language'], 'vi');
+    });
+
+    test('keeps a comma in the query as the user typed it', () {
+      expect(
+        geocodingParams('140 Lê Trọng Tấn, Phường Tây Thạnh', 8)['q'],
+        '140 Lê Trọng Tấn, Phường Tây Thạnh',
+      );
+    });
+
+    test('clamps the geocoding limit', () {
+      expect(geocodingParams('a', 0)['limit'], '1');
+      expect(geocodingParams('a', 8)['limit'], '8');
+      expect(geocodingParams('a', 500)['limit'], '20');
+    });
+
+    test('reads a Nominatim street address, strings and all', () {
+      final place = fromNominatim({
+        'name': 'Trường Đại học Công Thương Thành phố Hồ Chí Minh',
+        'display_name': 'Trường Đại học Công Thương Thành phố Hồ Chí Minh, '
+            '140, Lê Trọng Tấn, Khu phố 21, Phường Tây Thạnh, '
+            'Thành phố Hồ Chí Minh, 72009, Việt Nam',
+        'lat': '10.8070354',
+        'lon': '106.6287031',
+        'address': {
+          'house_number': '140',
+          'road': 'Lê Trọng Tấn',
+          'suburb': 'Phường Tây Thạnh',
+          'city': 'Thành phố Hồ Chí Minh',
+          'postcode': '72009',
+          'country': 'Việt Nam',
+        },
+      });
+
+      expect(place.name, startsWith('Trường Đại học'));
+      expect(place.admin, 'Thành phố Hồ Chí Minh');
+      expect(place.country, 'Việt Nam');
+      // lat/lon arrive as strings, not numbers.
+      expect(place.lat, closeTo(10.8070354, 0.0001));
+      expect(place.lon, closeTo(106.6287031, 0.0001));
+    });
+
+    test('falls back to display_name for a bare street', () {
+      final place = fromNominatim({
+        'display_name': 'Lê Trọng Tấn, Phường Tây Thạnh, '
+            'Thành phố Hồ Chí Minh, 72009, Việt Nam',
+        'lat': '10.8070',
+        'lon': '106.6287',
+        'address': {
+          'road': 'Lê Trọng Tấn',
+          'suburb': 'Phường Tây Thạnh',
+          'country': 'Việt Nam',
+        },
+      });
+
+      expect(place.name, startsWith('Lê Trọng Tấn'));
+      // No `city`, so the ward is the nearest thing to an area.
+      expect(place.admin, 'Phường Tây Thạnh');
+    });
+
+    test('survives a Nominatim row with nothing in it', () {
+      final place = fromNominatim({});
+      expect(place.name, '');
+      expect(place.admin, isNull);
+      expect(place.country, isNull);
+      expect(place.lat, 0);
+      expect(place.lon, 0);
+    });
+  });
+
+  group('routing failures', () {
+    test('a normal answer is not a failure', () {
+      expect(
+        routeFailureFor({'code': 'Ok', 'routes': [{'distance': 1}]}, [
+          {'distance': 1},
+        ]),
+        isNull,
+      );
+    });
+
+    test('an empty route list is noRoute', () {
+      expect(
+        routeFailureFor({'code': 'Ok', 'routes': const []}, const [])?.code,
+        'noRoute',
+      );
+    });
+
+    test('NoRoute is noRoute', () {
+      expect(
+        routeFailureFor({'code': 'NoRoute'}, const [])?.code,
+        'noRoute',
+      );
+    });
+
+    // OSRM refuses a point at 0,0 outright, which is what an unplaced stop
+    // looks like: a different problem from two places with no road between.
+    test('InvalidOptions says the points are missing, not that no road exists', () {
+      final failure = routeFailureFor({
+        'code': 'InvalidOptions',
+        'message': 'Welcome to Null Island...',
+      }, const []);
+
+      expect(failure?.code, 'noPoints');
+      expect(failure?.message, contains('chưa xác định được vị trí'));
+    });
+
+    test('a body that is not even JSON is noRoute, not a crash', () {
+      expect(routeFailureFor('nope', const [])?.code, 'noRoute');
     });
   });
 

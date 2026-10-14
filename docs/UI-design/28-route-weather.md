@@ -29,8 +29,9 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   (`Lộ trình / Khoảng cách / Thời gian di chuyển / Khởi hành / Đến dự kiến`) kèm
   chip nguồn `Dữ liệu trực tiếp · OSRM · Open-Meteo` hoặc `Dữ liệu cũ · cập nhật HH:mm`.
 - **Form Quản lý lộ trình** (`route_planner_panel.dart`): điểm xuất phát / điểm dừng /
-  điểm đến, ô tên sửa được, **tìm địa điểm** (gợi ý từ Open-Meteo Geocoding, debounce
-  400 ms), **chọn trên bản đồ**, `Thời gian dừng` cho từng điểm dừng (± 15 phút),
+  điểm đến, ô tên sửa được, **tìm địa điểm** (gợi ý từ Nominatim, **chỉ chạy khi bấm
+  nút Tìm / Enter** — không tìm lúc đang gõ; nút bị chặn 1,5 giây sau mỗi lần tìm),
+  **chọn trên bản đồ**, `Thời gian dừng` cho từng điểm dừng (± 15 phút),
   `Đảo chiều`, chọn ngày–giờ khởi hành, segmented `Ô tô / Xe đạp / Đi bộ`, danh sách
   **Tuyến thay thế** (chỉ hiện khi routing API trả về).
 - **Bản đồ** (`route_map_view.dart`): tile OSM thật, polyline, marker `Điểm đi/Điểm

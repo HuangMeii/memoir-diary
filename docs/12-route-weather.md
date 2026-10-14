@@ -36,7 +36,7 @@ Người dùng nhập một lộ trình (điểm xuất phát, các điểm dừ
 | Nhu cầu | Nhà cung cấp | Vì sao |
 |---|---|---|
 | Routing (tuyến + hình học + thời gian) | **OSRM** | Miễn phí, **không cần API key**, trả `distance` / `duration` **theo từng leg**, có `geometries=geojson` và `alternatives`. Cùng triết lý "không có bí mật nào phải giữ" như Open-Meteo ([11-weather-forecast.md §1](11-weather-forecast.md)) |
-| Tìm địa điểm theo tên | **Open-Meteo Geocoding** | Miễn phí, không key, **cùng nhà cung cấp** đang dùng cho thời tiết ⇒ ít đầu mối phải cấu hình |
+| Tìm địa điểm theo tên | **Nominatim** | OSM giữ địa chỉ tới tầng **đường / phường** (GeoNames mà Open-Meteo dùng thì không), trả **tên tiếng Việt có dấu** qua `accept-language=vi`, miễn phí không key |
 | Dự báo dọc tuyến | **Open-Meteo Forecast** | Nhận **nhiều toạ độ trong một request** (`latitude=a,b,c&longitude=…`), có `precipitation_probability`, `precipitation`, `temperature_2m`, `wind_speed_10m`, `wind_gusts_10m`, `visibility`, `weather_code`; tối đa **16 ngày** |
 | Nền bản đồ | **OSM raster tiles** | Không key, hiển thị được bằng `flutter_map` trên cả web và mobile |
 
@@ -51,12 +51,14 @@ Người dùng nhập một lộ trình (điểm xuất phát, các điểm dừ
 
 > ⚠️ Instance OSRM công khai là **server demo**: có giới hạn truy vấn và không cam kết SLA. Vì vậy đặc tả luôn dùng timeout cứng 5 s (§11), cache 30 phút, base URL ghi đè được bằng biến cấu hình (§12), và mọi chỗ hiển thị đều ghi rõ nguồn dữ liệu.
 
+> ⚠️ Nominatim là server **do cộng đồng quyên góp** và **cấm auto-complete search** (usage policy). Vì vậy tìm địa điểm **chỉ chạy khi user bấm nút / Enter**, client chặn **1,5 giây** giữa hai lần tìm (§11), và query luôn kèm `countrycodes=vn`.
+
 ---
 
 ## 3. Kiến trúc: backend làm trung gian
 
 ```
-Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Open-Meteo Geocoding
+Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Nominatim (geocoding)
         │
         └────> Serverpod /journeys/* ──> Open-Meteo Forecast (nhiều toạ độ)
                                                 │
@@ -80,7 +82,7 @@ Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Open-Meteo Geocod
 ### 4.1. A — Quản lý lộ trình
 
 1. User mở **Tiện ích → Thời tiết theo hành trình**; app nạp vị trí đã lưu trên hồ sơ (`weather_lat` / `weather_lon`) làm **điểm xuất phát**.
-2. Gõ tìm địa điểm → `RouteEndpoint.searchPlaces(query)` → chọn từ danh sách `PlaceCandidate`.
+2. **Bấm nút Tìm kiếm** (hoặc Enter) → `RouteEndpoint.searchPlaces(query)` → chọn từ danh sách `PlaceCandidate`. **Không** tìm ngay khi gõ: Nominatim cấm auto-complete.
 3. Hoặc **chọn trực tiếp trên bản đồ**: bấm vào bản đồ lấy toạ độ và gán vào điểm đi / điểm dừng / điểm đến (không cần geocode ngược).
 4. **Thêm nhiều điểm dừng trung gian**, sắp xếp lại thứ tự, xoá; mỗi điểm có **thời gian dừng** (phút). **Đảo chiều hành trình** = đảo danh sách điểm.
 5. Chọn **phương tiện** và **ngày + giờ khởi hành**.
@@ -257,7 +259,7 @@ Cả ba bảng đều thuộc về một user (trực tiếp qua `user_id`, ho�
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| `searchPlaces` | `route.searchPlaces(query, {limit})` | Tìm địa điểm theo tên (geocoding) |
+| `searchPlaces` | `route.searchPlaces(query, {limit})` | Tìm địa điểm theo tên (Nominatim, chỉ Việt Nam) |
 | `plan` | `route.plan({origin, destination, waypoints, vehicle, alternatives})` | Tuyến + hình học + leg (+ tuyến thay thế) |
 | `forecast` | `route.forecast({stops, departureAt, vehicle, geometry})` | Điểm mẫu + ETA + thời tiết + cờ bất lợi |
 | `planWithWeather` | `route.planWithWeather(...)` | Ghép `plan` + `forecast` cho một lần bấm |
@@ -333,6 +335,7 @@ Cả ba bảng đều thuộc về một user (trực tiếp qua `user_id`, ho�
 | Mã | Khi nào | UI |
 |---|---|---|
 | `loading` | đang tính tuyến / đang lấy dự báo | skeleton ở bản đồ + timeline; khoá nút gửi để tránh bấm hai lần |
+| `noPoints` | OSRM trả `InvalidOptions` — điểm ở `0,0`, tức stop **chưa được gán toạ độ** | "Điểm đi hoặc điểm đến chưa xác định được vị trí. Bấm nút tìm kiếm rồi chọn từ danh sách, hoặc chọn trực tiếp trên bản đồ." |
 | `noRoute` | OSRM trả `NoRoute` / `NoSegment` | "Không tìm thấy tuyến đường giữa các điểm đã chọn. Thử đổi điểm hoặc phương tiện." |
 | `rateLimited` | HTTP 429 từ OSRM / Open-Meteo | "Đã vượt giới hạn truy vấn. Vui lòng thử lại sau ít phút." + nút **Thử lại** |
 | `unavailable` | nhà cung cấp lỗi / timeout 5 s và cache cũng không có | "Không tải được dữ liệu thời tiết." + nút **Thử lại**; tuyến vẫn hiển thị nếu đã có |
@@ -359,6 +362,7 @@ Ngoài ra, mọi chỗ hiển thị thời tiết phải phân biệt được *
 - Trần **25 điểm mẫu** cho mỗi request thời tiết (§5.1).
 - `ROUTE_API_ENABLED=false` để tắt hẳn phần gọi ra ngoài (UI hiện thông báo thay vì lỗi).
 - Debounce thao tác trên client (≥ 400 ms) trước khi gọi `plan`; huỷ request cũ khi có kết quả mới.
+- **Tìm địa điểm chỉ chạy khi bấm nút / Enter** (Nominatim cấm auto-complete). Client chặn nút khi đang chờ **và** trong **1,5 giây** sau lần tìm trước — mềm hơn ngưỡng 1 req/s của Nominatim. Query luôn kèm `countrycodes=vn` để không gợi ý nhầm nước ngoài.
 
 ---
 
@@ -369,8 +373,9 @@ Ngoài ra, mọi chỗ hiển thị thời tiết phải phân biệt được *
 ROUTE_API_URL_CAR=https://routing.openstreetmap.de/routed-car/route/v1/driving
 ROUTE_API_URL_BIKE=https://routing.openstreetmap.de/routed-bike/route/v1/driving
 ROUTE_API_URL_FOOT=https://routing.openstreetmap.de/routed-foot/route/v1/driving
-# Geocoding — cùng nhà cung cấp với thời tiết, không cần key.
-ROUTE_GEOCODING_URL=https://geocoding-api.open-meteo.com/v1/search
+# Geocoding — Nominatim, không cần key. Có thể tự host.
+ROUTE_GEOCODING_URL=https://nominatim.openstreetmap.org/search
+ROUTE_GEOCODING_COUNTRY=vn
 ROUTE_TIMEOUT_SECONDS=5
 ROUTE_CACHE_TTL_MINUTES=30
 ROUTE_SAMPLE_STEP_KM=25
@@ -406,7 +411,7 @@ ROUTE_API_ENABLED=true
 
 ## 14. An toàn dữ liệu & giấy phép
 
-- **Attribution bắt buộc** trên bản đồ và ở dòng nguồn: *"© OpenStreetMap contributors · OSRM · Open-Meteo"*.
+- **Attribution bắt buộc** trên bản đồ và ở dòng nguồn: *"© OpenStreetMap contributors · OSRM · Open-Meteo"*. Nominatim cũng dùng dữ liệu OSM nên dòng này đã bao trùm, không cần thêm tên nhà cung cấp.
 - Dòng miễn trừ cuối trang, giữ đúng ý bản thiết kế:
   *"Dự báo thời tiết hành trình mang tính tham khảo cho cá nhân. Hãy luôn quan sát biển báo và điều kiện giao thông thực tế khi lái xe."*
 - Không dùng ngôn ngữ khẳng định chắc chắn (§1.2) — chỉ "dự kiến", "có thể", "xác suất".
@@ -419,7 +424,7 @@ ROUTE_API_ENABLED=true
 | Loại | Nội dung |
 |---|---|
 | Unit (Dart thuần, không mạng) | haversine & khoảng cách tích luỹ; sinh điểm mẫu (bước 25 km, trần 25, **giữ đủ stop**); ETA (`dwell` chỉ áp ở stop); ghép index giờ; bảng quy tắc §6 (mọi ngưỡng + giá trị biên); vượt 16 ngày → `beyondRange` |
-| Widget | 5 trạng thái: loading / noRoute / unavailable / partial / beyondRange; chọn mục timeline → marker tương ứng được highlight |
+| Widget | 6 trạng thái: loading / noPoints / noRoute / unavailable / partial / beyondRange; chọn mục timeline → marker tương ứng được highlight |
 | Tích hợp (thủ công) | một tuyến thật TP.HCM → Đà Lạt: 4 mốc, có cảnh báo, lưu vào nhật ký, mở lại xem **bản tóm tắt đã lưu** tách khỏi dự báo mới |
 
 ---
@@ -467,7 +472,7 @@ ROUTE_API_ENABLED=true
 
 | File | Nội dung |
 |---|---|
-| `route_service.dart` | haversine, giải mã GeoJSON, sinh điểm mẫu, ETA, gọi OSRM/Geocoding/Open-Meteo, ghép giờ, gộp dải cảnh báo, cache 30 phút |
+| `route_service.dart` | haversine, giải mã GeoJSON, sinh điểm mẫu, ETA, gọi OSRM/**Nominatim**/Open-Meteo, ghép giờ, gộp dải cảnh báo, cache 30 phút |
 | `route_rules.dart` | Nhóm WMO → `weathers.code` + **bảng ngưỡng bất lợi §6** + `RouteSeverity` |
 | `route_endpoint.dart` | `searchPlaces` · `plan` · `forecast` · `planWithWeather` · `compareDepartures` |
 | `journeys_endpoint.dart` | `list` · `detail` · `save` · `delete`, kèm upsert nhật ký ngày khởi hành |
@@ -496,7 +501,7 @@ ROUTE_API_ENABLED=true
 
 1. **`route.forecast` xin `timezone=GMT`, không phải `Asia/Ho_Chi_Minh`.** Múi giờ chỉ dùng để **tra index giờ**; mọi thời gian hiển thị lấy từ `arrivalAt` thật, nên không phụ thuộc múi giờ máy chủ. Điều này bỏ luôn rủi ro lệch múi giờ ở §17.5.
 2. **Ghép toạ độ mẫu ↔ entry trả về theo khoảng cách gần nhất**, không theo thứ tự. Nhờ vậy giả định "Open-Meteo trả đúng thứ tự" (§17.5) không còn là rủi ro: kể cả khi provider đổi thứ tự, điểm vẫn nhận đúng dữ liệu.
-3. **Tìm địa điểm được "phi dấu" trước khi gửi.** Đo thật: `name=Da Lat` → *Đà Lạt / Lâm Đồng*; `name=Đà Lạt` → *Đá Tịch / Quảng Trị*. Vì vậy `foldForSearch()` chuyển tiếng Việt về ASCII **chỉ cho phần truy vấn**; tên trả về vẫn là của nhà cung cấp.
+3. **Tìm địa điểm gửi thẳng chuỗi có dấu, kèm `countrycodes=vn`.** Đo thật trên Nominatim: `Đà Lạt` → *Đà Lạt, Tỉnh Lâm Đồng*; `140 Le Trong Tan` → *… 140, Lê Trọng Tấn, Phường Tây Thạnh, TP.HCM*. Bỏ `countrycodes` thì `Tây Thạnh` bị hiểu thành *Tây Thành / Đà Nẵng* (cách ~600 km), `Le T` chỉ ra địa danh Pháp. Vì vậy `foldForSearch()` đã **bị xoá** — query gửi nguyên bản.
 4. **Thêm `weatherGroup` vào `RouteWeatherSample` và `JourneyWeatherPoint`.** Server là nơi duy nhất giữ bảng WMO → `weathers.code`; app chỉ đọc nhóm để chọn icon SVG sẵn có, không lặp lại bảng WMO trong Dart.
 5. **`route_rules.dart` giữ một bản sao bảng WMO.** `weather/weather_endpoint.dart` **không bị sửa** để bảo toàn màn thời tiết đang chạy; gộp hai bản là việc riêng, làm sau.
 6. **Tuyến thay thế chỉ hỏi khi đúng 2 điểm.** Đo thật: `Hà Nội → Hải Phòng` trả **2 routes**, `TP.HCM → Đà Lạt` trả **1**. Không có thì khối "Tuyến thay thế" ẩn hẳn — đúng chữ "khi được hỗ trợ".

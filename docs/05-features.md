@@ -196,7 +196,7 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 - **Tương tác**: bản đồ có marker địa điểm + marker thời tiết; chọn marker ↔ highlight mục timeline; đổi điểm dừng / phương tiện / giờ khởi hành thì tính lại tuyến và dự báo.
 - **Tích hợp nhật ký**: lưu hành trình vào tài khoản (tên chuyến, điểm dừng, tuyến, giờ khởi hành, thời gian dự kiến), liên kết **một nhật ký hiện có** hoặc tạo nhật ký mới cho ngày khởi hành, bổ sung **ghi chú + ảnh**, và xem lại **bản tóm tắt dự báo đã lưu** (tách khỏi dự báo mới nhất).
 - **Dữ liệu**: `journeys` · `journey_stops` · `journey_weather_points`; liên kết mềm `journeys.entry_id → diary_entries`.
-- **Nhà cung cấp**: **OSRM** (routing, không key) · **Open-Meteo Geocoding** (tìm địa điểm) · **Open-Meteo Forecast** (nhiều toạ độ trong một request, tối đa **16 ngày**) · **tile OSM** (nền bản đồ).
+- **Nhà cung cấp**: **OSRM** (routing, không key) · **Nominatim** (tìm địa điểm, chỉ Việt Nam) · **Open-Meteo Forecast** (nhiều toạ độ trong một request, tối đa **16 ngày**) · **tile OSM** (nền bản đồ).
 - **Quy tắc**: backend gọi API (không cho client gọi thẳng); timeout 5s; cache 30 phút; trần **25 điểm mẫu**; mọi ngưỡng bất lợi là **quy tắc hiển thị của Memoir**, không phải khuyến nghị an toàn giao thông chính thức.
 - **Không làm**: **không tự xây mô hình dự đoán thời tiết**, **không khẳng định** mưa/bão/nắng "sẽ xảy ra", không dẫn đường turn-by-turn, không tự định vị GPS.
 

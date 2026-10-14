@@ -36,8 +36,16 @@ const Map<String, String> routeBackends = {
   'foot': 'https://routing.openstreetmap.de/routed-foot/route/v1/driving',
 };
 
+/// Nominatim geocodes OpenStreetMap data, which keeps addresses down to
+/// the street / ward level - the reason it replaced Open-Meteo Geocoding
+/// (see docs/12-route-weather.md §2 and §18.3).
 const String routeGeocodingUrl =
-    'https://geocoding-api.open-meteo.com/v1/search';
+    'https://nominatim.openstreetmap.org/search';
+
+/// Nominatim ranks globally, so without this "Tây Thạnh" resolves to
+/// Tây Thạnh in Đà Nẵng (~600 km away) and "Le T" to places in France.
+const String routeGeocodingCountry = 'vn';
+
 const String routeForecastUrl = 'https://api.open-meteo.com/v1/forecast';
 
 /// Only the routing backends are OSRM; the weather still comes from Open-Meteo.
@@ -465,69 +473,81 @@ Future<Map<String, dynamic>> _getJsonMap(Uri uri) async {
   return decoded.cast<String, dynamic>();
 }
 
-/// Vietnamese letters folded to their ASCII base. Built once, at first use.
-final Map<String, String> _asciiFold = () {
-  const groups = {
-    'a': 'áàảãạăắằẳẵặâấầẩẫậ',
-    'd': 'đ',
-    'e': 'éèẻẽẹêếềểễệ',
-    'i': 'íìỉĩị',
-    'o': 'óòỏõọôốồổỗộơớờởỡợ',
-    'u': 'úùủũụưứừửữự',
-    'y': 'ýỳỷỹỵ',
-  };
-  final map = <String, String>{};
-  for (final entry in groups.entries) {
-    map[entry.key] = entry.key;
-    map[entry.key.toUpperCase()] = entry.key.toUpperCase();
-    for (final char in entry.value.split('')) {
-      map[char] = entry.key;
-      map[char.toUpperCase()] = entry.key.toUpperCase();
-    }
+/// Nominatim's `/search` answers with a bare JSON array, unlike the other
+/// providers here, which all answer with an object.
+Future<List<dynamic>> _getJsonList(Uri uri) async {
+  final decoded = await _getJson(uri);
+  if (decoded is! List) {
+    throw RouteFailure('unavailable', 'Dữ liệu trả về không hợp lệ');
   }
-  return map;
-}();
+  return decoded;
+}
 
-/// Folds [value] to ASCII.
+/// The query Nominatim is called with.
 ///
-/// The geocoder matches ASCII best — measured against the live API, `Da Lat`
-/// finds Đà Lạt while `Đà Lạt` matches something else entirely — so the query is
-/// folded before it is sent. Only the query is folded; the names that come back
-/// are the provider's own.
-String foldForSearch(String value) {
-  final buffer = StringBuffer();
-  for (final rune in value.runes) {
-    final char = String.fromCharCode(rune);
-    buffer.write(_asciiFold[char] ?? char);
-  }
-  return buffer.toString();
+/// Sent as the user typed it, diacritics included: the live API matches those
+/// correctly. Nothing is appended to it either — a comma makes Nominatim switch
+/// to its structured form, where the text after it must name a real admin area
+/// exactly, so appending ", vn" turned "140 Lê Trọng Tấn, Phường Tây Thạnh"
+/// into a search restricted to an area that does not exist. The country filter
+/// is the `countrycodes` parameter below, which is a filter and not query
+/// syntax.
+String geocodingQuery(String query) => query.trim();
+
+/// The parameters of one geocoding request, in the order they matter.
+Map<String, String> geocodingParams(String query, int limit) => {
+      'q': geocodingQuery(query),
+      'format': 'jsonv2',
+      'limit': '${limit.clamp(1, 20)}',
+      // Vietnamese names, so results read "Đà Lạt, Tỉnh Lâm Đồng".
+      'accept-language': 'vi',
+      // Fills the `address` breakdown (ward, street, house number).
+      'addressdetails': '1',
+      // Keeps the ranking inside Vietnam; see [routeGeocodingCountry].
+      'countrycodes': routeGeocodingCountry,
+    };
+
+/// One Nominatim result as a [PlaceCandidate].
+///
+/// Nominatim is the odd provider out in this file: `lat` / `lon` come back as
+/// **strings**, not numbers, and the hierarchy lives in a nested `address`
+/// object rather than flat `admin1` / `admin2` fields.
+PlaceCandidate fromNominatim(Map row) {
+  final address = (row['address'] as Map?) ?? const {};
+  final admin = address['city'] ??
+      address['town'] ??
+      address['suburb'] ??
+      address['county'] ??
+      address['state'];
+  return PlaceCandidate(
+    // `name` is absent for a bare street; the address itself is then the name.
+    name: ((row['name'] as String?) ?? (row['display_name'] as String?))?.trim() ??
+        '',
+    admin: admin is String ? admin : null,
+    country: address['country'] is String ? address['country'] as String : null,
+    lat: double.tryParse('${row['lat']}') ?? 0,
+    lon: double.tryParse('${row['lon']}') ?? 0,
+  );
 }
 
 /// Places matching [query], for the search box of the planner.
+///
+/// Only ever called from an explicit user action (Search button or Enter):
+/// Nominatim's usage policy forbids auto-complete search, and caps the public
+/// instance at 1 request per second — see docs/12-route-weather.md §11.
 Future<List<PlaceCandidate>> searchPlaces(String query, {int limit = 8}) async {
   final trimmed = query.trim();
   // One character matches half the country; not worth a round trip.
   if (trimmed.length < 2) return const [];
 
-  final uri = Uri.parse(routeGeocodingUrl).replace(queryParameters: {
-    'name': foldForSearch(trimmed),
-    'count': '${limit.clamp(1, 20)}',
-    'language': 'vi',
-    'format': 'json',
-  });
-  final body = await _getJsonMap(uri);
-  final results = (body['results'] as List?) ?? const [];
+  final uri =
+      Uri.parse(routeGeocodingUrl).replace(queryParameters: geocodingParams(
+    trimmed,
+    limit,
+  ));
+  final results = await _getJsonList(uri);
 
-  return results.whereType<Map>().map((row) {
-    final admin = row['admin1'] ?? row['admin2'];
-    return PlaceCandidate(
-      name: (row['name'] as String?)?.trim() ?? trimmed,
-      admin: admin is String ? admin : null,
-      country: row['country'] is String ? row['country'] as String : null,
-      lat: ((row['latitude'] as num?) ?? 0).toDouble(),
-      lon: ((row['longitude'] as num?) ?? 0).toDouble(),
-    );
-  }).toList();
+  return results.whereType<Map>().map(fromNominatim).toList();
 }
 
 /// Forces `kind` to match the position: first stop is the origin, last is the
@@ -550,6 +570,31 @@ List<RouteStop> normalizeStops(List<RouteStop> stops) {
                 : 'waypoint',
       ),
   ];
+}
+
+/// The failure to report for one routing answer, or null when it is a route.
+///
+/// OSRM answers `NoRoute` when no road connects the points, but it answers
+/// `InvalidOptions` for a request it refuses outright — most often a point left
+/// at 0,0, which is a buoy in the Atlantic rather than a place. Those are two
+/// different problems: the first means "pick somewhere else", the second means
+/// "a stop has no coordinates yet". Collapsing them into one code made an
+/// unplaced destination read as "no route exists", which sent people looking
+/// for the wrong fault.
+RouteFailure? routeFailureFor(dynamic body, List<dynamic> routes) {
+  if (routes.isNotEmpty && body is Map && body['code'] == 'Ok') return null;
+
+  final code = body is Map ? body['code'] : null;
+  if (code == 'InvalidOptions') {
+    return RouteFailure(
+      'noPoints',
+      'Điểm đi hoặc điểm đến chưa xác định được vị trí',
+    );
+  }
+  return RouteFailure(
+    'noRoute',
+    'Không tìm thấy tuyến đường giữa các điểm đã chọn',
+  );
 }
 
 /// Asks the routing engine for a route through [stops].
@@ -582,12 +627,9 @@ Future<RoutePlan> fetchRoutePlan({
 
   final body = await _getJsonMap(uri);
   final routes = (body['routes'] as List?) ?? const [];
-  if (body['code'] != 'Ok' || routes.isEmpty) {
-    throw RouteFailure(
-      'noRoute',
-      'Không tìm thấy tuyến đường giữa các điểm đã chọn',
-    );
-  }
+
+  final failure = routeFailureFor(body, routes);
+  if (failure != null) throw failure;
 
   final primary = routes.first;
   if (primary is! Map) {
