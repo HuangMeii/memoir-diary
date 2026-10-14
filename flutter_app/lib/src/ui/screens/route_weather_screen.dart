@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -29,6 +30,29 @@ const double kRouteDesignWidth = 1280;
 /// Content width of that frame.
 const double kRouteContentWidth = 1208;
 
+/// Width of the planner column in the band above the map.
+///
+/// It is the frame's `lg:col-span-4` panel: 4 of the 12 columns of the
+/// 1208 px content, which works out at 384 px.
+const double kRoutePlannerColumnWidth = 384;
+
+/// Narrowest the live-data column may get before the band stacks instead.
+///
+/// Roughly the frame's `lg:col-span-8` column shrunk to its readable floor, so
+/// the split still happens on a 1024 px window rather than only at the full
+/// design width.
+const double kRouteSummaryColumnMinWidth = 520;
+
+/// Gap between the two columns of the band: the frame's 28 px `gap-7`.
+const double kRouteColumnGap = MemoirSpace.s7;
+
+/// How long a stop name has to stay unchanged before it becomes part of the
+/// route query (docs/12-route-weather.md §11).
+///
+/// The stop field is also the address field, so without this, typing an
+/// address asks OSRM for a route once per letter.
+const Duration kPlanDebounce = Duration(milliseconds: 400);
+
 /// Route weather planner (`ROUTE-01`): manage the trip, read the forecast along
 /// it, and save the trip to the journal.
 ///
@@ -47,10 +71,21 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   ///
   /// The origin starts at Ha Noi, the app's documented default location; the
   /// destination starts empty so the screen never invents a trip for the user.
-  List<RouteStop> _stops = const [
+  static const List<RouteStop> _initialStops = [
     RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
     RouteStop(name: '', lat: 0, lon: 0, kind: 'destination'),
   ];
+
+  /// What the form shows. Follows every keystroke, so the field never lags.
+  List<RouteStop> _stops = _initialStops;
+
+  /// What the route query asks for: [_stops] once the typing has paused.
+  ///
+  /// Keeping the two apart is what lets the field stay responsive without the
+  /// screen asking for a route once per letter (see [kPlanDebounce]).
+  List<RouteStop> _plannedStops = _initialStops;
+
+  Timer? _planTimer;
 
   String _vehicle = 'car';
   DateTime _departure = _nextHour();
@@ -77,13 +112,19 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   }
 
   bool get _ready =>
-      _stops.where((stop) => stop.name.trim().isNotEmpty).length >= 2;
+      _plannedStops.where((stop) => stop.name.trim().isNotEmpty).length >= 2;
 
   RouteQuery get _query => RouteQuery(
-        stops: _stops,
+        stops: _plannedStops,
         vehicle: _vehicle,
         departureAt: _departure,
       );
+
+  @override
+  void dispose() {
+    _planTimer?.cancel();
+    super.dispose();
+  }
 
   /// The route on screen: the chosen alternative when there is one.
   RoutePlan _displayPlan(RoutePlan plan) =>
@@ -93,13 +134,31 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       _alternative == null ? report : (_alternativeReport ?? report);
 
   /// The trip changed, so an alternative picked for the old route is stale.
-  void _setStops(List<RouteStop> stops) => setState(() {
-        _stops = stops;
-        _alternative = null;
-        _alternativePlan = null;
-        _alternativeReport = null;
-        _selectedSeq = null;
-      });
+  ///
+  /// [immediate] is for a discrete edit — picking a suggestion, a tap on the
+  /// map, a dwell change, adding or removing a stop — where making the user
+  /// wait would only feel slow. Typing a name passes `immediate: false`, so
+  /// the route request waits until they stop (see [kPlanDebounce]).
+  void _setStops(List<RouteStop> stops, {bool immediate = true}) {
+    setState(() {
+      _stops = stops;
+      _alternative = null;
+      _alternativePlan = null;
+      _alternativeReport = null;
+      _selectedSeq = null;
+    });
+
+    _planTimer?.cancel();
+    if (immediate) {
+      setState(() => _plannedStops = stops);
+      return;
+    }
+    // Read [_stops] inside the callback rather than closing over [stops], so
+    // the last keystroke wins even if an earlier timer somehow survives.
+    _planTimer = Timer(kPlanDebounce, () {
+      if (mounted) setState(() => _plannedStops = _stops);
+    });
+  }
 
   /// A tap on the map fills the stop the form has armed.
   void _onPickPoint(double lat, double lon) {
@@ -351,22 +410,8 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
         onSaved: () => showSavedJourneys(context),
       ),
       SizedBox(height: MemoirSpace.s4 * scale),
-      RoutePlannerPanel(
-        stops: _stops,
-        vehicle: _vehicle,
-        departureAt: _departure,
-        plan: plan,
-        selectedAlternative: _alternative,
-        pickTarget: _pickTarget,
-        scale: scale,
-        onStopsChanged: _setStops,
-        onVehicleChanged: _changeVehicle,
-        onDepartureChanged: _changeDeparture,
-        onPickTarget: (value) => setState(() => _pickTarget = value),
-        onSelectAlternative: _selectAlternative,
-      ),
-      SizedBox(height: MemoirSpace.s4 * scale),
-      ..._results(context, scale, plan, report, async),
+      _plannerBand(context, scale, plan, report, async),
+      ..._belowMap(scale, plan, report),
     ];
   }
 
@@ -388,8 +433,83 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     _alternativeReport = null;
   }
 
-  /// The part of the page that depends on the planned route.
-  List<Widget> _results(
+  /// The band above the map: the planner form and the live-data strip share one
+  /// row on a wide window, and the map runs the full width underneath them.
+  ///
+  /// This is the `lg:col-span-4 / 8` split of the reference frame with the map
+  /// lifted out of the right column, so it keeps the full content width.
+  Widget _plannerBand(
+    BuildContext context,
+    double scale,
+    RoutePlan? plan,
+    RouteWeatherReport? report,
+    AsyncValue<RoutePlanWithWeather>? async,
+  ) {
+    final panel = RoutePlannerPanel(
+      stops: _stops,
+      vehicle: _vehicle,
+      departureAt: _departure,
+      plan: plan,
+      selectedAlternative: _alternative,
+      pickTarget: _pickTarget,
+      scale: scale,
+      onStopsChanged: _setStops,
+      onVehicleChanged: _changeVehicle,
+      onDepartureChanged: _changeDeparture,
+      onPickTarget: (value) => setState(() => _pickTarget = value),
+      onSelectAlternative: _selectAlternative,
+    );
+    final status = _statusCard(context, scale, plan, report, async);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Side by side only where the live-data strip still has room to
+            // read: a squeezed row is worse than a stacked one.
+            final sideBySide = constraints.maxWidth >=
+                (kRoutePlannerColumnWidth +
+                        kRouteColumnGap +
+                        kRouteSummaryColumnMinWidth) *
+                    scale;
+            if (!sideBySide) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  panel,
+                  SizedBox(height: MemoirSpace.s4 * scale),
+                  status,
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: kRoutePlannerColumnWidth * scale,
+                  child: panel,
+                ),
+                SizedBox(width: kRouteColumnGap * scale),
+                Expanded(child: status),
+              ],
+            );
+          },
+        ),
+        if (plan != null && report != null) ...[
+          SizedBox(height: MemoirSpace.s4 * scale),
+          _mapSection(context, scale, plan, report),
+        ],
+      ],
+    );
+  }
+
+  /// The right column of the band: the live-data strip once the route is
+  /// planned, and the placeholder that stands in for it until then.
+  ///
+  /// Keeping every state in this one column is what lets the form stay put on
+  /// the left, whether the route is still typed, loading, or failed.
+  Widget _statusCard(
     BuildContext context,
     double scale,
     RoutePlan? plan,
@@ -397,24 +517,33 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     AsyncValue<RoutePlanWithWeather>? async,
   ) {
     if (async == null) {
-      return [
-        _messageCard(
-          context,
-          scale,
-          Icons.travel_explore,
-          'Chọn điểm xuất phát và điểm đến để xem thời tiết dọc đường.',
-        ),
-      ];
+      return _messageCard(
+        context,
+        scale,
+        Icons.travel_explore,
+        'Chọn điểm xuất phát và điểm đến để xem thời tiết dọc đường.',
+      );
     }
     if (async.hasError && !async.isLoading) {
-      return [_errorCard(context, scale, async.error!)];
+      return _errorCard(context, scale, async.error!);
     }
-    if (plan == null || report == null) return [_loadingCard(context, scale)];
+    if (plan == null || report == null) return _loadingCard(context, scale);
+    return RouteSummary(plan: plan, report: report, scale: scale);
+  }
+
+  /// Everything under the map: the progress chart, the legs, the safety
+  /// callout, the departure comparison and the source disclaimer.
+  ///
+  /// Empty until a route is on screen, because the band already shows the state
+  /// the page is in.
+  List<Widget> _belowMap(
+    double scale,
+    RoutePlan? plan,
+    RouteWeatherReport? report,
+  ) {
+    if (plan == null || report == null) return const [];
 
     return [
-      RouteSummary(plan: plan, report: report, scale: scale),
-      SizedBox(height: MemoirSpace.s4 * scale),
-      _mapSection(context, scale, plan, report),
       SizedBox(height: MemoirSpace.s4 * scale),
       RouteSection(
         overline: 'Phân tích hành trình',

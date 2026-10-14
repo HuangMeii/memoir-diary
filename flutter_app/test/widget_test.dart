@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/core/autosave.dart';
@@ -7,6 +8,7 @@ import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
 import 'package:memoir_app/src/ui/month/day_details.dart';
 import 'package:memoir_app/src/ui/month/month_card.dart';
+import 'package:memoir_app/src/ui/route/route_planner_panel.dart';
 import 'package:memoir_app/src/ui/screens/calendar_screen.dart';
 import 'package:memoir_app/src/ui/screens/entry_editor.dart';
 import 'package:memoir_app/src/ui/tokens.dart';
@@ -14,6 +16,7 @@ import 'package:memoir_app/src/ui/widgets/app_header.dart';
 import 'package:memoir_app/src/ui/widgets/month_heatmap.dart';
 import 'package:memoir_app/src/ui/widgets/weather_card.dart';
 import 'package:memoir_app/src/data/models.dart';
+import 'package:memoir_app/src/data/providers.dart';
 
 void main() {
   group('colorFromHex', () {
@@ -894,6 +897,111 @@ void main() {
       expect(
         upcomingAfter(events, DateTime(2026, 10, 13)).map((e) => e.title),
         ['Sớm', 'Muộn'],
+      );
+    });
+  });
+
+  group('RoutePlannerPanel', () {
+    /// Every stop list the panel reported, with the flag it used.
+    late List<({List<RouteStop> stops, bool immediate})> reported;
+
+    setUp(() => reported = []);
+
+    /// Pumps the panel inside a stand-in for the screen.
+    ///
+    /// The stand-in owns the stop list and feeds it back, which is what the real
+    /// screen does — without that the field would be reset by the panel's own
+    /// rebuild and a test could pass for the wrong reason.
+    Future<void> pumpPanel(WidgetTester tester) async {
+      var stops = const [
+        RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
+        RouteStop(name: '', lat: 0, lon: 0, kind: 'destination'),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            // There is no backend in a widget test. An empty answer is enough to
+            // show that a search actually ran.
+            placeSearchProvider
+                .overrideWith((ref, query) async => const <PlaceCandidate>[]),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setLocalState) => SingleChildScrollView(
+                  child: RoutePlannerPanel(
+                    stops: stops,
+                    vehicle: 'car',
+                    departureAt: DateTime(2026, 10, 14, 18),
+                    plan: null,
+                    selectedAlternative: null,
+                    pickTarget: null,
+                    scale: 1,
+                    onStopsChanged: (next, {bool immediate = true}) {
+                      reported.add((stops: next, immediate: immediate));
+                      setLocalState(() => stops = next);
+                    },
+                    onVehicleChanged: (_) {},
+                    onDepartureChanged: (_) {},
+                    onPickTarget: (_) {},
+                    onSelectAlternative: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // docs/12-route-weather.md §11: the stop field is also the address field,
+    // so typing must be reported as "not immediate" for the screen to hold the
+    // route request back instead of asking OSRM once per letter.
+    testWidgets('a typed name is reported as debounceable', (tester) async {
+      await pumpPanel(tester);
+      await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
+      await tester.pump();
+
+      expect(reported, isNotEmpty);
+      expect(
+        reported.every((call) => !call.immediate),
+        isTrue,
+        reason: 'typing must never ask for a route straight away',
+      );
+    });
+
+    // The point of the whole screen: you type an address and ask for it, rather
+    // than opening a search box first — but still only when you ask.
+    testWidgets('typing does not search, Enter does', (tester) async {
+      await pumpPanel(tester);
+      await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
+      await tester.pump();
+      expect(
+        find.text('Không tìm thấy địa điểm nào.'),
+        findsNothing,
+        reason: 'Nominatim forbids auto-complete, so nothing may be looked up',
+      );
+
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Không tìm thấy địa điểm nào.'), findsOneWidget);
+
+      // Let the 1.5 s search counter run out, so no timer outlives the test.
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('a discrete edit is reported as immediate', (tester) async {
+      await pumpPanel(tester);
+      await tester.tap(find.text('Thêm điểm dừng'));
+      await tester.pump();
+
+      expect(reported, isNotEmpty);
+      expect(
+        reported.every((call) => call.immediate),
+        isTrue,
+        reason: 'adding a stop should not wait for a typing pause',
       );
     });
   });

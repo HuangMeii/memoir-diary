@@ -11,6 +11,13 @@ import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
 import 'route_format.dart';
 
+/// Reports a new stop list from the form.
+///
+/// [immediate] is false only while the user is still typing a name, so the
+/// caller can hold the route request back instead of asking once per letter
+/// (docs/12-route-weather.md §11).
+typedef StopsChanged = void Function(List<RouteStop> stops, {bool immediate});
+
 /// The planner form: where the trip starts and ends, what it stops at on the
 /// way, how the traveller gets there, and when they leave.
 ///
@@ -47,7 +54,7 @@ class RoutePlannerPanel extends ConsumerStatefulWidget {
 
   final double scale;
 
-  final ValueChanged<List<RouteStop>> onStopsChanged;
+  final StopsChanged onStopsChanged;
   final ValueChanged<String> onVehicleChanged;
   final ValueChanged<DateTime> onDepartureChanged;
 
@@ -59,14 +66,70 @@ class RoutePlannerPanel extends ConsumerStatefulWidget {
   ConsumerState<RoutePlannerPanel> createState() => _RoutePlannerPanelState();
 }
 
-class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
-  /// Which slot the search box is filling, or null when it is closed.
-  int? _searchingIndex;
+/// How long the Search button stays disabled after a search. Comfortably
+/// over the 1 second a Nominatim request may take, so presses can never
+/// queue up into a burst. One counter for the whole form, so pressing fast
+/// on two different stops is blocked just the same.
+const Duration _throttleSeconds = Duration(milliseconds: 1500);
 
-  void _replaceStop(int index, RouteStop stop) {
+class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
+  /// Which stop's suggestions are showing, or null when none are.
+  int? _resultsIndex;
+
+  /// The term the suggestions belong to. Empty means "nothing searched yet",
+  /// which is what keeps results off the screen until the user asks.
+  String _query = '';
+
+  Timer? _throttle;
+
+  @override
+  void dispose() {
+    _throttle?.cancel();
+    super.dispose();
+  }
+
+  bool get _coolingDown => _throttle?.isActive ?? false;
+
+  /// True while the last search is still in flight, so a slow answer cannot be
+  /// overtaken by a second request once the throttle has expired.
+  bool get _inFlight =>
+      _query.isNotEmpty && ref.read(placeSearchProvider(_query)).isLoading;
+
+  /// A search is only ever sent from here, and only ever because the user
+  /// asked for one: Enter in a stop field, or the Search button beside it.
+  /// Never while they are still typing — Nominatim's usage policy lists
+  /// auto-complete search under Unacceptable Use (docs/12-route-weather.md
+  /// §11).
+  void _search(int index, String term) {
+    if (_coolingDown || _inFlight) return;
+    final trimmed = term.trim();
+    // Two characters is the server's own floor; asking with one is a wasted
+    // round trip that only burns into the throttle.
+    if (trimmed.length < 2) return;
+
+    setState(() {
+      _query = trimmed;
+      _resultsIndex = index;
+    });
+    _throttle?.cancel();
+    _throttle = Timer(_throttleSeconds, () {
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// The results no longer describe what is in the field.
+  void _clearResults() {
+    if (_resultsIndex == null && _query.isEmpty) return;
+    setState(() {
+      _resultsIndex = null;
+      _query = '';
+    });
+  }
+
+  void _replaceStop(int index, RouteStop stop, {bool immediate = true}) {
     final stops = [...widget.stops];
     stops[index] = stop;
-    widget.onStopsChanged(stops);
+    widget.onStopsChanged(stops, immediate: immediate);
   }
 
   void _removeStop(int index) {
@@ -129,7 +192,8 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
     return RouteSection(
       overline: 'Quản lý lộ trình',
       title: 'Chọn hành trình và các điểm dừng',
-      subtitle: 'Tìm địa điểm, hoặc bấm vào bản đồ để chọn trực tiếp.',
+      subtitle: 'Nhập tên đường hoặc địa chỉ vào ô của điểm, rồi nhấn Enter '
+          'hoặc nút tìm kiếm để định vị. Hoặc bấm vào bản đồ để chọn trực tiếp.',
       scale: scale,
       trailing: TextButton.icon(
         onPressed: stops.length < 2 ? null : _reverse,
@@ -143,14 +207,21 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
             _StopRow(
               index: i,
               stop: stops[i],
-              searching: _searchingIndex == i,
+              searching: _resultsIndex == i,
               picking: widget.pickTarget == i,
+              canSearch: !_coolingDown,
               scale: scale,
-              onName: (value) =>
-                  _replaceStop(i, stops[i].copyWith(name: value)),
-              onToggleSearch: () => setState(() {
-                _searchingIndex = _searchingIndex == i ? null : i;
-              }),
+              onName: (value) {
+                _replaceStop(
+                  i,
+                  stops[i].copyWith(name: value),
+                  // Still typing: the route request can wait.
+                  immediate: false,
+                );
+                // What is on screen no longer matches what was searched.
+                _clearResults();
+              },
+              onSearch: (term) => _search(i, term),
               onTogglePick: () =>
                   widget.onPickTarget(widget.pickTarget == i ? null : i),
               onDwell: (minutes) =>
@@ -158,12 +229,18 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
               onRemove:
                   i == 0 || i == stops.length - 1 ? null : () => _removeStop(i),
             ),
-            if (_searchingIndex == i)
-              _PlaceSearch(
+            // Nothing is fetched, and so nothing is shown, until a search has
+            // actually been asked for.
+            if (_resultsIndex == i && _query.length >= 2)
+              _PlaceResults(
+                query: _query,
                 scale: scale,
                 onPick: (place) {
                   _replaceStop(i, place.toStop(stops[i].kind));
-                  setState(() => _searchingIndex = null);
+                  setState(() {
+                    _resultsIndex = null;
+                    _query = '';
+                  });
                 },
               ),
             if (i != stops.length - 1)
@@ -248,9 +325,10 @@ class _StopRow extends StatefulWidget {
     required this.stop,
     required this.searching,
     required this.picking,
+    required this.canSearch,
     required this.scale,
     required this.onName,
-    required this.onToggleSearch,
+    required this.onSearch,
     required this.onTogglePick,
     required this.onDwell,
     this.onRemove,
@@ -258,12 +336,22 @@ class _StopRow extends StatefulWidget {
 
   final int index;
   final RouteStop stop;
+
+  /// True while this stop's suggestions are on screen.
   final bool searching;
   final bool picking;
+
+  /// False while the search counter is running, so the button cannot be
+  /// pressed into a burst.
+  final bool canSearch;
+
   final double scale;
 
   final ValueChanged<String> onName;
-  final VoidCallback onToggleSearch;
+
+  /// Runs a lookup for the text in this stop's field.
+  final ValueChanged<String> onSearch;
+
   final VoidCallback onTogglePick;
   final ValueChanged<int> onDwell;
   final VoidCallback? onRemove;
@@ -317,9 +405,15 @@ class _StopRowState extends State<_StopRow> {
               child: TextField(
                 controller: _controller,
                 onChanged: widget.onName,
+                // Enter locates, exactly like the Search button beside it.
+                onSubmitted: widget.onSearch,
+                textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   isDense: true,
                   labelText: role,
+                  // Shows once the label floats, so it is the first thing the
+                  // user reads when they go to type an address.
+                  hintText: 'Nhập tên đường hoặc địa chỉ',
                   border: OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(MemoirRadius.input * scale),
@@ -332,9 +426,12 @@ class _StopRowState extends State<_StopRow> {
             ),
             SizedBox(width: MemoirSpace.s1 * scale),
             IconButton(
-              tooltip: 'Tìm địa điểm',
+              tooltip: 'Tìm địa chỉ trong ô này',
               isSelected: widget.searching,
-              onPressed: widget.onToggleSearch,
+              // Disabled while the counter runs, which is what keeps presses
+              // inside Nominatim's 1 request per second (docs/12 §11).
+              onPressed:
+                  widget.canSearch ? () => widget.onSearch(_controller.text) : null,
               icon: Icon(Icons.search, size: 18 * scale),
               visualDensity: VisualDensity.compact,
             ),
@@ -439,71 +536,28 @@ class _StepButton extends StatelessWidget {
   }
 }
 
-/// The place search box. A search is sent only when the user asks for one —
-/// the Search button or Enter — never while they are still typing.
+/// The suggestions for one stop. A search is sent only when the user asks for
+/// one — Enter in the stop field, or the Search button beside it — never while
+/// they are still typing.
 ///
-/// Nominatim's usage policy lists auto-complete search under Unacceptable
-/// Use and caps the public instance at 1 request per second, so the old
-/// 400 ms debounce is gone: [_throttle] blocks the next press for
-/// [_throttleSeconds] after every search instead. See
-/// docs/12-route-weather.md §11.
-class _PlaceSearch extends ConsumerStatefulWidget {
-  const _PlaceSearch({required this.scale, required this.onPick});
+/// It holds no state of its own: the term and the counter live in the panel, so
+/// one counter covers the whole form and a fast press on one stop cannot slip a
+/// second request past another. See docs/12-route-weather.md §11.
+class _PlaceResults extends ConsumerWidget {
+  const _PlaceResults({
+    required this.query,
+    required this.scale,
+    required this.onPick,
+  });
 
+  final String query;
   final double scale;
   final ValueChanged<PlaceCandidate> onPick;
 
   @override
-  ConsumerState<_PlaceSearch> createState() => _PlaceSearchState();
-}
-
-/// How long the Search button stays disabled after a search. Comfortably
-/// over the 1 second a Nominatim request may take, so presses can never
-/// queue up into a burst.
-const Duration _throttleSeconds = Duration(milliseconds: 1500);
-
-class _PlaceSearchState extends ConsumerState<_PlaceSearch> {
-  final TextEditingController _controller = TextEditingController();
-  Timer? _throttle;
-
-  /// The term the last search was made with. Empty means "not searched yet",
-  /// which is what keeps results off the screen until the user asks.
-  String _query = '';
-
-  @override
-  void dispose() {
-    _throttle?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  bool get _coolingDown => _throttle?.isActive ?? false;
-
-  /// True while the last search is still in flight, so a slow answer cannot be
-  /// overtaken by a second request once the throttle has expired.
-  bool get _inFlight =>
-      _query.isNotEmpty &&
-      ref.read(placeSearchProvider(_query)).isLoading;
-
-  void _search() {
-    if (_coolingDown || _inFlight) return;
-    final term = _controller.text.trim();
-    // Two characters is the server's own floor; asking with one is a wasted
-    // round trip that only burns into the throttle.
-    if (term.length < 2) return;
-
-    setState(() => _query = term);
-    _throttle?.cancel();
-    _throttle = Timer(_throttleSeconds, () {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
-    final scale = widget.scale;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -516,90 +570,41 @@ class _PlaceSearchState extends ConsumerState<_PlaceSearch> {
           color: palette.surfaceBrandSubtle,
           borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              // Enter searches, exactly like the button beside it.
-              onSubmitted: (_) => _search(),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: 'Tìm địa chỉ, ví dụ 140 Lê Trọng Tấn',
-                // A real button, not a decoration: Nominatim is only asked
-                // when the user asks for it.
-                prefixIcon: _query.isEmpty || _coolingDown
-                    ? Icon(Icons.search, size: 16 * scale)
-                    : IconButton(
-                        icon: Icon(Icons.search, size: 16 * scale),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        tooltip: 'Tìm kiếm',
-                        onPressed: _search,
-                      ),
-                border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(MemoirRadius.input * scale),
-                ),
-              ),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: MemoirType.bodyInput,
-              ),
-            ),
-            // Nothing is fetched, and so nothing is shown, until a search has
-            // actually been asked for.
-            if (_query.trim().length >= 2)
-              ref.watch(placeSearchProvider(_query)).when(
-                    loading: () => Padding(
-                      padding: EdgeInsets.only(top: MemoirSpace.s2 * scale),
-                      child: const LinearProgressIndicator(minHeight: 2),
-                    ),
-                    error: (error, _) => Padding(
-                      padding: EdgeInsets.only(top: MemoirSpace.s2 * scale),
-                      child: RouteNote(message: '$error', scale: scale),
-                    ),
-                    data: (places) => places.isEmpty
-                        ? Padding(
-                            padding:
-                                EdgeInsets.only(top: MemoirSpace.s2 * scale),
-                            child: RouteNote(
-                              message: 'Không tìm thấy địa điểm nào.',
-                              scale: scale,
+        child: ref.watch(placeSearchProvider(query)).when(
+              loading: () => const LinearProgressIndicator(minHeight: 2),
+              error: (error, _) => RouteNote(message: '$error', scale: scale),
+              data: (places) => places.isEmpty
+                  ? RouteNote(
+                      message: 'Không tìm thấy địa điểm nào.',
+                      scale: scale,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final place in places)
+                          ListTile(
+                            dense: true,
+                            visualDensity: VisualDensity.compact,
+                            title: Text(
+                              place.name,
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(fontSize: MemoirType.body),
                             ),
-                          )
-                        : Column(
-                            children: [
-                              for (final place in places)
-                                ListTile(
-                                  dense: true,
-                                  visualDensity: VisualDensity.compact,
-                                  title: Text(
-                                    place.name,
+                            subtitle: place.subtitle.isEmpty
+                                ? null
+                                : Text(
+                                    place.subtitle,
                                     style:
-                                        theme.textTheme.bodyMedium?.copyWith(
-                                      fontSize: MemoirType.body,
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: MemoirType.caption,
                                     ),
                                   ),
-                                  subtitle: place.subtitle.isEmpty
-                                      ? null
-                                      : Text(
-                                          place.subtitle,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                            color: theme
-                                                .colorScheme.onSurfaceVariant,
-                                            fontSize: MemoirType.caption,
-                                          ),
-                                        ),
-                                  onTap: () => widget.onPick(place),
-                                ),
-                            ],
+                            onTap: () => onPick(place),
                           ),
-                  ),
-          ],
-        ),
+                      ],
+                    ),
+            ),
       ),
     );
   }

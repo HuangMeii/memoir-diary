@@ -82,7 +82,7 @@ Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Nominatim (geocod
 ### 4.1. A — Quản lý lộ trình
 
 1. User mở **Tiện ích → Thời tiết theo hành trình**; app nạp vị trí đã lưu trên hồ sơ (`weather_lat` / `weather_lon`) làm **điểm xuất phát**.
-2. **Bấm nút Tìm kiếm** (hoặc Enter) → `RouteEndpoint.searchPlaces(query)` → chọn từ danh sách `PlaceCandidate`. **Không** tìm ngay khi gõ: Nominatim cấm auto-complete.
+2. **Gõ thẳng tên đường / địa chỉ vào ô của điểm đó** rồi **bấm nút Tìm kiếm hoặc Enter** → `RouteEndpoint.searchPlaces(query)` → gợi ý hiện ngay dưới điểm đó; chọn một dòng để gán toạ độ. Không có bước mở ô tìm kiếm riêng, và **không** tìm trong lúc đang gõ: Nominatim cấm auto-complete (§11).
 3. Hoặc **chọn trực tiếp trên bản đồ**: bấm vào bản đồ lấy toạ độ và gán vào điểm đi / điểm dừng / điểm đến (không cần geocode ngược).
 4. **Thêm nhiều điểm dừng trung gian**, sắp xếp lại thứ tự, xoá; mỗi điểm có **thời gian dừng** (phút). **Đảo chiều hành trình** = đảo danh sách điểm.
 5. Chọn **phương tiện** và **ngày + giờ khởi hành**.
@@ -361,8 +361,8 @@ Ngoài ra, mọi chỗ hiển thị thời tiết phải phân biệt được *
 - Timeout cứng **5 s** cho mọi lời gọi ra ngoài; lỗi thì trả cache chứ **không** trả lỗi (giống [11-weather-forecast.md §6](11-weather-forecast.md)).
 - Trần **25 điểm mẫu** cho mỗi request thời tiết (§5.1).
 - `ROUTE_API_ENABLED=false` để tắt hẳn phần gọi ra ngoài (UI hiện thông báo thay vì lỗi).
-- Debounce thao tác trên client (≥ 400 ms) trước khi gọi `plan`; huỷ request cũ khi có kết quả mới.
-- **Tìm địa điểm chỉ chạy khi bấm nút / Enter** (Nominatim cấm auto-complete). Client chặn nút khi đang chờ **và** trong **1,5 giây** sau lần tìm trước — mềm hơn ngưỡng 1 req/s của Nominatim. Query luôn kèm `countrycodes=vn` để không gợi ý nhầm nước ngoài.
+- **Gõ vào ô tên điểm bị debounce ≥ 400 ms trước khi gọi `plan`.** Ô tên vừa là ô nhập địa chỉ (§4.1), nên không debounce thì gõ `140 Lê Trọng Tấn` là **16 request** OSRM + Open-Meteo. Cách làm: danh sách điểm hiển thị cập nhật ngay từng phím, nhưng danh sách **đi vào `RouteQuery`** chỉ cập nhật sau khi ngừng gõ. Thao tác rời rạc (chọn từ gợi ý, bấm bản đồ, đổi `dwell`, thêm/xoá/đảo chiều) áp dụng **ngay**, không qua debounce — chờ 400 ms chỉ làm app chậm mà không tránh được gì.
+- **Tìm địa điểm chỉ chạy khi bấm nút / Enter** (Nominatim cấm auto-complete). Client chặn nút khi đang chờ **và** trong **1,5 giây** sau lần tìm trước — mềm hơn ngưỡng 1 req/s của Nominatim. Query luôn kèm `countrycodes=vn` để không gợi ý nhầm nước ngoài. Bộ đếm 1,5 giây dùng **chung cho mọi điểm**, nên bấm nhanh ở hai điểm khác nhau cũng bị chặn.
 
 ---
 
@@ -487,7 +487,7 @@ ROUTE_API_ENABLED=true
 | File | Nội dung |
 |---|---|
 | `ui/screens/route_weather_screen.dart` | Màn `ROUTE-01`: form + bản đồ + biểu đồ + timeline + khuyến cáo + so sánh giờ + các trạng thái mục E |
-| `ui/route/route_planner_panel.dart` | **Mục A**: điểm đi/điểm dừng/điểm đến, tìm kiếm địa điểm (debounce 400 ms), chọn trên bản đồ, phương tiện, ngày–giờ, thời gian dừng, đảo chiều, tuyến thay thế |
+| `ui/route/route_planner_panel.dart` | **Mục A**: điểm đi/điểm dừng/điểm đến; **ô mỗi điểm vừa là ô nhập địa chỉ** (Enter / nút Tìm để geocode, gợi ý hiện dưới điểm đó), chọn trên bản đồ, phương tiện, ngày–giờ, thời gian dừng, đảo chiều, tuyến thay thế. State tìm kiếm nằm ở panel (không ở widget con) để dùng chung bộ đếm 1,5 giây |
 | `ui/route/route_map_view.dart` | Bản đồ tile: polyline, marker địa điểm, marker nhiệt độ, bấm để chọn điểm, tự cuộn tới mục timeline đang chọn |
 | `ui/route/route_progress_chart.dart` | Bar mưa + line nhiệt độ theo `Km` (`CustomPainter`) |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng, gắn mức bất lợi của **cả đoạn** chứ không chỉ điểm cuối |
@@ -501,7 +501,9 @@ ROUTE_API_ENABLED=true
 
 1. **`route.forecast` xin `timezone=GMT`, không phải `Asia/Ho_Chi_Minh`.** Múi giờ chỉ dùng để **tra index giờ**; mọi thời gian hiển thị lấy từ `arrivalAt` thật, nên không phụ thuộc múi giờ máy chủ. Điều này bỏ luôn rủi ro lệch múi giờ ở §17.5.
 2. **Ghép toạ độ mẫu ↔ entry trả về theo khoảng cách gần nhất**, không theo thứ tự. Nhờ vậy giả định "Open-Meteo trả đúng thứ tự" (§17.5) không còn là rủi ro: kể cả khi provider đổi thứ tự, điểm vẫn nhận đúng dữ liệu.
-3. **Tìm địa điểm gửi thẳng chuỗi có dấu, kèm `countrycodes=vn`.** Đo thật trên Nominatim: `Đà Lạt` → *Đà Lạt, Tỉnh Lâm Đồng*; `140 Le Trong Tan` → *… 140, Lê Trọng Tấn, Phường Tây Thạnh, TP.HCM*. Bỏ `countrycodes` thì `Tây Thạnh` bị hiểu thành *Tây Thành / Đà Nẵng* (cách ~600 km), `Le T` chỉ ra địa danh Pháp. Vì vậy `foldForSearch()` đã **bị xoá** — query gửi nguyên bản.
+3. **Tìm địa điểm gửi thẳng chuỗi có dấu, kèm `countrycodes=vn`.** Đo thật trên Nominatim: `Đà Lạt` → *Đà Lạt, Tỉnh Lâm Đồng*; `140 Le Trong Tan` → *… 140, Lê Trọng Tấn, Phường Tây Thạnh, TP.HCM*. Bỏ `countrycodes` thì `Tây Thạnh` bị hiểu thành *Tây Thành / Đà Nẵng* (cách ~600 km), `Le T` chỉ ra địa danh Pháp. Vì vậy `foldForSearch()` đã **bị xoá** — query gửi nguyên bản. Không nối thêm gì vào `q`: gặp dấu phẩy, Nominatim chuyển sang dạng có cấu trúc và đòi đoạn sau dấu phẩy phải là tên vùng **khớp chính xác**.
+4. **Gõ vào ô tên điểm bị debounce, nhưng `searchPlaces` thì không.** Hai thứ khác nhau: `plan` bị debounce 400 ms vì gõ tới đâu gọi tới đó là bắn request thừa; `searchPlaces` **không** debounce mà **không gọi** trong lúc gõ, vì Nominatim cấm auto-complete — chỉ chạy khi Enter / bấm nút.
+5. **Danh sách điểm có hai bản: bản hiển thị và bản đi vào `RouteQuery`.** `_StopRow` ghi controller từ `stop.name` khi tên đổi từ ngoài, nên nếu debounce thẳng việc ghi tên vào danh sách thì ô nhập sẽ bị nhảy chữ. Tách hai bản giữ được cả hai: ô nhập mượt, và request chỉ bắn sau khi ngừng gõ.
 4. **Thêm `weatherGroup` vào `RouteWeatherSample` và `JourneyWeatherPoint`.** Server là nơi duy nhất giữ bảng WMO → `weathers.code`; app chỉ đọc nhóm để chọn icon SVG sẵn có, không lặp lại bảng WMO trong Dart.
 5. **`route_rules.dart` giữ một bản sao bảng WMO.** `weather/weather_endpoint.dart` **không bị sửa** để bảo toàn màn thời tiết đang chạy; gộp hai bản là việc riêng, làm sau.
 6. **Tuyến thay thế chỉ hỏi khi đúng 2 điểm.** Đo thật: `Hà Nội → Hải Phòng` trả **2 routes**, `TP.HCM → Đà Lạt` trả **1**. Không có thì khối "Tuyến thay thế" ẩn hẳn — đúng chữ "khi được hỗ trợ".
