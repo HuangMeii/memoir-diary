@@ -36,12 +36,16 @@ const double kRouteContentWidth = 1208;
 /// 1208 px content, which works out at 384 px.
 const double kRoutePlannerColumnWidth = 384;
 
-/// Narrowest the live-data column may get before the band stacks instead.
+/// Narrowest the map column may get before the band stacks instead.
 ///
 /// Roughly the frame's `lg:col-span-8` column shrunk to its readable floor, so
 /// the split still happens on a 1024 px window rather than only at the full
 /// design width.
-const double kRouteSummaryColumnMinWidth = 520;
+const double kRouteMapColumnMinWidth = 520;
+
+/// Height of the map block on the right of the band: the height this screen has
+/// always drawn it at, so only its place on the page changed.
+const double kRouteMapHeight = 360;
 
 /// Gap between the two columns of the band: the frame's 28 px `gap-7`.
 const double kRouteColumnGap = MemoirSpace.s7;
@@ -433,11 +437,12 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     _alternativeReport = null;
   }
 
-  /// The band above the map: the planner form and the live-data strip share one
-  /// row on a wide window, and the map runs the full width underneath them.
+  /// The band above the analysis: the planner form and the map share one row on
+  /// a wide window, and the live-data block runs the full width under them.
   ///
-  /// This is the `lg:col-span-4 / 8` split of the reference frame with the map
-  /// lifted out of the right column, so it keeps the full content width.
+  /// This is the `lg:col-span-4 / 8` split of the reference frame: the form
+  /// keeps the left column at its fixed width and the map takes the right one.
+  /// Narrower than the breakpoint the blocks stack: form, map, live data.
   Widget _plannerBand(
     BuildContext context,
     double scale,
@@ -459,19 +464,22 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       onPickTarget: (value) => setState(() => _pickTarget = value),
       onSelectAlternative: _selectAlternative,
     );
-    final status = _statusCard(context, scale, plan, report, async);
+
+    // The map and the live-data block both need a route; until there is one the
+    // right column carries the card that says why there is no map yet.
+    final hasRoute = plan != null && report != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            // Side by side only where the live-data strip still has room to
-            // read: a squeezed row is worse than a stacked one.
+            // Side by side only where the map still has room to read: a
+            // squeezed row is worse than a stacked one.
             final sideBySide = constraints.maxWidth >=
                 (kRoutePlannerColumnWidth +
                         kRouteColumnGap +
-                        kRouteSummaryColumnMinWidth) *
+                        kRouteMapColumnMinWidth) *
                     scale;
             if (!sideBySide) {
               return Column(
@@ -479,10 +487,14 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
                 children: [
                   panel,
                   SizedBox(height: MemoirSpace.s4 * scale),
-                  status,
+                  hasRoute
+                      ? _mapSection(context, scale, plan, report)
+                      : _statusCard(context, scale, plan, report, async),
                 ],
               );
             }
+            // Both columns keep their own height, so the form is never resized
+            // by whatever the map needs.
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -491,24 +503,29 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
                   child: panel,
                 ),
                 SizedBox(width: kRouteColumnGap * scale),
-                Expanded(child: status),
+                Expanded(
+                  child: hasRoute
+                      ? _mapSection(context, scale, plan, report)
+                      : _statusCard(context, scale, plan, report, async),
+                ),
               ],
             );
           },
         ),
-        if (plan != null && report != null) ...[
+        if (hasRoute) ...[
           SizedBox(height: MemoirSpace.s4 * scale),
-          _mapSection(context, scale, plan, report),
+          RouteSummary(plan: plan, report: report, scale: scale),
         ],
       ],
     );
   }
 
-  /// The right column of the band: the live-data strip once the route is
-  /// planned, and the placeholder that stands in for it until then.
+  /// What the band's right column carries until the route is known: the state
+  /// the page is in, in place of the map.
   ///
-  /// Keeping every state in this one column is what lets the form stay put on
-  /// the left, whether the route is still typed, loading, or failed.
+  /// Keeping every state in this one column — the map included — is what lets
+  /// the form stay put on the left, whether the route is still typed, loading,
+  /// or failed.
   Widget _statusCard(
     BuildContext context,
     double scale,
@@ -598,6 +615,7 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     ];
   }
 
+  /// The map of the route, and the header that says what a tap on it does.
   Widget _mapSection(
     BuildContext context,
     double scale,
@@ -617,8 +635,11 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       overline: 'Bản đồ lộ trình',
       title: 'Tuyến đường & trạm quan sát thời tiết',
       subtitle: role == null
-          ? 'Bấm vào một điểm trên hành trình để xem chi tiết.'
-          : 'Bấm lên bản đồ để đặt $role.',
+          ? 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
+              'mưa), xám – chưa có dự báo; bấm vào một điểm trên hành trình '
+              'để xem chi tiết.'
+          : 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
+              'mưa), xám – chưa có dự báo; bấm lên bản đồ để đặt $role.',
       scale: scale,
       trailing: _alternative == null
           ? null
@@ -641,9 +662,8 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
             plan: plan,
             report: report,
             selectedSeq: _selectedSeq,
+            height: kRouteMapHeight,
             scale: scale,
-            onSelectSample: (sample) =>
-                setState(() => _selectedSeq = sample.seq),
             onPickPoint: _onPickPoint,
           ),
         ],
@@ -763,7 +783,3 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     );
   }
 }
-
-
-
-

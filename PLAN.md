@@ -199,7 +199,7 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 ### ✅ Phase 25 — Flutter UI: lộ trình, bản đồ, timeline (ĐÃ TRIỂN KHAI)
 - [x] `ui/screens/route_weather_screen.dart` + `ui/route/*` (chrome, form, bản đồ, biểu đồ, timeline, khuyến cáo, so sánh giờ)
 - [x] **Form Quản lý lộ trình**: điểm đi / nhiều điểm dừng / điểm đến, tìm kiếm, chọn trên bản đồ, phương tiện, ngày–giờ, dwell, đảo chiều, chọn tuyến thay thế
-- [x] Bản đồ tile thật (`flutter_map` + tile OSM): polyline + marker địa điểm + marker nhiệt độ; chọn marker ↔ highlight timeline, chọn timeline ↔ bản đồ cuộn tới marker
+- [x] Bản đồ tile thật (`flutter_map` + tile OSM): tuyến **cắt lát tô màu theo mức bất lợi** (xanh/cam/đỏ, xám nét đứt khi thiếu dự báo) + chú thích màu + marker địa điểm; chọn mục timeline / biểu đồ ↔ **làm dày lát + khuyên đánh dấu** và cuộn bản đồ tới mẫu
 - [x] Đăng ký màn vào `ui/utilities.dart` (nhãn đầy đủ `Thời tiết hành trình`, nhãn header `Hành trình`)
 
 ### ✅ Phase 26 — Flutter: lưu nhật ký + xem lại hành trình (ĐÃ TRIỂN KHAI)

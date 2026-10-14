@@ -166,8 +166,8 @@ class RouteHero extends StatelessWidget {
   }
 }
 
-/// The strip under the hero: the headline figures of the planned trip, and where
-/// the data came from.
+/// The live-data block under the band: where the data came from, and the
+/// headline figures of the planned trip.
 class RouteSummary extends StatelessWidget {
   const RouteSummary({
     super.key,
@@ -185,8 +185,6 @@ class RouteSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
     final samples = report.samples;
-    final origin = plan.stops.first;
-    final destination = plan.stops.last;
 
     // A cached answer is labelled with the moment it was taken, like the weather
     // screen does, so a stale forecast never reads as live.
@@ -229,17 +227,10 @@ class RouteSummary extends StatelessWidget {
               RouteSeverityChip(severity: report.worstSeverity, scale: scale),
             ],
           ),
-          SizedBox(height: MemoirSpace.s3 * scale),
-          Wrap(
-            spacing: MemoirSpace.s6 * scale,
-            runSpacing: MemoirSpace.s3 * scale,
-            children: [
-              RouteMetric(
-                label: 'Lộ trình',
-                value: '${origin.name} → ${destination.name}',
-                icon: Icons.route,
-                scale: scale,
-              ),
+          SizedBox(height: MemoirSpace.s4 * scale),
+          RouteMetricTable(
+            scale: scale,
+            cells: [
               RouteMetric(
                 label: 'Khoảng cách',
                 value: formatKm(plan.distanceMeters),
@@ -278,4 +269,3 @@ class RouteSummary extends StatelessWidget {
     );
   }
 }
-

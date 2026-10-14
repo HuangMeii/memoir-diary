@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -5,6 +7,7 @@ import '../../data/models.dart';
 import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import 'route_segments.dart';
 
 /// "305 km" / "18,4 km" — the distance labels the route panels use.
 String formatKm(num meters) {
@@ -39,6 +42,25 @@ Color routeSeverityColor(BuildContext context, String severity) =>
       RouteSeverity.caution => MemoirPalette.of(context).warningText,
       _ => Theme.of(context).colorScheme.primary,
     };
+
+/// The colour the route line is drawn with along a stretch of [bucket].
+///
+/// The map answers one question - "will this stretch be ridden through rain?" -
+/// so the line carries the *weather*, not the severity: a wet stretch takes the
+/// teal of the rain bars in the chart just above the map, a dry one takes the
+/// route yellow. The chips, the safety callout and the departure comparison
+/// keep the severity scale ([routeSeverityColor]), which is another question.
+///
+/// A stretch the forecast does not cover is grey rather than yellow: missing
+/// data must never look like a dry, good stretch of road.
+Color routeWeatherLineColor(BuildContext context, String bucket) {
+  final palette = MemoirPalette.of(context);
+  return switch (bucket) {
+    RouteWeatherBucket.rain => palette.routeRainLine,
+    RouteWeatherBucket.sun => palette.routeSunLine,
+    _ => palette.textDisabled,
+  };
+}
 
 /// The background a severity paints its chip with.
 Color routeSeveritySurface(BuildContext context, String severity) =>
@@ -298,3 +320,95 @@ class RouteMetric extends StatelessWidget {
   }
 }
 
+/// The rows of figures in the live-data block, ruled like a table.
+///
+/// Wide enough for the frame's `lg:grid-cols-4`, the cells sit on one row with
+/// a line between them; as the window narrows they reflow to two and then one
+/// column, with a line between the rows as well. Ruling them into a grid keeps
+/// the figures in columns, where a `Wrap` of the same cells lets a long value
+/// shuffle its neighbours along.
+class RouteMetricTable extends StatelessWidget {
+  const RouteMetricTable({
+    super.key,
+    required this.cells,
+    this.scale = 1,
+    this.minColumnWidth = 160,
+    this.maxColumns = 4,
+  });
+
+  /// One cell per figure, in reading order.
+  final List<RouteMetric> cells;
+
+  final double scale;
+
+  /// Narrowest a column may get, in design pixels, before the cells reflow.
+  final double minColumnWidth;
+
+  /// Columns on the widest window: the frame's four-figure strip.
+  final int maxColumns;
+
+  /// How many cells share a row of [width]: at least one, at most [maxColumns].
+  static int columnsFor(double width, double minColumnWidth, int maxColumns) {
+    if (width <= 0 || minColumnWidth <= 0) return 1;
+    return math.max(1, math.min(maxColumns, (width / minColumnWidth).floor()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = MemoirPalette.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = columnsFor(
+          constraints.maxWidth / scale,
+          minColumnWidth,
+          maxColumns,
+        );
+        final rows = [
+          for (var start = 0; start < cells.length; start += columns)
+            cells.sublist(start, math.min(start + columns, cells.length)),
+        ];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var row = 0; row < rows.length; row++)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var column = 0; column < rows[row].length; column++)
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.only(
+                            left: column == 0 ? 0 : MemoirSpace.s4 * scale,
+                            top: row == 0 ? 0 : MemoirSpace.s3 * scale,
+                            right: column == rows[row].length - 1
+                                ? 0
+                                : MemoirSpace.s4 * scale,
+                            bottom: row == rows.length - 1
+                                ? 0
+                                : MemoirSpace.s3 * scale,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: column == 0
+                                  ? BorderSide.none
+                                  : BorderSide(color: palette.borderDefault),
+                              top: row == 0
+                                  ? BorderSide.none
+                                  : BorderSide(color: palette.borderDefault),
+                            ),
+                          ),
+                          child: rows[row][column],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}

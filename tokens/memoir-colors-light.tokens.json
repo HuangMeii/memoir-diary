@@ -552,6 +552,36 @@
           "$description": "Weather semantic color extracted from existing design."
         }
       }
+    },
+    "map": {
+      "route": {
+        "rainy": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.486275,
+              0.588235,
+              0.576471
+            ],
+            "hex": "#7c9693"
+          },
+          "$description": "Route line where the forecast has rain; the teal of the rain bars in the route chart."
+        },
+        "sunny": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.85098,
+              0.65098,
+              0.180392
+            ],
+            "hex": "#d9a62e"
+          },
+          "$description": "Route line where the forecast has no rain; dark enough to read on the light OSM tiles."
+        }
+      }
     }
   }
 }

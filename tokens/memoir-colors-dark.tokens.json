@@ -496,6 +496,36 @@
           "$description": "Weather semantic color extracted from existing design."
         }
       }
+    },
+    "map": {
+      "route": {
+        "rainy": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.486275,
+              0.588235,
+              0.576471
+            ],
+            "hex": "#7c9693"
+          },
+          "$description": "Same teal in dark mode: the map tiles are the light OSM set in both themes."
+        },
+        "sunny": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.85098,
+              0.65098,
+              0.180392
+            ],
+            "hex": "#d9a62e"
+          },
+          "$description": "Same yellow in dark mode: the map tiles are the light OSM set in both themes."
+        }
+      }
     }
   }
 }
