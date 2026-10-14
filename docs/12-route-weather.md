@@ -102,7 +102,7 @@ Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Nominatim (geocod
 
 ### 4.3. C — Tương tác bản đồ & timeline
 
-1. Vẽ bản đồ + tuyến **cắt thành từng lát tô màu theo mức bất lợi** (xanh / cam / đỏ, xám nét đứt khi thiếu dự báo — xem §18.3) + marker địa điểm + bảng chú thích màu.
+1. Vẽ bản đồ + tuyến **một nét liền, cắt thành từng lát tô màu theo thời tiết** (xanh – mưa, vàng – không mưa, xám khi thiếu dự báo — xem §18.3 và §18.6) + marker địa điểm + bảng chú thích màu 3 mục.
 2. Bấm một điểm trên bản đồ → **đặt điểm dừng đang chọn** vào đúng điểm đó (mục A).
 3. Bấm mục timeline / điểm trên biểu đồ / dải khuyến cáo → **làm dày lát đường chứa mẫu đó**, đóng khuyên đánh dấu tại mẫu và cuộn bản đồ tới mẫu.
 4. Đổi điểm dừng / phương tiện / giờ khởi hành → **tính lại tuyến và dự báo** (debounce ≥ 400 ms; huỷ request cũ khi có kết quả mới).
@@ -395,8 +395,8 @@ ROUTE_API_ENABLED=true
 | `ui/screens/route_weather_screen.dart` | Màn **Tiện ích → Thời tiết theo hành trình**: chrome + form + bản đồ + phân tích + timeline + khuyến cáo + so sánh giờ + disclaimer |
 | `ui/route/route_chrome.dart` | Breadcrumb `Trang chủ / Tiện ích / HÀNH TRÌNH & THỜI TIẾT`, tiêu đề, phụ đề, nút **So sánh giờ khởi hành** + **Lưu vào nhật ký**, khối **Dữ liệu trực tiếp** (chip nguồn + bảng 4 ô số liệu, full-width dưới dải 2 cột) |
 | `ui/route/route_planner_panel.dart` | **Mục A**: điểm xuất phát / danh sách điểm dừng / điểm đến, tìm kiếm địa điểm, chọn trên bản đồ, chọn phương tiện, ngày–giờ khởi hành, thời gian dừng, đảo chiều, chọn tuyến thay thế |
-| `ui/route/route_map_view.dart` | Bản đồ + tuyến cắt lát tô màu theo mức bất lợi + marker địa điểm + chú thích màu; **mục C** (chọn mục timeline ↔ làm dày lát và cuộn tới mẫu) |
-| `ui/route/route_segments.dart` | Hàm thuần cắt hình học tuyến thành các lát theo `distanceFromStartMeters`, gán mức của cả lát và gộp lát liền kề cùng mức |
+| `ui/route/route_map_view.dart` | Bản đồ + **tuyến liền một nét** cắt lát tô màu theo thời tiết (mưa / không mưa / chưa có dự báo) + marker địa điểm + chú thích màu; **mục C** (chọn mục timeline ↔ làm dày lát và cuộn tới mẫu) |
+| `ui/route/route_segments.dart` | Hàm thuần cắt hình học tuyến thành các lát theo `distanceFromStartMeters`, gán **mức bất lợi** (cho thẻ chặng / timeline) và **nhóm thời tiết `rain` / `sun` / `unknown`** (cho màu tuyến), gộp lát liền kề khi **cùng cả hai** |
 | `ui/route/route_progress_chart.dart` | Bar lượng mưa + line nhiệt độ theo `Km`, trục mốc `Km 0 / 75 / 185 / 305` |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng: `giờ — Chặng N`, tên, `Km`, nhiệt độ, `Mưa %` + mm, gió, chip mức |
 | `ui/route/route_alerts_panel.dart` | Dải cảnh báo bất lợi (cấp độ Vàng) gộp từ `alerts[]` + ghi rõ nguồn và tính chất tham khảo |
@@ -489,8 +489,8 @@ ROUTE_API_ENABLED=true
 |---|---|
 | `ui/screens/route_weather_screen.dart` | Màn `ROUTE-01`: form + bản đồ + biểu đồ + timeline + khuyến cáo + so sánh giờ + các trạng thái mục E |
 | `ui/route/route_planner_panel.dart` | **Mục A**: điểm đi/điểm dừng/điểm đến; **ô mỗi điểm vừa là ô nhập địa chỉ** (Enter / nút Tìm để geocode, gợi ý hiện dưới điểm đó), chọn trên bản đồ, phương tiện, ngày–giờ, thời gian dừng, đảo chiều, tuyến thay thế. State tìm kiếm nằm ở panel (không ở widget con) để dùng chung bộ đếm 1,5 giây |
-| `ui/route/route_map_view.dart` | Bản đồ tile: tuyến cắt lát tô màu theo mức bất lợi + chú thích màu, marker địa điểm, bấm để đặt điểm dừng, tự cuộn tới và làm dày lát của mục timeline đang chọn |
-| `ui/route/route_segments.dart` | `buildRouteSegments`: cắt hình học tại từng mẫu, mức của lát = mức cao nhất của hai mẫu hai đầu, gộp lát liền kề cùng mức, `unknown` khi cả hai đầu đều không có dữ liệu; `routeMetersBetween`/`routeCumulativeMeters`/`routePointAt` dùng chung hằng số bán kính với server |
+| `ui/route/route_map_view.dart` | Bản đồ tile: **một đường nền liền** (viền + nền) với các lát tô màu theo **thời tiết** (mưa / không mưa / chưa có dự báo) + chú thích màu, marker địa điểm, bấm để đặt điểm dừng, tự cuộn tới và làm dày lát của mục timeline đang chọn |
+| `ui/route/route_segments.dart` | `buildRouteSegments`: cắt hình học tại từng mẫu, mức của lát = mức cao nhất của hai mẫu hai đầu, **nhóm màu** = `rain` nếu một trong hai đầu có mưa (`rainy` / `storm`, `precipitationMm ≥ 0,1`, xác suất mưa ≥ 60 %), ngược lại `sun`, `unknown` khi cả hai đầu đều không có dữ liệu; gộp lát liền kề khi cùng mức **và** cùng nhóm; `routeMetersBetween`/`routeCumulativeMeters`/`routePointAt` dùng chung hằng số bán kính với server |
 | `ui/route/route_progress_chart.dart` | Bar mưa + line nhiệt độ theo `Km` (`CustomPainter`) |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng, gắn mức bất lợi của **cả đoạn** chứ không chỉ điểm cuối |
 | `ui/route/route_panels.dart` | Panel khuyến cáo an toàn + panel so sánh giờ khởi hành |
@@ -514,11 +514,12 @@ ROUTE_API_ENABLED=true
 9. **Khi chọn tuyến thay thế, dự báo được tính lại** cho hình học mới (`route.forecast` với plan của tuyến thay thế, giữ nguyên điểm dừng và thời gian dừng), kèm nút **Về tuyến đề xuất**.
 10. **Header web đổi cách chia chỗ.** `nav` và `utilities` nằm trong hai dải cuộn riêng theo tỉ lệ **2 : 1** để pill thứ hai không bao giờ đẩy navigation ra khỏi tầm bấm; pill trong header dùng nhãn ngắn (`Hành trình`), nhãn đầy đủ (`Thời tiết hành trình`) dùng ở khối "Tiện ích" cuối trang.
 
-11. **Tuyến tô màu theo mức bất lợi, thay cho icon mức độ trên marker.** Mỗi đoạn giữa hai mẫu liền kề là một lát, tô bằng **mức cao nhất của hai mẫu hai đầu** — đúng quy tắc `RouteTimeline` dùng cho mỗi chặng, nên bản đồ và thẻ không bao giờ nói lệch nhau. Ba màu lấy **nguyên bộ màu mức độ đã có** (`warning` = đỏ đất `feedbackError`, `caution` = hổ phách `feedbackWarning`, `info` = xanh brand), nên **không sinh token mới** và bản đồ khớp với chip / callout / timeline. Đoạn **thiếu dự báo** (mẫu `unavailable` hoặc không có `weatherCode`) tô **xám nét đứt**: dữ liệu thiếu không được trông như đường tốt. Mẫu `stale` **vẫn tô màu** vì đó là điều tốt nhất app biết.
+11. **Tuyến tô màu theo *thời tiết*, thay cho icon mức độ trên marker.** Bản đồ trả lời một câu hỏi — *"đoạn này có mưa không?"* — nên mỗi lát giữa hai mẫu liền kề được tô theo **nhóm thời tiết của hai đầu**: `rain` nếu **một trong hai** đầu có mưa (`rainy` / `storm`, hoặc `precipitationMm ≥ 0,1`, hoặc xác suất mưa ≥ 60 %), ngược lại `sun` — tức *nắng / chỉ có mây*, tức **không có mưa trong dự báo**. Màu lấy từ token riêng của bản đồ: `map.route.rainy` = `#7C9693`, **đúng bằng màu cột mưa của biểu đồ ngay trên bản đồ** (`chart.weather.rain-accumulation`), và `map.route.sunny` = `#D9A62E`. Lát **thiếu dự báo** (mẫu `unavailable` hoặc không có `weatherCode`) tô **xám liền** (`text.disabled`): dữ liệu thiếu không được trông như một đoạn đường khô ráo. Mẫu `stale` **vẫn tô màu** vì đó là điều tốt nhất app biết. Thang **mức bất lợi** không mất đi, nó chuyển sang những chỗ nói được *thành lời*: chip mỗi chặng (`route_timeline.dart`), khối **Khuyến cáo an toàn** và panel so sánh giờ. Lý do đổi: xem §18.6.
 12. **Không dùng `Polyline.gradientColors` của `flutter_map`.** Painter của gói vẽ gradient **tuyến tính theo màn hình** giữa điểm đầu và điểm cuối của cả polyline (`Gradient.linear(offsets.first, offsets.last, …)` trong `polyline_layer/painter.dart`), nên màu chảy ngang qua khúc cua thay vì bám theo chiều dài đường. Cách đúng là **cắt thành nhiều `Polyline`**, mỗi lát một màu — đúng cách Google Maps vẽ giao thông.
 13. **Bỏ marker icon thời tiết trên bản đồ.** Marker là tay bấm duy nhất để chọn mẫu, nên đổi lại: chọn mẫu từ **timeline / biểu đồ / dải khuyến cáo**, bản đồ **làm dày lát** chứa mẫu đó và **đóng khuyên** tại toạ độ mẫu. Vì vậy `RouteMapView` **bỏ tham số `onSelectSample`** (chỉ có một call-site, không test nào dựng widget này).
-14. **Màu là *thời tiết*, không phải *giao thông*.** Memoir không có nguồn dữ liệu giao thông (OSRM công khai chỉ trả tuyến, không trả traffic), nên phụ đề mục **Bản đồ lộ trình** và chú thích màu đều ghi rõ "màu đường là mức bất lợi của thời tiết dự kiến". Muốn tô theo kẹt xe phải thêm provider mới (Google Directions `duration_in_traffic` / TomTom / HERE) — việc riêng, ngoài phạm vi.
-15. **Bảng chú thích nằm trên bản đồ.** Vì màu đường giờ mang nghĩa, thang màu phải đọc được ngay tại chỗ: khối chú thích đặt góc dưới-phải khung bản đồ (góc dưới-trái đã dành cho attribution), gồm 4 mục `Thuận lợi / Cần chú ý / Cảnh báo / Chưa có dự báo`.
+14. **Màu là *thời tiết*, không phải *giao thông*.** Memoir không có nguồn dữ liệu giao thông (OSRM công khai chỉ trả tuyến, không trả traffic), nên phụ đề mục **Bản đồ lộ trình** và chú thích màu đều ghi rõ *"Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không mưa), xám – chưa có dự báo"*. Muốn tô theo kẹt xe phải thêm provider mới (Google Directions `duration_in_traffic` / TomTom / HERE) — việc riêng, ngoài phạm vi.
+15. **Bảng chú thích nằm trên bản đồ.** Vì màu đường giờ mang nghĩa, thang màu phải đọc được ngay tại chỗ: khối chú thích đặt góc dưới-phải khung bản đồ (góc dưới-trái đã dành cho attribution), gồm **3 mục** `Mưa / Nắng · không mưa / Chưa có dự báo` — đúng ba nhóm mà lát đường có thể mang.
+16. **Tuyến là *một nét liền*, không còn nét đứt.** Hai nguyên nhân làm bản dựng đầu trông như một hàng gạch rời: (a) lát thiếu dự báo vẽ bằng `StrokePattern.dashed` với `PatternFit.scaleUp`, nên **mỗi lát tự reset pha gạch** và co giãn độ dài gạch theo lát của nó; (b) mỗi lát tự vẽ **viền trắng** (`borderStrokeWidth` 2, `surfaceCard`), mà painter của `flutter_map` vẽ **tuần tự từng lát, viền dưới — ruột trên**, với `StrokeCap.round` — nên viền của lát sau **khoét một vết trắng** vào lát trước ngay tại **mọi chỗ đổi màu**. Cách sửa: bỏ nét đứt hoàn toàn, thêm **một polyline nền** vẽ cả hình học tuyến (`_baseLine`: viền `surfaceCard` + nền xám mờ) và để các lát vẽ **không viền riêng** — tuyến đọc như một con đường, đổi màu giữa chừng cũng không đứt.
 
 ### 18.4. Đã kiểm chứng
 
@@ -536,6 +537,16 @@ ROUTE_API_ENABLED=true
 - **Gộp bảng WMO** giữa `weather_endpoint.dart` và `route_rules.dart` (mục 18.3.5).
 - Số liệu **theo giờ trong màn thời tiết cũ** vẫn là minh họa (việc riêng của Phase 19–20).
 - **`transit`** vẫn chưa hỗ trợ, đúng như đặc tả §2.
+
+### 18.6. Đổi thang màu tuyến sang *thời tiết* (14.10.2026)
+
+Đổi hướng so với §18.3.11/14/15: tuyến vẽ **một nét liền**, màu theo **thời tiết** — hai nhóm **mưa / không mưa** — thay cho thang **mức bất lợi**.
+
+| Việc | Chi tiết |
+|---|---|
+| Token | thêm `map.route.rainy` `#7C9693` + `map.route.sunny` `#D9A62E` cho **cả hai chế độ**, ghi **hex trực tiếp** (token dạng alias bị `tool/gen_tokens.dart` bỏ qua nên không sinh ra hằng số), rồi chạy `dart run tool/gen_tokens.dart` |
+| Code | `route_segments.dart` (`RouteWeatherBucket`, `routeWeatherBucket`, `_stretchBucket`, `_onlyBucket`, `RouteSegment.bucket`), `route_format.dart` (`routeWeatherLineColor` thay `routeLineColor`), `route_map_view.dart` (`_baseLine`, bỏ viền riêng của lát, bỏ nét đứt, chú thích 3 mục), `theme.dart` (`routeRainLine` / `routeSunLine`), phụ đề màn hình |
+| Kiểm chứng | `flutter analyze` **sạch**; `flutter test` **chưa chạy lại** riêng cho đợt này — thang `severity` giữ nguyên nên hành vi mà `route_segments_test.dart` kiểm tra không đổi, người dùng tự kiểm |
 
 ---
 

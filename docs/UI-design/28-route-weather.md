@@ -130,9 +130,10 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
      khi routing API thực sự trả về**; không có thì bỏ hẳn khối này.
 6. **Bản đồ** — trong frame nằm ở **cột phải `8/12`**, ngay dưới banner nguồn + strip
    tóm tắt; bản dựng giữ đúng như vậy. Panel header (*Bản đồ lộ trình & Trạm quan sát
-   thời tiết* + tỷ lệ + cụm zoom `+ / − / fit`), viewport: polyline tuyến, marker điểm đi
-   / điểm dừng / điểm đến, marker thời tiết, callout cảnh báo (viền vàng + pulse),
-   bảng chú thích. **Attribution** đặt ở góc bản đồ.
+   thời tiết* + tỷ lệ + cụm zoom `+ / − / fit`), viewport: polyline tuyến (bản dựng:
+   **một nét liền**, màu theo thời tiết), marker điểm đi / điểm dừng / điểm đến, callout
+   cảnh báo (viền vàng + pulse), bảng chú thích **3 mục** `Mưa / Nắng · không mưa /
+   Chưa có dự báo`. **Attribution** đặt ở góc bản đồ.
 
 7. **Phân tích hành trình** — tiêu đề *Dự báo thời tiết dọc hành trình & Biểu đồ
    diễn tiến*; biểu đồ **bar lượng mưa (mm)** + **line nhiệt độ (°C)** theo trục
@@ -175,6 +176,10 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   `feedbackWarning` + `feedbackWarningBackground` cho khối khuyến cáo;
   `feedbackError` cho mưa lớn / cảnh báo nặng; `textPrimary` / `textSecondary`
   cho chữ; `actionPrimary` cho nút đặc.
+- **Màu tuyến đường** (bản dựng — xem [12-route-weather.md §18.6](../12-route-weather.md)):
+  `map.route.rainy` `#7C9693` cho đoạn có mưa — trùng màu cột mưa của biểu đồ
+  (`chart.weather.rain-accumulation`) — và `map.route.sunny` `#D9A62E` cho đoạn không
+  mưa; đoạn thiếu dự báo dùng `text.disabled` (xám).
 - **Chữ**: `MemoirType` — headline cho tiêu đề màn, title cho tiêu đề khối, body
   cho nội dung, label cho nhãn nút, caption cho nhãn phụ; số liệu (`Km`, `°C`,
   `mm`, `%`) dùng cỡ caption/nhãn mono để thẳng cột.
@@ -196,6 +201,9 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   được export** sang `assets/icons/` ⇒ dùng `Icons.*` của Material như mọi màn khác.
 - **Attribution là bắt buộc**, không phải trang trí: đặt ở góc bản đồ và/hoặc
   dòng nguồn cuối trang.
+- **Màu tuyến mang nghĩa *thời tiết*, không phải *mức bất lợi***: hai nhóm mưa /
+  không mưa, tuyến vẽ **một nét liền** (không nét đứt cho đoạn thiếu dự báo).
+  Thang mức vẫn nằm ở chip mỗi chặng, khối khuyến cáo và panel so sánh giờ.
 - **Không dùng chữ khẳng định chắc chắn** ("sẽ mưa", "bão sẽ đổ bộ") — chỉ
   "dự kiến", "có thể", "xác suất".
 
