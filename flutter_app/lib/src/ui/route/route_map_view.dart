@@ -159,13 +159,14 @@ class _RouteMapViewState extends State<RouteMapView> {
     );
   }
 
-  /// Small round markers carrying the temperature, tinted by severity.
+  /// Small round markers carrying the weather at each sample, tinted by
+  /// severity.
   List<Marker> _weatherMarkers() => [
         for (final sample in _samples)
           Marker(
             point: LatLng(sample.lat, sample.lon),
-            width: 44 * widget.scale,
-            height: 28 * widget.scale,
+            width: 32 * widget.scale,
+            height: 32 * widget.scale,
             child: GestureDetector(
               onTap: () => widget.onSelectSample(sample),
               child: _SampleMarker(
@@ -198,7 +199,8 @@ class _RouteMapViewState extends State<RouteMapView> {
   }
 }
 
-/// A temperature bubble, tinted by how notable the weather there is.
+/// A round weather marker: the sample's weather icon, tinted by how notable
+/// the weather there is.
 class _SampleMarker extends StatelessWidget {
   const _SampleMarker({
     required this.sample,
@@ -212,7 +214,6 @@ class _SampleMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final color = routeSeverityColor(context, sample.severity);
 
     return Container(
@@ -220,7 +221,7 @@ class _SampleMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: routeSeveritySurface(context, sample.severity),
         border: Border.all(color: color, width: (selected ? 2 : 1) * scale),
-        borderRadius: BorderRadius.circular(MemoirRadius.pill),
+        shape: BoxShape.circle,
         boxShadow: selected
             ? [
                 BoxShadow(
@@ -230,13 +231,10 @@ class _SampleMarker extends StatelessWidget {
               ]
             : null,
       ),
-      child: Text(
-        sample.tempC == null ? '—' : '${sample.tempC!.round()}°',
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: color,
-          fontSize: MemoirType.caption,
-          fontWeight: FontWeight.w600,
-        ),
+      child: RouteWeatherIcon(
+        group: sample.weatherGroup,
+        size: 16 * scale,
+        color: color,
       ),
     );
   }
