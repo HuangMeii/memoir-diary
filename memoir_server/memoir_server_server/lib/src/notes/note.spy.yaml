@@ -4,8 +4,22 @@ table: notes
 fields:
   id: UuidValue?, defaultPersist=random_v7
   userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  ### Tiêu đề riêng; `content` giữ vai trò thân ghi chú.
+  title: String?
   content: String
   color: String?
+  ### Thẻ tự do, không phân cấp; UI hiển thị dạng `#tag`.
+  ### Serverpod không hỗ trợ `default` cho List nên để nullable,
+  ### endpoint sẽ chuẩn hoá null thành [] khi tạo/sửa.
+  tags: List<String>?
   isPinned: bool, default=false
+  isArchived: bool, default=false
+  isTrashed: bool, default=false
   createdAt: DateTime, default=now
   updatedAt: DateTime, default=now
+indexes:
+  idx_notes_user_updated:
+    fields: userId, updatedAt
+  idx_notes_user_flags:
+    fields: userId, isTrashed, isArchived
+

@@ -1,0 +1,7 @@
+### Note + its checklist and linked diary entries, for the note editor.
+class: NoteDetail
+fields:
+  note: Note
+  checklist: List<NoteChecklistItem>
+  ### Các trang nhật ký đang liên kết (mới nhất trước).
+  entries: List<DiaryEntry>

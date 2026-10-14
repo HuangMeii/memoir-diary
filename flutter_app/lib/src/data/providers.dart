@@ -269,3 +269,29 @@ void refreshEntryData(WidgetRef ref) {
   ref.invalidate(todayQuoteProvider);
   ref.invalidate(entryImagesProvider);
 }
+
+/// Notes list, pinned first, newest updated first (server-sorted).
+final notesProvider = FutureProvider<List<Note>>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(notesRepositoryProvider).list();
+});
+
+/// Notes in trash.
+final trashedNotesProvider = FutureProvider<List<Note>>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(notesRepositoryProvider).list(trashed: true);
+});
+
+/// One note with checklist and linked entries for the editor.
+final noteDetailProvider =
+    FutureProvider.family<NoteDetail, String>((ref, id) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(notesRepositoryProvider).get(id);
+});
+
+/// Refreshes lists, trash and details after a note mutation.
+void refreshNotes(WidgetRef ref) {
+  ref.invalidate(notesProvider);
+  ref.invalidate(trashedNotesProvider);
+  ref.invalidate(noteDetailProvider);
+}

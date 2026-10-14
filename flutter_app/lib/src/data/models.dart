@@ -320,6 +320,8 @@ class DiaryEntry {
     this.tomorrowHope,
     this.gratitude,
     this.dream,
+    this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -333,6 +335,8 @@ class DiaryEntry {
   final String? tomorrowHope;
   final String? gratitude;
   final String? dream;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory DiaryEntry.fromJson(Map<String, dynamic> json) => DiaryEntry(
         id: json['id'] as String,
@@ -346,6 +350,12 @@ class DiaryEntry {
         tomorrowHope: json['tomorrow_hope'] as String?,
         gratitude: json['gratitude'] as String?,
         dream: json['dream'] as String?,
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.tryParse(json['created_at'] as String),
+        updatedAt: json['updated_at'] == null
+            ? null
+            : DateTime.tryParse(json['updated_at'] as String),
       );
 
   /// Every content slot of a day, in the order the editor asks for them.
@@ -370,6 +380,208 @@ class DiaryEntry {
   }
 
   static bool _filled(String? value) => value != null && value.trim().isNotEmpty;
+}
+
+/// A quick note with title, tags, pin/archive/trash flags.
+class Note {
+  const Note({
+    required this.id,
+    this.title,
+    required this.content,
+    this.color,
+    this.tags = const [],
+    this.isPinned = false,
+    this.isArchived = false,
+    this.isTrashed = false,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  final String id;
+  final String? title;
+  final String content;
+  final String? color;
+  final List<String> tags;
+  final bool isPinned;
+  final bool isArchived;
+  final bool isTrashed;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  factory Note.fromJson(Map<String, dynamic> json) => Note(
+        id: json['id'] as String,
+        title: json['title'] as String?,
+        content: json['content'] as String? ?? '',
+        color: json['color'] as String?,
+        tags: ((json['tags'] as List?) ?? const [])
+            .map((e) => '$e')
+            .toList(growable: false),
+        isPinned: json['is_pinned'] as bool? ?? false,
+        isArchived: json['is_archived'] as bool? ?? false,
+        isTrashed: json['is_trashed'] as bool? ?? false,
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.tryParse(json['created_at'] as String),
+        updatedAt: json['updated_at'] == null
+            ? null
+            : DateTime.tryParse(json['updated_at'] as String),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        if (title != null) 'title': title,
+        'content': content,
+        if (color != null) 'color': color,
+        'tags': tags,
+        'is_pinned': isPinned,
+        'is_archived': isArchived,
+        'is_trashed': isTrashed,
+        if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+        if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+      };
+
+  Note copyWith({
+    String? title,
+    String? content,
+    String? color,
+    List<String>? tags,
+    bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
+  }) =>
+      Note(
+        id: id,
+        title: title ?? this.title,
+        content: content ?? this.content,
+        color: color ?? this.color,
+        tags: tags ?? this.tags,
+        isPinned: isPinned ?? this.isPinned,
+        isArchived: isArchived ?? this.isArchived,
+        isTrashed: isTrashed ?? this.isTrashed,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+  /// Title shown on cards: explicit title, else first line of content.
+  String get displayTitle {
+    final t = title?.trim();
+    if (t != null && t.isNotEmpty) return t;
+    final first = content.split('\n').first.trim();
+    if (first.isEmpty) return '(Ghi chú)';
+    return first.length > 60 ? '${first.substring(0, 60)}…' : first;
+  }
+
+  /// Body preview without the title line.
+  String get preview {
+    final lines = content.split('\n');
+    if (title?.trim().isNotEmpty == true) {
+      return lines.join('\n').trim();
+    }
+    if (lines.length <= 1) return content.trim();
+    return lines.skip(1).join('\n').trim();
+  }
+
+  /// Word count of the body, ignoring pure markdown markers.
+  int get wordCount {
+    final cleaned = content.replaceAll(RegExp(r'[#>*`\-+[\]().!]'), ' ');
+    return RegExp(r'\S+').allMatches(cleaned).length;
+  }
+}
+
+/// One interactive checklist line inside a note.
+class NoteChecklistItem {
+  const NoteChecklistItem({
+    this.id,
+    this.noteId,
+    required this.text,
+    this.isDone = false,
+    this.sortOrder = 0,
+  });
+
+  final String? id;
+  final String? noteId;
+  final String text;
+  final bool isDone;
+  final int sortOrder;
+
+  factory NoteChecklistItem.fromJson(Map<String, dynamic> json) =>
+      NoteChecklistItem(
+        id: json['id'] as String?,
+        noteId: json['note_id'] as String?,
+        text: json['text'] as String? ?? '',
+        isDone: json['is_done'] as bool? ?? false,
+        sortOrder: json['sort_order'] as int? ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        if (id != null) 'id': id,
+        if (noteId != null) 'note_id': noteId,
+        'text': text,
+        'is_done': isDone,
+        'sort_order': sortOrder,
+      };
+
+  NoteChecklistItem copyWith({bool? isDone, String? text, int? sortOrder}) =>
+      NoteChecklistItem(
+        id: id,
+        noteId: noteId,
+        text: text ?? this.text,
+        isDone: isDone ?? this.isDone,
+        sortOrder: sortOrder ?? this.sortOrder,
+      );
+}
+
+/// Link between a note and one diary entry.
+class NoteEntryLink {
+  const NoteEntryLink({
+    this.id,
+    this.noteId,
+    required this.entryId,
+    this.createdAt,
+  });
+
+  final String? id;
+  final String? noteId;
+  final String entryId;
+  final DateTime? createdAt;
+
+  factory NoteEntryLink.fromJson(Map<String, dynamic> json) => NoteEntryLink(
+        id: json['id'] as String?,
+        noteId: json['note_id'] as String?,
+        entryId: json['entry_id'] as String? ?? '',
+        createdAt: json['created_at'] == null
+            ? null
+            : DateTime.tryParse(json['created_at'] as String),
+      );
+}
+
+/// A note with its checklist and linked entries for the editor.
+class NoteDetail {
+  const NoteDetail({
+    required this.note,
+    this.checklist = const [],
+    this.entries = const [],
+  });
+
+  final Note note;
+  final List<NoteChecklistItem> checklist;
+  final List<DiaryEntry> entries;
+
+  factory NoteDetail.fromJson(Map<String, dynamic> json) => NoteDetail(
+        note: Note.fromJson(
+          (json['note'] as Map).cast<String, dynamic>(),
+        ),
+        checklist: ((json['checklist'] as List?) ?? const [])
+            .map((e) => NoteChecklistItem.fromJson(
+                  (e as Map).cast<String, dynamic>(),
+                ))
+            .toList(),
+        entries: ((json['entries'] as List?) ?? const [])
+            .map((e) => DiaryEntry.fromJson(
+                  (e as Map).cast<String, dynamic>(),
+                ))
+            .toList(),
+      );
 }
 
 /// The "now" reading from `/weather/current`.

@@ -32,6 +32,10 @@ import 'package:memoir_server_server/src/generated/lookups/weather.dart'
     as _i1e4r54y;
 import 'package:memoir_server_server/src/generated/notes/note.dart'
     as _ikw68uhq;
+import 'package:memoir_server_server/src/generated/notes/note_checklist_item.dart'
+    as _i6aehc7v;
+import 'package:memoir_server_server/src/generated/notes/note_detail.dart'
+    as _ileo2l1s;
 import 'package:memoir_server_server/src/generated/planner/event.dart'
     as _ispcnwj0;
 import 'package:memoir_server_server/src/generated/planner/schedule_item.dart'
@@ -835,6 +839,37 @@ class _EntriesEndpoint {
     });
   }
 
+  _ida.Future<_irepgc45.DiaryEntry?> get(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'entries',
+            method: 'get',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'entries',
+          methodName: 'get',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_irepgc45.DiaryEntry?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<_irepgc45.DiaryEntry?> byDate(
     _ist.TestSessionBuilder sessionBuilder,
     String isoDate,
@@ -1235,8 +1270,10 @@ class _NotesEndpoint {
   final _is.SerializationManager _serializationManager;
 
   _ida.Future<List<_ikw68uhq.Note>> list(
-    _ist.TestSessionBuilder sessionBuilder,
-  ) async {
+    _ist.TestSessionBuilder sessionBuilder, {
+    required bool includeArchived,
+    required bool trashedOnly,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1248,7 +1285,10 @@ class _NotesEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'notes',
           methodName: 'list',
-          parameters: _ist.testObjectToJson({}),
+          parameters: _ist.testObjectToJson({
+            'includeArchived': includeArchived,
+            'trashedOnly': trashedOnly,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
@@ -1264,12 +1304,46 @@ class _NotesEndpoint {
     });
   }
 
+  _ida.Future<_ileo2l1s.NoteDetail> get(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notes',
+            method: 'get',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notes',
+          methodName: 'get',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ileo2l1s.NoteDetail>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<_ikw68uhq.Note> create(
     _ist.TestSessionBuilder sessionBuilder, {
     required String content,
     String? title,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    List<_i6aehc7v.NoteChecklistItem>? checklist,
+    List<_is.UuidValue>? entryIds,
   }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1286,7 +1360,10 @@ class _NotesEndpoint {
             'content': content,
             'title': title,
             'color': color,
+            'tags': tags,
             'isPinned': isPinned,
+            'checklist': checklist,
+            'entryIds': entryIds,
           }),
           serializationManager: _serializationManager,
         );
@@ -1306,9 +1383,15 @@ class _NotesEndpoint {
   _ida.Future<_ikw68uhq.Note> update(
     _ist.TestSessionBuilder sessionBuilder, {
     required _is.UuidValue id,
+    String? title,
     String? content,
     String? color,
+    List<String>? tags,
     bool? isPinned,
+    bool? isArchived,
+    bool? isTrashed,
+    List<_i6aehc7v.NoteChecklistItem>? checklist,
+    List<_is.UuidValue>? entryIds,
   }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1323,9 +1406,15 @@ class _NotesEndpoint {
           methodName: 'update',
           parameters: _ist.testObjectToJson({
             'id': id,
+            'title': title,
             'content': content,
             'color': color,
+            'tags': tags,
             'isPinned': isPinned,
+            'isArchived': isArchived,
+            'isTrashed': isTrashed,
+            'checklist': checklist,
+            'entryIds': entryIds,
           }),
           serializationManager: _serializationManager,
         );
@@ -1335,6 +1424,103 @@ class _NotesEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_ikw68uhq.Note>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> restore(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notes',
+            method: 'restore',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notes',
+          methodName: 'restore',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ikw68uhq.Note> archive(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+    bool isArchived,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notes',
+            method: 'archive',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notes',
+          methodName: 'archive',
+          parameters: _ist.testObjectToJson({
+            'id': id,
+            'isArchived': isArchived,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ikw68uhq.Note>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> purge(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notes',
+            method: 'purge',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notes',
+          methodName: 'purge',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

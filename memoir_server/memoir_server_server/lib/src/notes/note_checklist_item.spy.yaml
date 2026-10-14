@@ -1,0 +1,13 @@
+### One checklist line inside a note (interactive to-do block).
+class: NoteChecklistItem
+table: note_checklist_items
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  noteId: UuidValue, relation(parent=notes, onDelete=Cascade)
+  text: String
+  isDone: bool, default=false
+  ### Thứ tự hiển thị; 0-based, tăng dần từ trên xuống.
+  sortOrder: int, default=0
+indexes:
+  idx_note_checklist_note:
+    fields: noteId, sortOrder

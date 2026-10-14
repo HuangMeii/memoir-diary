@@ -10,6 +10,8 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:memoir_server_server/src/generated/notes/note_checklist_item.dart'
+    as _i6aehc7v;
 import 'package:serverpod/serverpod.dart' as _is;
 import '../admin/admin_endpoint.dart' as _ido5l6pj;
 import '../auth/auth_endpoint.dart' as _iiznyhpe;
@@ -522,6 +524,25 @@ class Endpoints extends _is.EndpointDispatch {
                     to: params['to'],
                   ),
         ),
+        'get': _is.MethodConnector(
+          name: 'get',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['entries'] as _i4r7i20a.EntriesEndpoint).get(
+                    session,
+                    params['id'],
+                  ),
+        ),
         'byDate': _is.MethodConnector(
           name: 'byDate',
           params: {
@@ -864,13 +885,45 @@ class Endpoints extends _is.EndpointDispatch {
       methodConnectors: {
         'list': _is.MethodConnector(
           name: 'list',
-          params: {},
+          params: {
+            'includeArchived': _is.ParameterDescription(
+              name: 'includeArchived',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
+            'trashedOnly': _is.ParameterDescription(
+              name: 'trashedOnly',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
+          },
           call:
               (
                 _is.Session session,
                 Map<String, dynamic> params,
-              ) async =>
-                  (endpoints['notes'] as _i3f4yez7.NotesEndpoint).list(session),
+              ) async => (endpoints['notes'] as _i3f4yez7.NotesEndpoint).list(
+                session,
+                includeArchived: params['includeArchived'],
+                trashedOnly: params['trashedOnly'],
+              ),
+        ),
+        'get': _is.MethodConnector(
+          name: 'get',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['notes'] as _i3f4yez7.NotesEndpoint).get(
+                session,
+                params['id'],
+              ),
         ),
         'create': _is.MethodConnector(
           name: 'create',
@@ -890,9 +943,24 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<String?>(),
               nullable: true,
             ),
+            'tags': _is.ParameterDescription(
+              name: 'tags',
+              type: _is.getType<List<String>?>(),
+              nullable: true,
+            ),
             'isPinned': _is.ParameterDescription(
               name: 'isPinned',
               type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+            'checklist': _is.ParameterDescription(
+              name: 'checklist',
+              type: _is.getType<List<_i6aehc7v.NoteChecklistItem>?>(),
+              nullable: true,
+            ),
+            'entryIds': _is.ParameterDescription(
+              name: 'entryIds',
+              type: _is.getType<List<_is.UuidValue>?>(),
               nullable: true,
             ),
           },
@@ -905,7 +973,10 @@ class Endpoints extends _is.EndpointDispatch {
                 content: params['content'],
                 title: params['title'],
                 color: params['color'],
+                tags: params['tags'],
                 isPinned: params['isPinned'],
+                checklist: params['checklist'],
+                entryIds: params['entryIds'],
               ),
         ),
         'update': _is.MethodConnector(
@@ -915,6 +986,11 @@ class Endpoints extends _is.EndpointDispatch {
               name: 'id',
               type: _is.getType<_is.UuidValue>(),
               nullable: false,
+            ),
+            'title': _is.ParameterDescription(
+              name: 'title',
+              type: _is.getType<String?>(),
+              nullable: true,
             ),
             'content': _is.ParameterDescription(
               name: 'content',
@@ -926,9 +1002,34 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<String?>(),
               nullable: true,
             ),
+            'tags': _is.ParameterDescription(
+              name: 'tags',
+              type: _is.getType<List<String>?>(),
+              nullable: true,
+            ),
             'isPinned': _is.ParameterDescription(
               name: 'isPinned',
               type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+            'isArchived': _is.ParameterDescription(
+              name: 'isArchived',
+              type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+            'isTrashed': _is.ParameterDescription(
+              name: 'isTrashed',
+              type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+            'checklist': _is.ParameterDescription(
+              name: 'checklist',
+              type: _is.getType<List<_i6aehc7v.NoteChecklistItem>?>(),
+              nullable: true,
+            ),
+            'entryIds': _is.ParameterDescription(
+              name: 'entryIds',
+              type: _is.getType<List<_is.UuidValue>?>(),
               nullable: true,
             ),
           },
@@ -939,9 +1040,77 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['notes'] as _i3f4yez7.NotesEndpoint).update(
                 session,
                 id: params['id'],
+                title: params['title'],
                 content: params['content'],
                 color: params['color'],
+                tags: params['tags'],
                 isPinned: params['isPinned'],
+                isArchived: params['isArchived'],
+                isTrashed: params['isTrashed'],
+                checklist: params['checklist'],
+                entryIds: params['entryIds'],
+              ),
+        ),
+        'restore': _is.MethodConnector(
+          name: 'restore',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['notes'] as _i3f4yez7.NotesEndpoint).restore(
+                    session,
+                    params['id'],
+                  ),
+        ),
+        'archive': _is.MethodConnector(
+          name: 'archive',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'isArchived': _is.ParameterDescription(
+              name: 'isArchived',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['notes'] as _i3f4yez7.NotesEndpoint).archive(
+                    session,
+                    params['id'],
+                    params['isArchived'],
+                  ),
+        ),
+        'purge': _is.MethodConnector(
+          name: 'purge',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['notes'] as _i3f4yez7.NotesEndpoint).purge(
+                session,
+                params['id'],
               ),
         ),
         'delete': _is.MethodConnector(
