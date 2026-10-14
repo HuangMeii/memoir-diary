@@ -102,9 +102,9 @@ Flutter ──> Serverpod /route/*    ──> OSRM (routing) + Nominatim (geocod
 
 ### 4.3. C — Tương tác bản đồ & timeline
 
-1. Vẽ bản đồ + polyline tuyến + marker địa điểm + marker thời tiết.
-2. Bấm marker → popup thời tiết + **thời gian dự kiến đi qua**; đồng thời highlight mục tương ứng trên timeline.
-3. Bấm mục timeline → **highlight marker tương ứng trên bản đồ** (và cuộn bản đồ tới marker).
+1. Vẽ bản đồ + tuyến **cắt thành từng lát tô màu theo mức bất lợi** (xanh / cam / đỏ, xám nét đứt khi thiếu dự báo — xem §18.3) + marker địa điểm + bảng chú thích màu.
+2. Bấm một điểm trên bản đồ → **đặt điểm dừng đang chọn** vào đúng điểm đó (mục A).
+3. Bấm mục timeline / điểm trên biểu đồ / dải khuyến cáo → **làm dày lát đường chứa mẫu đó**, đóng khuyên đánh dấu tại mẫu và cuộn bản đồ tới mẫu.
 4. Đổi điểm dừng / phương tiện / giờ khởi hành → **tính lại tuyến và dự báo** (debounce ≥ 400 ms; huỷ request cũ khi có kết quả mới).
 5. Chọn tuyến thay thế → tính lại dự báo theo hình học mới.
 
@@ -395,7 +395,8 @@ ROUTE_API_ENABLED=true
 | `ui/screens/route_weather_screen.dart` | Màn **Tiện ích → Thời tiết theo hành trình**: chrome + form + bản đồ + phân tích + timeline + khuyến cáo + so sánh giờ + disclaimer |
 | `ui/route/route_chrome.dart` | Breadcrumb `Trang chủ / Tiện ích / HÀNH TRÌNH & THỜI TIẾT`, tiêu đề, phụ đề, nút **So sánh giờ khởi hành** + **Lưu vào nhật ký**, khối **Dữ liệu trực tiếp** (chip nguồn + bảng 4 ô số liệu, full-width dưới dải 2 cột) |
 | `ui/route/route_planner_panel.dart` | **Mục A**: điểm xuất phát / danh sách điểm dừng / điểm đến, tìm kiếm địa điểm, chọn trên bản đồ, chọn phương tiện, ngày–giờ khởi hành, thời gian dừng, đảo chiều, chọn tuyến thay thế |
-| `ui/route/route_map_view.dart` | Bản đồ + polyline + marker địa điểm + marker thời tiết + popup; **mục C** (chọn marker ↔ highlight timeline) |
+| `ui/route/route_map_view.dart` | Bản đồ + tuyến cắt lát tô màu theo mức bất lợi + marker địa điểm + chú thích màu; **mục C** (chọn mục timeline ↔ làm dày lát và cuộn tới mẫu) |
+| `ui/route/route_segments.dart` | Hàm thuần cắt hình học tuyến thành các lát theo `distanceFromStartMeters`, gán mức của cả lát và gộp lát liền kề cùng mức |
 | `ui/route/route_progress_chart.dart` | Bar lượng mưa + line nhiệt độ theo `Km`, trục mốc `Km 0 / 75 / 185 / 305` |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng: `giờ — Chặng N`, tên, `Km`, nhiệt độ, `Mưa %` + mm, gió, chip mức |
 | `ui/route/route_alerts_panel.dart` | Dải cảnh báo bất lợi (cấp độ Vàng) gộp từ `alerts[]` + ghi rõ nguồn và tính chất tham khảo |
@@ -423,8 +424,8 @@ ROUTE_API_ENABLED=true
 
 | Loại | Nội dung |
 |---|---|
-| Unit (Dart thuần, không mạng) | haversine & khoảng cách tích luỹ; sinh điểm mẫu (bước 25 km, trần 25, **giữ đủ stop**); ETA (`dwell` chỉ áp ở stop); ghép index giờ; bảng quy tắc §6 (mọi ngưỡng + giá trị biên); vượt 16 ngày → `beyondRange` |
-| Widget | 6 trạng thái: loading / noPoints / noRoute / unavailable / partial / beyondRange; chọn mục timeline → marker tương ứng được highlight |
+| Unit (Dart thuần, không mạng) | haversine & khoảng cách tích luỹ; cắt tuyến thành lát màu (mức của lát = mức cao nhất hai đầu, gộp lát liền kề, thiếu dữ liệu → `unknown`, mẫu lệch thứ tự, mẫu vượt cuối hình học); sinh điểm mẫu (bước 25 km, trần 25, **giữ đủ stop**); ETA (`dwell` chỉ áp ở stop); ghép index giờ; bảng quy tắc §6 (mọi ngưỡng + giá trị biên); vượt 16 ngày → `beyondRange` |
+| Widget | 6 trạng thái: loading / noPoints / noRoute / unavailable / partial / beyondRange; chọn mục timeline → **làm dày lát đường + khuyên đánh dấu** tại mẫu tương ứng |
 | Tích hợp (thủ công) | một tuyến thật TP.HCM → Đà Lạt: 4 mốc, có cảnh báo, lưu vào nhật ký, mở lại xem **bản tóm tắt đã lưu** tách khỏi dự báo mới |
 
 ---
@@ -488,7 +489,8 @@ ROUTE_API_ENABLED=true
 |---|---|
 | `ui/screens/route_weather_screen.dart` | Màn `ROUTE-01`: form + bản đồ + biểu đồ + timeline + khuyến cáo + so sánh giờ + các trạng thái mục E |
 | `ui/route/route_planner_panel.dart` | **Mục A**: điểm đi/điểm dừng/điểm đến; **ô mỗi điểm vừa là ô nhập địa chỉ** (Enter / nút Tìm để geocode, gợi ý hiện dưới điểm đó), chọn trên bản đồ, phương tiện, ngày–giờ, thời gian dừng, đảo chiều, tuyến thay thế. State tìm kiếm nằm ở panel (không ở widget con) để dùng chung bộ đếm 1,5 giây |
-| `ui/route/route_map_view.dart` | Bản đồ tile: polyline, marker địa điểm, marker nhiệt độ, bấm để chọn điểm, tự cuộn tới mục timeline đang chọn |
+| `ui/route/route_map_view.dart` | Bản đồ tile: tuyến cắt lát tô màu theo mức bất lợi + chú thích màu, marker địa điểm, bấm để đặt điểm dừng, tự cuộn tới và làm dày lát của mục timeline đang chọn |
+| `ui/route/route_segments.dart` | `buildRouteSegments`: cắt hình học tại từng mẫu, mức của lát = mức cao nhất của hai mẫu hai đầu, gộp lát liền kề cùng mức, `unknown` khi cả hai đầu đều không có dữ liệu; `routeMetersBetween`/`routeCumulativeMeters`/`routePointAt` dùng chung hằng số bán kính với server |
 | `ui/route/route_progress_chart.dart` | Bar mưa + line nhiệt độ theo `Km` (`CustomPainter`) |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng, gắn mức bất lợi của **cả đoạn** chứ không chỉ điểm cuối |
 | `ui/route/route_panels.dart` | Panel khuyến cáo an toàn + panel so sánh giờ khởi hành |
@@ -512,6 +514,12 @@ ROUTE_API_ENABLED=true
 9. **Khi chọn tuyến thay thế, dự báo được tính lại** cho hình học mới (`route.forecast` với plan của tuyến thay thế, giữ nguyên điểm dừng và thời gian dừng), kèm nút **Về tuyến đề xuất**.
 10. **Header web đổi cách chia chỗ.** `nav` và `utilities` nằm trong hai dải cuộn riêng theo tỉ lệ **2 : 1** để pill thứ hai không bao giờ đẩy navigation ra khỏi tầm bấm; pill trong header dùng nhãn ngắn (`Hành trình`), nhãn đầy đủ (`Thời tiết hành trình`) dùng ở khối "Tiện ích" cuối trang.
 
+11. **Tuyến tô màu theo mức bất lợi, thay cho icon mức độ trên marker.** Mỗi đoạn giữa hai mẫu liền kề là một lát, tô bằng **mức cao nhất của hai mẫu hai đầu** — đúng quy tắc `RouteTimeline` dùng cho mỗi chặng, nên bản đồ và thẻ không bao giờ nói lệch nhau. Ba màu lấy **nguyên bộ màu mức độ đã có** (`warning` = đỏ đất `feedbackError`, `caution` = hổ phách `feedbackWarning`, `info` = xanh brand), nên **không sinh token mới** và bản đồ khớp với chip / callout / timeline. Đoạn **thiếu dự báo** (mẫu `unavailable` hoặc không có `weatherCode`) tô **xám nét đứt**: dữ liệu thiếu không được trông như đường tốt. Mẫu `stale` **vẫn tô màu** vì đó là điều tốt nhất app biết.
+12. **Không dùng `Polyline.gradientColors` của `flutter_map`.** Painter của gói vẽ gradient **tuyến tính theo màn hình** giữa điểm đầu và điểm cuối của cả polyline (`Gradient.linear(offsets.first, offsets.last, …)` trong `polyline_layer/painter.dart`), nên màu chảy ngang qua khúc cua thay vì bám theo chiều dài đường. Cách đúng là **cắt thành nhiều `Polyline`**, mỗi lát một màu — đúng cách Google Maps vẽ giao thông.
+13. **Bỏ marker icon thời tiết trên bản đồ.** Marker là tay bấm duy nhất để chọn mẫu, nên đổi lại: chọn mẫu từ **timeline / biểu đồ / dải khuyến cáo**, bản đồ **làm dày lát** chứa mẫu đó và **đóng khuyên** tại toạ độ mẫu. Vì vậy `RouteMapView` **bỏ tham số `onSelectSample`** (chỉ có một call-site, không test nào dựng widget này).
+14. **Màu là *thời tiết*, không phải *giao thông*.** Memoir không có nguồn dữ liệu giao thông (OSRM công khai chỉ trả tuyến, không trả traffic), nên phụ đề mục **Bản đồ lộ trình** và chú thích màu đều ghi rõ "màu đường là mức bất lợi của thời tiết dự kiến". Muốn tô theo kẹt xe phải thêm provider mới (Google Directions `duration_in_traffic` / TomTom / HERE) — việc riêng, ngoài phạm vi.
+15. **Bảng chú thích nằm trên bản đồ.** Vì màu đường giờ mang nghĩa, thang màu phải đọc được ngay tại chỗ: khối chú thích đặt góc dưới-phải khung bản đồ (góc dưới-trái đã dành cho attribution), gồm 4 mục `Thuận lợi / Cần chú ý / Cảnh báo / Chưa có dự báo`.
+
 ### 18.4. Đã kiểm chứng
 
 | Việc | Kết quả |
@@ -519,7 +527,7 @@ ROUTE_API_ENABLED=true
 | `dart analyze` (workspace `memoir_server`) | sạch |
 | `dart test test/route_service_test.dart` | **31/31 xanh** |
 | `flutter analyze` | sạch |
-| `flutter test` (route + weather + calendar + widget) | **99/99 xanh** — gồm 51 test `AppHeader`/trang chủ cũ, không hồi quy |
+| `flutter test` (route + weather + calendar + widget) | **117/117 xanh** — trong đó **15 test mới** cho `route_segments.dart` (`test/route_segments_test.dart`); gồm 51 test `AppHeader`/trang chủ cũ, không hồi quy |
 | `tool/route_smoke.dart` (nhà cung cấp thật) | TP.HCM → Đèo Bảo Lộc → Đà Lạt: **293 km / 228 phút**, 6074 điểm hình học, 14 điểm mẫu đều có dữ liệu, ETA khớp `dwell` 30 phút, 2 dải cảnh báo `caution` |
 
 ### 18.5. Còn lại (chưa làm)
