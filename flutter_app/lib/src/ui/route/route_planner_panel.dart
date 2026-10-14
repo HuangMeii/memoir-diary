@@ -11,6 +11,13 @@ import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
 import 'route_format.dart';
 
+/// Reports a new stop list from the form.
+///
+/// [immediate] is false only while the user is still typing a name, so the
+/// caller can hold the route request back instead of asking once per letter
+/// (docs/12-route-weather.md §11).
+typedef StopsChanged = void Function(List<RouteStop> stops, {bool immediate});
+
 /// The planner form: where the trip starts and ends, what it stops at on the
 /// way, how the traveller gets there, and when they leave.
 ///
@@ -47,7 +54,7 @@ class RoutePlannerPanel extends ConsumerStatefulWidget {
 
   final double scale;
 
-  final ValueChanged<List<RouteStop>> onStopsChanged;
+  final StopsChanged onStopsChanged;
   final ValueChanged<String> onVehicleChanged;
   final ValueChanged<DateTime> onDepartureChanged;
 
@@ -63,10 +70,10 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
   /// Which slot the search box is filling, or null when it is closed.
   int? _searchingIndex;
 
-  void _replaceStop(int index, RouteStop stop) {
+  void _replaceStop(int index, RouteStop stop, {bool immediate = true}) {
     final stops = [...widget.stops];
     stops[index] = stop;
-    widget.onStopsChanged(stops);
+    widget.onStopsChanged(stops, immediate: immediate);
   }
 
   void _removeStop(int index) {
@@ -146,8 +153,12 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
               searching: _searchingIndex == i,
               picking: widget.pickTarget == i,
               scale: scale,
-              onName: (value) =>
-                  _replaceStop(i, stops[i].copyWith(name: value)),
+              onName: (value) => _replaceStop(
+                    i,
+                    stops[i].copyWith(name: value),
+                    // Still typing: the route request can wait.
+                    immediate: false,
+                  ),
               onToggleSearch: () => setState(() {
                 _searchingIndex = _searchingIndex == i ? null : i;
               }),

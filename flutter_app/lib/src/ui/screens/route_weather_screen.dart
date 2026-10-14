@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -29,6 +30,13 @@ const double kRouteDesignWidth = 1280;
 /// Content width of that frame.
 const double kRouteContentWidth = 1208;
 
+/// How long a stop name has to stay unchanged before it becomes part of the
+/// route query (docs/12-route-weather.md §11).
+///
+/// The stop field is also the address field, so without this, typing an
+/// address asks OSRM for a route once per letter.
+const Duration kPlanDebounce = Duration(milliseconds: 400);
+
 /// Route weather planner (`ROUTE-01`): manage the trip, read the forecast along
 /// it, and save the trip to the journal.
 ///
@@ -47,10 +55,21 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   ///
   /// The origin starts at Ha Noi, the app's documented default location; the
   /// destination starts empty so the screen never invents a trip for the user.
-  List<RouteStop> _stops = const [
+  static const List<RouteStop> _initialStops = [
     RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
     RouteStop(name: '', lat: 0, lon: 0, kind: 'destination'),
   ];
+
+  /// What the form shows. Follows every keystroke, so the field never lags.
+  List<RouteStop> _stops = _initialStops;
+
+  /// What the route query asks for: [_stops] once the typing has paused.
+  ///
+  /// Keeping the two apart is what lets the field stay responsive without the
+  /// screen asking for a route once per letter (see [kPlanDebounce]).
+  List<RouteStop> _plannedStops = _initialStops;
+
+  Timer? _planTimer;
 
   String _vehicle = 'car';
   DateTime _departure = _nextHour();
@@ -77,13 +96,19 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   }
 
   bool get _ready =>
-      _stops.where((stop) => stop.name.trim().isNotEmpty).length >= 2;
+      _plannedStops.where((stop) => stop.name.trim().isNotEmpty).length >= 2;
 
   RouteQuery get _query => RouteQuery(
-        stops: _stops,
+        stops: _plannedStops,
         vehicle: _vehicle,
         departureAt: _departure,
       );
+
+  @override
+  void dispose() {
+    _planTimer?.cancel();
+    super.dispose();
+  }
 
   /// The route on screen: the chosen alternative when there is one.
   RoutePlan _displayPlan(RoutePlan plan) =>
@@ -93,13 +118,31 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       _alternative == null ? report : (_alternativeReport ?? report);
 
   /// The trip changed, so an alternative picked for the old route is stale.
-  void _setStops(List<RouteStop> stops) => setState(() {
-        _stops = stops;
-        _alternative = null;
-        _alternativePlan = null;
-        _alternativeReport = null;
-        _selectedSeq = null;
-      });
+  ///
+  /// [immediate] is for a discrete edit — picking a suggestion, a tap on the
+  /// map, a dwell change, adding or removing a stop — where making the user
+  /// wait would only feel slow. Typing a name passes `immediate: false`, so
+  /// the route request waits until they stop (see [kPlanDebounce]).
+  void _setStops(List<RouteStop> stops, {bool immediate = true}) {
+    setState(() {
+      _stops = stops;
+      _alternative = null;
+      _alternativePlan = null;
+      _alternativeReport = null;
+      _selectedSeq = null;
+    });
+
+    _planTimer?.cancel();
+    if (immediate) {
+      setState(() => _plannedStops = stops);
+      return;
+    }
+    // Read [_stops] inside the callback rather than closing over [stops], so
+    // the last keystroke wins even if an earlier timer somehow survives.
+    _planTimer = Timer(kPlanDebounce, () {
+      if (mounted) setState(() => _plannedStops = _stops);
+    });
+  }
 
   /// A tap on the map fills the stop the form has armed.
   void _onPickPoint(double lat, double lon) {

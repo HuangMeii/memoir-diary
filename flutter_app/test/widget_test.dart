@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memoir_app/src/core/autosave.dart';
@@ -7,6 +8,7 @@ import 'package:memoir_app/src/ui/home/home_scale.dart';
 import 'package:memoir_app/src/ui/home/picker_card.dart';
 import 'package:memoir_app/src/ui/month/day_details.dart';
 import 'package:memoir_app/src/ui/month/month_card.dart';
+import 'package:memoir_app/src/ui/route/route_planner_panel.dart';
 import 'package:memoir_app/src/ui/screens/calendar_screen.dart';
 import 'package:memoir_app/src/ui/screens/entry_editor.dart';
 import 'package:memoir_app/src/ui/tokens.dart';
@@ -894,6 +896,78 @@ void main() {
       expect(
         upcomingAfter(events, DateTime(2026, 10, 13)).map((e) => e.title),
         ['Sớm', 'Muộn'],
+      );
+    });
+  });
+
+  group('RoutePlannerPanel', () {
+    /// Every stop list the panel reported, with the flag it used.
+    late List<({List<RouteStop> stops, bool immediate})> reported;
+
+    setUp(() => reported = []);
+
+    Widget panel() => ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: RoutePlannerPanel(
+                  stops: const [
+                    RouteStop(
+                      name: 'Hà Nội',
+                      lat: 21.0285,
+                      lon: 105.8542,
+                      kind: 'origin',
+                    ),
+                    RouteStop(
+                      name: '',
+                      lat: 0,
+                      lon: 0,
+                      kind: 'destination',
+                    ),
+                  ],
+                  vehicle: 'car',
+                  departureAt: DateTime(2026, 10, 14, 18),
+                  plan: null,
+                  selectedAlternative: null,
+                  pickTarget: null,
+                  scale: 1,
+                  onStopsChanged: (stops, {bool immediate = true}) =>
+                      reported.add((stops: stops, immediate: immediate)),
+                  onVehicleChanged: (_) {},
+                  onDepartureChanged: (_) {},
+                  onPickTarget: (_) {},
+                  onSelectAlternative: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+
+    // docs/12-route-weather.md §11: the stop field is also the address field,
+    // so typing must be reported as "not immediate" for the screen to hold the
+    // route request back instead of asking OSRM once per letter.
+    testWidgets('a typed name is reported as debounceable', (tester) async {
+      await tester.pumpWidget(panel());
+      await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
+
+      expect(reported, isNotEmpty);
+      expect(
+        reported.every((call) => !call.immediate),
+        isTrue,
+        reason: 'typing must never ask for a route straight away',
+      );
+    });
+
+    testWidgets('a discrete edit is reported as immediate', (tester) async {
+      await tester.pumpWidget(panel());
+      await tester.tap(find.text('Thêm điểm dừng'));
+      await tester.pump();
+
+      expect(reported, isNotEmpty);
+      expect(
+        reported.every((call) => call.immediate),
+        isTrue,
+        reason: 'adding a stop should not wait for a typing pause',
       );
     });
   });
