@@ -28,6 +28,11 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   (`Hành trình đã lưu` · `So sánh giờ khởi hành` · `Lưu vào nhật ký`); dải tóm tắt
   (`Lộ trình / Khoảng cách / Thời gian di chuyển / Khởi hành / Đến dự kiến`) kèm
   chip nguồn `Dữ liệu trực tiếp · OSRM · Open-Meteo` hoặc `Dữ liệu cũ · cập nhật HH:mm`.
+- **Dải trên bản đồ** (`route_weather_screen.dart`): trên cửa sổ rộng, form **Quản lý
+  lộ trình** (cột trái, `4/12` ≈ 384 px) và khối **nguồn dữ liệu + dải tóm tắt** (cột
+  phải, `8/12`) nằm **chung một hàng**; **bản đồ chạy full-width ngay bên dưới** cả hai
+  cột. Hẹp hơn ngưỡng thì xếp dọc lại: form → nguồn dữ liệu → bản đồ. Mọi trạng thái
+  (chưa đủ điểm / loading / lỗi) hiện ở cột phải, nên form luôn đứng nguyên bên trái.
 - **Form Quản lý lộ trình** (`route_planner_panel.dart`): điểm xuất phát / điểm dừng /
   điểm đến, **ô của mỗi điểm vừa là ô nhập địa chỉ** (gợi ý từ Nominatim hiện ngay dưới
   điểm đó, **chỉ chạy khi bấm nút Tìm / Enter** — không tìm lúc đang gõ; nút bị chặn
@@ -62,6 +67,8 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
 - **Số liệu đều lấy từ nhà cung cấp thật** (OSRM + Open-Meteo), không dùng số minh họa.
 - **Form Quản lý lộ trình không có trong bản Stitch** — dựng mới theo cùng ngôn ngữ
   thị giác.
+- **Dải trên bản đồ phục dựng lưới `lg:col-span-4 / 8`** của frame, nhưng **bản đồ
+  được nâng lên full-width** ngay dưới dải đó thay vì nằm trong cột phải như Stitch.
 - **Icon Material thay cho Material Symbols** chưa export, như mọi màn khác.
 - **Attribution ở góc bản đồ** và **dòng miễn trừ cuối trang** là bắt buộc, không phải
   trang trí.
@@ -90,11 +97,16 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
    khởi hành** (viền) và **Lưu vào nhật ký** (đặc).
 3. **Banner nguồn** — khối `surface-container-low`: icon info + chữ nguồn dữ
    liệu, và chip trạng thái nguồn (`Dữ liệu trực tiếp · OSRM/Open-Meteo` hoặc
-   `Dữ liệu cũ · cập nhật HH:mm`).
+   `Dữ liệu cũ · cập nhật HH:mm`). Nằm ở **cột phải** của dải 2 cột (mục 5), tức
+   **chung hàng với form Quản lý lộ trình**.
 4. **Strip tóm tắt** — bốn ô: *Lộ trình* · *Khoảng cách* · *Giờ khởi hành* ·
-   *Thời gian di chuyển* · *Đến dự kiến*; liên kết **Đảo chiều hành trình**.
+   *Thời gian di chuyển* · *Đến dự kiến*; liên kết **Đảo chiều hành trình**. Cùng
+   **cột phải** với banner nguồn.
 5. **Form Quản lý lộ trình** *(MỚI — **không** có trong bản Stitch, phải dựng
-   thêm theo cùng ngôn ngữ thị giác)*:
+   thêm theo cùng ngôn ngữ thị giác)* — **cột trái** của dải 2 cột, trên cửa sổ
+   rộng chia hàng `4/12` (≈ 384 px) với cột phải `8/12` (banner nguồn + strip tóm
+   tắt). Dưới ngưỡng rộng thì ba khối xếp dọc lại: form → nguồn dữ liệu → bản đồ.
+   Khối gồm:
    - **Điểm xuất phát** (pill có icon ghim + giá trị + chevron).
    - **Danh sách điểm dừng trung gian**: mỗi hàng có tay kéo để đổi thứ tự, tên
      điểm, ô **Thời gian dừng** (phút), nút xoá; nút **+ Thêm điểm dừng**.
@@ -106,10 +118,11 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
    - **Ngày khởi hành** + **giờ khởi hành**.
    - **Tuyến thay thế**: danh sách thẻ (km / thời gian / chênh lệch). **Chỉ hiện
      khi routing API thực sự trả về**; không có thì bỏ hẳn khối này.
-6. **Bản đồ** — panel header (*Bản đồ lộ trình & Trạm quan sát thời tiết* + tỷ lệ
-   + cụm zoom `+ / − / fit`), viewport: polyline tuyến, marker điểm đi / điểm
-   dừng / điểm đến, marker thời tiết, callout cảnh báo (viền vàng + pulse), bảng
-   chú thích. **Attribution** đặt ở góc bản đồ.
+6. **Bản đồ** — **chạy full-width ngay bên dưới dải 2 cột** (khác bản Stitch, vốn
+   đặt bản đồ trong cột phải). Panel header (*Bản đồ lộ trình & Trạm quan sát thời
+   tiết* + tỷ lệ + cụm zoom `+ / − / fit`), viewport: polyline tuyến, marker điểm đi
+   / điểm dừng / điểm đến, marker thời tiết, callout cảnh báo (viền vàng + pulse),
+   bảng chú thích. **Attribution** đặt ở góc bản đồ.
 
 7. **Phân tích hành trình** — tiêu đề *Dự báo thời tiết dọc hành trình & Biểu đồ
    diễn tiến*; biểu đồ **bar lượng mưa (mm)** + **line nhiệt độ (°C)** theo trục
