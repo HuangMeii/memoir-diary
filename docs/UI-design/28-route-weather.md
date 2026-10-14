@@ -25,14 +25,20 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
 
 - **Chrome** (`route_chrome.dart`): breadcrumb `← Trang chủ / Tiện ích / Hành trình`,
   overline `HÀNH TRÌNH & THỜI TIẾT`, tiêu đề, phụ đề, ba hành động
-  (`Hành trình đã lưu` · `So sánh giờ khởi hành` · `Lưu vào nhật ký`); dải tóm tắt
-  (`Lộ trình / Khoảng cách / Thời gian di chuyển / Khởi hành / Đến dự kiến`) kèm
-  chip nguồn `Dữ liệu trực tiếp · OSRM · Open-Meteo` hoặc `Dữ liệu cũ · cập nhật HH:mm`.
-- **Dải trên bản đồ** (`route_weather_screen.dart`): trên cửa sổ rộng, form **Quản lý
-  lộ trình** (cột trái, `4/12` ≈ 384 px) và khối **nguồn dữ liệu + dải tóm tắt** (cột
-  phải, `8/12`) nằm **chung một hàng**; **bản đồ chạy full-width ngay bên dưới** cả hai
-  cột. Hẹp hơn ngưỡng thì xếp dọc lại: form → nguồn dữ liệu → bản đồ. Mọi trạng thái
-  (chưa đủ điểm / loading / lỗi) hiện ở cột phải, nên form luôn đứng nguyên bên trái.
+  (`Hành trình đã lưu` · `So sánh giờ khởi hành` · `Lưu vào nhật ký`).
+- **Khối `Dữ liệu trực tiếp`** (`route_chrome.dart` → `RouteSummary`): chip nguồn
+  `Dữ liệu trực tiếp · OSRM · Open-Meteo` hoặc `Dữ liệu cũ · cập nhật HH:mm` (kèm
+  chip mức bất lợi), rồi **bảng số liệu 4 ô** `Khoảng cách / Thời gian di chuyển /
+  Khởi hành / Đến dự kiến` (`RouteMetricTable`): đủ rộng thì 4 cột trên **một hàng**,
+  hẹp dần thì tự xuống **2 rồi 1 cột**, các ô có kẻ dọc/ngang như bảng. Ô `Lộ trình`
+  (điểm đi → điểm đến) **đã bỏ** — yêu cầu riêng của người dùng, không theo Figma.
+  Khối này **chạy full-width ngay dưới dải 2 cột**.
+- **Dải 2 cột trên** (`route_weather_screen.dart`): trên cửa sổ rộng, form **Quản lý
+  lộ trình** (cột trái, `4/12` ≈ 384 px — **kích thước không đổi**) và **bản đồ**
+  (cột phải, `8/12`, khối cao 360 như cũ) nằm **chung một hàng**, hai cột căn đỉnh và
+  giữ chiều cao riêng. Hẹp hơn ngưỡng thì xếp dọc lại: form → bản đồ → dữ liệu trực
+  tiếp. Mọi trạng thái (chưa đủ điểm / loading / lỗi) hiện ở cột phải **thay chỗ bản
+  đồ**, nên form luôn đứng nguyên bên trái.
 - **Form Quản lý lộ trình** (`route_planner_panel.dart`): điểm xuất phát / điểm dừng /
   điểm đến, **ô của mỗi điểm vừa là ô nhập địa chỉ** (gợi ý từ Nominatim hiện ngay dưới
   điểm đó, **chỉ chạy khi bấm nút Tìm / Enter** — không tìm lúc đang gõ; nút bị chặn
@@ -67,8 +73,11 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
 - **Số liệu đều lấy từ nhà cung cấp thật** (OSRM + Open-Meteo), không dùng số minh họa.
 - **Form Quản lý lộ trình không có trong bản Stitch** — dựng mới theo cùng ngôn ngữ
   thị giác.
-- **Dải trên bản đồ phục dựng lưới `lg:col-span-4 / 8`** của frame, nhưng **bản đồ
-  được nâng lên full-width** ngay dưới dải đó thay vì nằm trong cột phải như Stitch.
+- **Dải 2 cột phục dựng lưới `lg:col-span-4 / 8`** của frame và **đưa bản đồ về đúng
+  cột phải `8/12`** như Stitch; khác Stitch ở chỗ khối **dữ liệu trực tiếp** (chip
+  nguồn + bảng 4 ô số liệu) **chạy full-width bên dưới** dải đó thay vì nằm chung cột
+  phải với form, và ô `Lộ trình` trong strip đã bỏ. Bố cục này là **yêu cầu riêng của
+  người dùng**, chưa có frame Figma tương ứng.
 - **Icon Material thay cho Material Symbols** chưa export, như mọi màn khác.
 - **Attribution ở góc bản đồ** và **dòng miễn trừ cuối trang** là bắt buộc, không phải
   trang trí.
@@ -101,7 +110,8 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
    **chung hàng với form Quản lý lộ trình**.
 4. **Strip tóm tắt** — bốn ô: *Lộ trình* · *Khoảng cách* · *Giờ khởi hành* ·
    *Thời gian di chuyển* · *Đến dự kiến*; liên kết **Đảo chiều hành trình**. Cùng
-   **cột phải** với banner nguồn.
+   **cột phải** với banner nguồn. *(Bản dựng: bỏ ô Lộ trình và chuyển thành khối
+   `Dữ liệu trực tiếp` full-width dưới dải 2 cột — xem "Đã dựng".)*
 5. **Form Quản lý lộ trình** *(MỚI — **không** có trong bản Stitch, phải dựng
    thêm theo cùng ngôn ngữ thị giác)* — **cột trái** của dải 2 cột, trên cửa sổ
    rộng chia hàng `4/12` (≈ 384 px) với cột phải `8/12` (banner nguồn + strip tóm
@@ -118,9 +128,9 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
    - **Ngày khởi hành** + **giờ khởi hành**.
    - **Tuyến thay thế**: danh sách thẻ (km / thời gian / chênh lệch). **Chỉ hiện
      khi routing API thực sự trả về**; không có thì bỏ hẳn khối này.
-6. **Bản đồ** — **chạy full-width ngay bên dưới dải 2 cột** (khác bản Stitch, vốn
-   đặt bản đồ trong cột phải). Panel header (*Bản đồ lộ trình & Trạm quan sát thời
-   tiết* + tỷ lệ + cụm zoom `+ / − / fit`), viewport: polyline tuyến, marker điểm đi
+6. **Bản đồ** — trong frame nằm ở **cột phải `8/12`**, ngay dưới banner nguồn + strip
+   tóm tắt; bản dựng giữ đúng như vậy. Panel header (*Bản đồ lộ trình & Trạm quan sát
+   thời tiết* + tỷ lệ + cụm zoom `+ / − / fit`), viewport: polyline tuyến, marker điểm đi
    / điểm dừng / điểm đến, marker thời tiết, callout cảnh báo (viền vàng + pulse),
    bảng chú thích. **Attribution** đặt ở góc bản đồ.
 

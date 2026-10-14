@@ -393,7 +393,7 @@ ROUTE_API_ENABLED=true
 | Màn hình / widget | Nội dung |
 |---|---|
 | `ui/screens/route_weather_screen.dart` | Màn **Tiện ích → Thời tiết theo hành trình**: chrome + form + bản đồ + phân tích + timeline + khuyến cáo + so sánh giờ + disclaimer |
-| `ui/route/route_chrome.dart` | Breadcrumb `Trang chủ / Tiện ích / HÀNH TRÌNH & THỜI TIẾT`, tiêu đề, phụ đề, nút **So sánh giờ khởi hành** + **Lưu vào nhật ký**, dải strip tóm tắt + **Đảo chiều hành trình** |
+| `ui/route/route_chrome.dart` | Breadcrumb `Trang chủ / Tiện ích / HÀNH TRÌNH & THỜI TIẾT`, tiêu đề, phụ đề, nút **So sánh giờ khởi hành** + **Lưu vào nhật ký**, khối **Dữ liệu trực tiếp** (chip nguồn + bảng 4 ô số liệu, full-width dưới dải 2 cột) |
 | `ui/route/route_planner_panel.dart` | **Mục A**: điểm xuất phát / danh sách điểm dừng / điểm đến, tìm kiếm địa điểm, chọn trên bản đồ, chọn phương tiện, ngày–giờ khởi hành, thời gian dừng, đảo chiều, chọn tuyến thay thế |
 | `ui/route/route_map_view.dart` | Bản đồ + polyline + marker địa điểm + marker thời tiết + popup; **mục C** (chọn marker ↔ highlight timeline) |
 | `ui/route/route_progress_chart.dart` | Bar lượng mưa + line nhiệt độ theo `Km`, trục mốc `Km 0 / 75 / 185 / 305` |
@@ -492,7 +492,7 @@ ROUTE_API_ENABLED=true
 | `ui/route/route_progress_chart.dart` | Bar mưa + line nhiệt độ theo `Km` (`CustomPainter`) |
 | `ui/route/route_timeline.dart` | Thẻ từng chặng, gắn mức bất lợi của **cả đoạn** chứ không chỉ điểm cuối |
 | `ui/route/route_panels.dart` | Panel khuyến cáo an toàn + panel so sánh giờ khởi hành |
-| `ui/route/route_chrome.dart` | Breadcrumb, hero, dải tóm tắt + chip nguồn (trực tiếp / dữ liệu cũ) |
+| `ui/route/route_chrome.dart` | Breadcrumb, hero, khối **Dữ liệu trực tiếp** (chip nguồn trực tiếp / dữ liệu cũ + bảng 4 ô số liệu) |
 | `ui/route/save_journey_dialog.dart` | **`ROUTE-02`**: tên chuyến, ghi/không ghi vào nhật ký ngày khởi hành, nội dung đính kèm sửa được, ghi chú |
 | `ui/route/saved_journeys_dialog.dart` | **Mục D phần xem lại**: danh sách hành trình, chi tiết một chuyến, **bản tóm tắt đã lưu tách khỏi "Cập nhật dự báo mới nhất"**, xoá hành trình |
 | `ui/route/route_format.dart` · `data/repositories/route_repository.dart` · `data/providers.dart` | Định dạng dùng chung, repository, provider (`routePlanProvider`, `routeDeparturesProvider`, `placeSearchProvider`, `journeysProvider`, `journeyDetailProvider`) |
