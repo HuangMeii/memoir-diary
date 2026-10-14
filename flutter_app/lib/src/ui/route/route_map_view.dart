@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../theme.dart';
 import '../tokens.dart';
 import 'route_format.dart';
+import 'route_segments.dart';
 
 /// Decodes the `coordinates` of a GeoJSON LineString into map points.
 List<LatLng> decodeRoutePoints(String geoJson) {
@@ -27,8 +28,14 @@ List<LatLng> decodeRoutePoints(String geoJson) {
   return points;
 }
 
-/// The route map: the polyline, the place markers, the weather markers, and a
-/// tap handler so a stop can be picked straight off the map.
+/// The route map: the route drawn in the colours of the weather along it, the
+/// place markers, and a tap handler so a stop can be picked straight off the
+/// map.
+///
+/// The way Google Maps paints traffic, the line is cut into stretches painted
+/// by how bad the weather is on them - brand green, amber, red - with the
+/// stretches the forecast does not cover dashed in grey. The stretches
+/// themselves come from `route_segments.dart`.
 ///
 /// Tiles come from OpenStreetMap and carry its attribution, just as the routing
 /// and weather providers carry theirs.
@@ -38,7 +45,6 @@ class RouteMapView extends StatefulWidget {
     required this.plan,
     required this.report,
     required this.selectedSeq,
-    required this.onSelectSample,
     required this.onPickPoint,
     this.height = 360,
     this.scale = 1,
@@ -47,10 +53,9 @@ class RouteMapView extends StatefulWidget {
   final RoutePlan plan;
   final RouteWeatherReport? report;
 
-  /// Sequence number of the sample the timeline has selected, if any.
+  /// Sequence number of the sample the timeline has selected, if any: the
+  /// stretch that holds it is drawn thicker and a ring marks the spot.
   final int? selectedSeq;
-
-  final ValueChanged<RouteWeatherSample> onSelectSample;
 
   /// Called with the coordinates of a tap on the map.
   final void Function(double lat, double lon) onPickPoint;
@@ -70,6 +75,20 @@ class _RouteMapViewState extends State<RouteMapView> {
   List<RouteWeatherSample> get _samples =>
       widget.report?.samples ?? const <RouteWeatherSample>[];
 
+  /// The route cut into stretches, each carrying the severity of the weather
+  /// along it. Without a forecast this is the whole line in the brand colour.
+  List<RouteSegment> get _segments => buildRouteSegments(_line, _samples);
+
+  /// The sample the timeline picked, when it is one of the ones drawn here.
+  RouteWeatherSample? get _selected {
+    final seq = widget.selectedSeq;
+    if (seq == null) return null;
+    for (final sample in _samples) {
+      if (sample.seq == seq) return sample;
+    }
+    return null;
+  }
+
   @override
   void didUpdateWidget(RouteMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -85,9 +104,10 @@ class _RouteMapViewState extends State<RouteMapView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final palette = MemoirPalette.of(context);
     final line = _line;
+    final segments = _segments;
+    final selected = _selected;
     final stops = widget.plan.stops;
 
     // A plan with fewer than two points cannot be framed; fall back to Ha Noi.
@@ -121,19 +141,29 @@ class _RouteMapViewState extends State<RouteMapView> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'memoir_app',
                 ),
-                if (line.length > 1)
+                if (segments.isNotEmpty)
                   PolylineLayer(
                     polylines: [
-                      Polyline(
-                        points: line,
-                        strokeWidth: 4 * widget.scale,
-                        color: theme.colorScheme.primary,
-                      ),
+                      for (final segment in segments)
+                        _routeLine(
+                          context,
+                          segment,
+                          selected: selected != null &&
+                              segment.covers(
+                                selected.distanceFromStartMeters.toDouble(),
+                              ),
+                        ),
                     ],
                   ),
-                MarkerLayer(markers: _weatherMarkers()),
                 MarkerLayer(markers: _stopMarkers()),
+                if (selected != null)
+                  MarkerLayer(markers: _selectedMarkers(selected)),
               ],
+            ),
+            Positioned(
+              right: MemoirSpace.s2 * widget.scale,
+              bottom: MemoirSpace.s2 * widget.scale,
+              child: _RouteMapLegend(scale: widget.scale),
             ),
             Positioned(
               left: MemoirSpace.s2 * widget.scale,
@@ -159,23 +189,41 @@ class _RouteMapViewState extends State<RouteMapView> {
     );
   }
 
-  /// Small round markers carrying the weather at each sample, tinted by
-  /// severity.
-  List<Marker> _weatherMarkers() => [
-        for (final sample in _samples)
-          Marker(
-            point: LatLng(sample.lat, sample.lon),
-            width: 32 * widget.scale,
-            height: 32 * widget.scale,
-            child: GestureDetector(
-              onTap: () => widget.onSelectSample(sample),
-              child: _SampleMarker(
-                sample: sample,
-                selected: sample.seq == widget.selectedSeq,
-                scale: widget.scale,
-              ),
-            ),
+  /// One stretch of the route, drawn in the colour of its severity: a wide
+  /// stroke over a pale casing, so green, amber and red stay readable on the
+  /// OpenStreetMap tiles. A stretch the forecast does not cover is dashed, so a
+  /// gap in the data cannot pass for a good stretch of road.
+  Polyline _routeLine(
+    BuildContext context,
+    RouteSegment segment, {
+    required bool selected,
+  }) =>
+      Polyline(
+        points: segment.points,
+        strokeWidth: (selected ? 7 : 4.5) * widget.scale,
+        color: routeLineColor(context, segment.severity),
+        borderStrokeWidth: 2 * widget.scale,
+        borderColor: MemoirPalette.of(context).surfaceCard,
+        pattern: segment.severity == routeSeverityUnknown
+            ? StrokePattern.dashed(
+                segments: [7 * widget.scale, 5 * widget.scale],
+                patternFit: PatternFit.scaleUp,
+              )
+            : const StrokePattern.solid(),
+      );
+
+  /// A ring on the sample the timeline picked, so the way from a card to its
+  /// spot on the route still shows now that the weather markers are gone.
+  List<Marker> _selectedMarkers(RouteWeatherSample sample) => [
+        Marker(
+          point: LatLng(sample.lat, sample.lon),
+          width: 18 * widget.scale,
+          height: 18 * widget.scale,
+          child: _SelectedSampleDot(
+            severity: sample.severity,
+            scale: widget.scale,
           ),
+        ),
       ];
 
   /// Pins for the origin, the waypoints and the destination.
@@ -199,42 +247,96 @@ class _RouteMapViewState extends State<RouteMapView> {
   }
 }
 
-/// A round weather marker: the sample's weather icon, tinted by how notable
-/// the weather there is.
-class _SampleMarker extends StatelessWidget {
-  const _SampleMarker({
-    required this.sample,
-    required this.selected,
-    required this.scale,
-  });
+/// A ring around the sample the timeline selected, drawn in the colour of the
+/// stretch under it so the selected spot reads at a glance.
+class _SelectedSampleDot extends StatelessWidget {
+  const _SelectedSampleDot({required this.severity, required this.scale});
 
-  final RouteWeatherSample sample;
-  final bool selected;
+  final String severity;
   final double scale;
 
   @override
   Widget build(BuildContext context) {
-    final color = routeSeverityColor(context, sample.severity);
+    final color = routeLineColor(context, severity);
 
     return Container(
-      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: routeSeveritySurface(context, sample.severity),
-        border: Border.all(color: color, width: (selected ? 2 : 1) * scale),
+        color: MemoirPalette.of(context).surfaceCard,
         shape: BoxShape.circle,
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.35),
-                  blurRadius: 8 * scale,
-                ),
-              ]
-            : null,
+        border: Border.all(color: color, width: 3 * scale),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.35),
+            blurRadius: 6 * scale,
+          ),
+        ],
       ),
-      child: RouteWeatherIcon(
-        group: sample.weatherGroup,
-        size: 16 * scale,
-        color: color,
+    );
+  }
+}
+
+/// What the colours of the route mean, written on the map itself.
+///
+/// The line carries the meaning now, so the scale has to be readable where it
+/// is read - and the dashed grey entry has to be there too, or a gap in the
+/// forecast would look like an ordinary stretch of road.
+class _RouteMapLegend extends StatelessWidget {
+  const _RouteMapLegend({required this.scale});
+
+  final double scale;
+
+  static const List<(String, String)> _entries = [
+    (RouteSeverity.info, 'Thuận lợi'),
+    (RouteSeverity.caution, 'Cần chú ý'),
+    (RouteSeverity.warning, 'Cảnh báo'),
+    (routeSeverityUnknown, 'Chưa có dự báo'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = MemoirPalette.of(context);
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: MemoirSpace.s2 * scale,
+        vertical: MemoirSpace.s1 * scale,
+      ),
+      decoration: BoxDecoration(
+        color: palette.surfaceCard.withValues(alpha: 0.92),
+        border: Border.all(color: palette.borderDefault),
+        borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (severity, label) in _entries)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 2 * scale),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16 * scale,
+                    height: 4 * scale,
+                    decoration: BoxDecoration(
+                      color: routeLineColor(context, severity),
+                      borderRadius: BorderRadius.circular(2 * scale),
+                    ),
+                  ),
+                  SizedBox(width: MemoirSpace.s2 * scale),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: MemoirType.caption,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

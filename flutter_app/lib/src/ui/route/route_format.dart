@@ -7,6 +7,7 @@ import '../../data/models.dart';
 import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
+import 'route_segments.dart';
 
 /// "305 km" / "18,4 km" — the distance labels the route panels use.
 String formatKm(num meters) {
@@ -41,6 +42,17 @@ Color routeSeverityColor(BuildContext context, String severity) =>
       RouteSeverity.caution => MemoirPalette.of(context).warningText,
       _ => Theme.of(context).colorScheme.primary,
     };
+
+/// The colour the route line is drawn with along a stretch of [severity].
+///
+/// The line uses the same three colours as the chips and the timeline, so the
+/// map reads as one scale with the rest of the screen. A stretch the forecast
+/// does not cover is grey rather than green: missing data must never look like
+/// good news.
+Color routeLineColor(BuildContext context, String severity) =>
+    severity == routeSeverityUnknown
+        ? MemoirPalette.of(context).textDisabled
+        : routeSeverityColor(context, severity);
 
 /// The background a severity paints its chip with.
 Color routeSeveritySurface(BuildContext context, String severity) =>

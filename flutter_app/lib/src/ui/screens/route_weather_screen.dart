@@ -635,8 +635,10 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       overline: 'Bản đồ lộ trình',
       title: 'Tuyến đường & trạm quan sát thời tiết',
       subtitle: role == null
-          ? 'Bấm vào một điểm trên hành trình để xem chi tiết.'
-          : 'Bấm lên bản đồ để đặt $role.',
+          ? 'Màu đường là mức bất lợi của thời tiết dự kiến; bấm vào một điểm '
+              'trên hành trình để xem chi tiết.'
+          : 'Màu đường là mức bất lợi của thời tiết dự kiến; bấm lên bản đồ '
+              'để đặt $role.',
       scale: scale,
       trailing: _alternative == null
           ? null
@@ -661,8 +663,6 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
             selectedSeq: _selectedSeq,
             height: kRouteMapHeight,
             scale: scale,
-            onSelectSample: (sample) =>
-                setState(() => _selectedSeq = sample.seq),
             onPickPoint: _onPickPoint,
           ),
         ],
