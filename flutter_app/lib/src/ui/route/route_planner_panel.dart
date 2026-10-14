@@ -193,7 +193,7 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
       overline: 'Quản lý lộ trình',
       title: 'Chọn hành trình và các điểm dừng',
       subtitle: 'Nhập tên đường hoặc địa chỉ vào ô của điểm, rồi nhấn Enter '
-          'hoặc nút tìm kiếm để định vị. Hoặc bấm vào bản đồ để chọn trực tiếp.',
+          'hoặc nút tìm kiếm để định vị.',
       scale: scale,
       trailing: TextButton.icon(
         onPressed: stops.length < 2 ? null : _reverse,
