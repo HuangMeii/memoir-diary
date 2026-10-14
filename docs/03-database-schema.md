@@ -385,7 +385,99 @@ Câu nhập ở ô *gửi gắm tương lai* chỉ vào kho `self_messages`; nó
 
 ---
 
-## 18. Tổng hợp index
+## 18. Nhóm bảng Thời tiết & Hành trình — ĐÃ TRIỂN KHAI
+
+> Bảng `weather_snapshots` do `WeatherEndpoint` tạo; ba bảng `journeys` / `journey_stops` / `journey_weather_points` do `JourneysEndpoint` tạo, thêm ở migration `20261013174623807` và `20261013175627648` (**chỉ thêm**, không `DROP`).
+> Đặc tả: [11-weather-forecast.md](11-weather-forecast.md) và [12-route-weather.md](12-route-weather.md). Lộ trình: [Phase 22–23](../PLAN.md) *(đã xong)*.
+
+### 18.1. Bảng `weather_snapshots` (đã triển khai)
+
+| Cột | Kiểu | Ràng buộc | Mô tả |
+|---|---|---|---|
+| id | uuid | PK | |
+| user_id | uuid | FK→users(id) CASCADE, indexed | |
+| forecast_date | date | NOT NULL | Ngày dự báo |
+| weather_code | smallint | NOT NULL | Mã WMO gốc |
+| weather_id | smallint | FK→weathers(id) | Nhóm đã ánh xạ |
+| temp_min / temp_max / temp_avg | float | NULL | °C |
+| precipitation_mm | float | NULL | Lượng mưa |
+| fetched_at | timestamptz | NOT NULL | Lúc lấy từ Open-Meteo |
+
+**Ràng buộc**: `UNIQUE (user_id, forecast_date)`.
+
+### 18.2. Bảng `journeys`
+
+| Cột | Kiểu | Ràng buộc | Mô tả |
+|---|---|---|---|
+| id | uuid | PK | |
+| user_id | uuid | FK→users(id) CASCADE, indexed | Chủ sở hữu |
+| title | varchar(150) | NOT NULL | Tên chuyến đi |
+| vehicle | varchar(20) | NOT NULL | `car` / `bike` / `foot` |
+| departure_at | timestamptz | NOT NULL | Giờ khởi hành |
+| origin_name | varchar(200) | NOT NULL | |
+| origin_lat / origin_lon | double precision | NOT NULL | |
+| destination_name | varchar(200) | NOT NULL | |
+| destination_lat / destination_lon | double precision | NOT NULL | |
+| distance_meters | int | NOT NULL | Tổng quãng đường |
+| duration_seconds | int | NOT NULL | Thời gian di chuyển (chưa gồm thời gian dừng) |
+| geometry | text | NOT NULL | GeoJSON LineString của tuyến đang chọn |
+| notes | text | NULL | Ghi chú chuyến đi |
+| entry_id | uuid | FK→diary_entries(id) ON DELETE SET NULL | Nhật ký liên kết (mềm) |
+| weather_saved_at | timestamptz | NULL | Lúc chụp bản tóm tắt dự báo |
+| created_at / updated_at | timestamptz | NOT NULL | |
+
+### 18.3. Bảng `journey_stops`
+
+| Cột | Kiểu | Ràng buộc | Mô tả |
+|---|---|---|---|
+| id | uuid | PK | |
+| journey_id | uuid | FK→journeys(id) CASCADE, indexed | |
+| seq | int | NOT NULL | Thứ tự `0..n` |
+| kind | varchar(20) | NOT NULL | `origin` / `waypoint` / `destination` |
+| name | varchar(200) | NOT NULL | |
+| lat / lon | double precision | NOT NULL | |
+| dwell_minutes | int | NOT NULL default 0 | Thời gian dừng |
+| arrival_at | timestamptz | NULL | ETA tại thời điểm lưu |
+| distance_from_start_meters | int | NULL | Km tích luỹ (nhãn "Km 75") |
+
+**Ràng buộc**: `UNIQUE (journey_id, seq)`.
+
+### 18.4. Bảng `journey_weather_points`
+
+Ảnh chụp dự báo **tại thời điểm lưu** — căn cứ để phân biệt **bản tóm tắt đã lưu** với **dự báo mới nhất**.
+
+| Cột | Kiểu | Ràng buộc | Mô tả |
+|---|---|---|---|
+| id | uuid | PK | |
+| journey_id | uuid | FK→journeys(id) CASCADE, indexed | |
+| seq | int | NOT NULL | Trùng `seq` mẫu trong báo cáo dự báo |
+| sample_at | timestamptz | NOT NULL | Thời điểm dự kiến đi qua |
+| lat / lon | double precision | NOT NULL | |
+| label | varchar(200) | NULL | Tên mốc (điểm dừng / "Km 185") |
+| weather_code | int | NULL | Mã WMO gốc |
+| weather_id | int | NULL | FK→weathers(id) |
+| temp_c | double precision | NULL | |
+| precipitation_mm | double precision | NULL | |
+| precipitation_probability | int | NULL | % |
+| wind_speed_kmh | double precision | NULL | |
+| severity | varchar(20) | NULL | `info` / `caution` / `warning` |
+| fetched_at | timestamptz | NOT NULL | Lúc lấy từ Open-Meteo |
+
+**Ràng buộc**: `UNIQUE (journey_id, seq)`.
+
+### 18.5. Index dự kiến
+
+| Bảng | Index |
+|---|---|
+| weather_snapshots | `uq_weather_user_date (user_id, forecast_date)` |
+| journeys | `idx_journeys_user_departure (user_id, departure_at DESC)` |
+| journey_stops | `uq_journey_stops_seq (journey_id, seq)` |
+| journey_weather_points | `uq_journey_weather_seq (journey_id, seq)` |
+
+> `journeys.entry_id` là **liên kết mềm** tới nhật ký: xoá nhật ký thì hành trình vẫn còn, chỉ mất liên kết.
+
+
+## 19. Tổng hợp index
 
 | Bảng | Index |
 |---|---|
@@ -402,14 +494,18 @@ Câu nhập ở ô *gửi gắm tương lai* chỉ vào kho `self_messages`; nó
 | *(Phase 8–13)* focus_sessions | `idx_focus_user_status (user_id, status)`, `idx_focus_user_started (user_id, started_at DESC)` |
 | *(Phase 8–13)* user_inventory | `uq_inventory_user_item (user_id, item_code)` |
 | *(Phase 8–13)* garden_challenge_progress | `uq_progress_challenge_user (challenge_id, user_id)` |
+| weather_snapshots | `uq_weather_user_date (user_id, forecast_date)` |
+| *(Phase 22–27)* journeys | `idx_journeys_user_departure (user_id, departure_at DESC)` |
+| *(Phase 22–27)* journey_stops | `uq_journey_stops_seq (journey_id, seq)` |
+| *(Phase 22–27)* journey_weather_points | `uq_journey_weather_seq (journey_id, seq)` |
 
-> **Phase 14–20 — chưa triển khai.** Xem [10-calendar.md](10-calendar.md) và [11-weather-forecast.md](11-weather-forecast.md).
+> **Phase 14–18 — chưa triển khai.** Xem [10-calendar.md](10-calendar.md) và [11-weather-forecast.md](11-weather-forecast.md).
 > Bảng `events` sẽ được bổ sung `recurrence_rule`, `recurrence_until`, `reminder_minutes`, `status`,
 > `color`, `entry_id`, `focus_session_id`; bảng `schedule_items` sẽ được migrate rồi bỏ.
-> Bảng mới `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) lưu lịch sử thời tiết;
-> bảng `users` thêm `weather_lat`, `weather_lon`, `weather_location_name`.
+> Nhóm bảng Thời tiết & Hành trình (§18) **đã có**: `weather_snapshots` (+ cột `weather_lat` / `weather_lon` /
+> `weather_location_name` trên `users`), `journeys`, `journey_stops`, `journey_weather_points`.
 
-## 19. Ghi chú kỹ thuật
+## 20. Ghi chú kỹ thuật
 
 - `gen_random_uuid()` cần extension `pgcrypto` (Neon hỗ trợ sẵn).
 - `updated_at` cập nhật qua trigger hoặc ở tầng ORM (SQLAlchemy `onupdate=func.now()`).

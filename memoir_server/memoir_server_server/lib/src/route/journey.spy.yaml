@@ -1,0 +1,30 @@
+### A saved trip: the route, its weather snapshot and the diary link. Stops and
+### weather points live in their own tables so a trip can be reopened and shown
+### exactly as it was planned, separately from the latest forecast.
+class: Journey
+table: journeys
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  title: String
+  ### car | bike | foot
+  vehicle: String
+  departureAt: DateTime
+  originName: String
+  originLat: double
+  originLon: double
+  destinationName: String
+  destinationLat: double
+  destinationLon: double
+  distanceMeters: int
+  durationSeconds: int
+  ### GeoJSON LineString of the chosen route.
+  geometry: String
+  notes: String?
+  ### Soft link to the diary entry, like `reflections.entryId`: deleting the
+  ### entry leaves the trip intact.
+  entryId: UuidValue?
+  ### When the weather snapshot below was taken.
+  weatherSavedAt: DateTime?
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now

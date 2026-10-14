@@ -26,7 +26,8 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 - 🔐 **Quản trị (admin)**: thêm/sửa/xoá câu trong **kho câu dùng chung**, xem danh sách tài khoản, khoá/mở tài khoản, nâng/hạ quyền. Tài khoản thường không sửa được câu dùng chung.
 - 🌳 **Khu vườn học tập** *(đang phát triển — xem [docs/09-focus-garden.md](docs/09-focus-garden.md))*: timer tập trung có chống gian lân → đổi thời gian học thành **coin/EXP** → gieo **hạt đậu nảy mầm** → mua **nước, phân bón** → **bảng xếp hạng** và **sự kiện** do admin tổ chức.
 - 📆 **Calendar** *(đặc tả xong, chưa code — xem [docs/10-calendar.md](docs/10-calendar.md))*: xem lịch **ngày / tuần / tháng**, **timeline theo giờ**, tạo/sửa/xoá sự kiện, **lặp lại**, **nhắc nhở**, liên kết với Study Garden và nhật ký, thống kê thời gian đã lên lịch vs thực tế học.
-- 🌦️ **Dự báo thời tiết thật** *(đặc tả xong, chưa code — xem [docs/11-weather-forecast.md](docs/11-weather-forecast.md))*: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện nhiệt độ và dự báo, gợi ý chọn thời tiết khi viết nhật ký.
+- 🌦️ **Dự báo thời tiết thật** *(đã dựng — xem [docs/11-weather-forecast.md](docs/11-weather-forecast.md))*: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện nhiệt độ và dự báo nhiều ngày, gợi ý chọn thời tiết khi viết nhật ký. Nằm trong **Tiện ích → Thời tiết**.
+- 🧭 **Thời tiết theo hành trình** *(đã dựng — xem [docs/12-route-weather.md](docs/12-route-weather.md))*: chọn điểm đi / nhiều điểm dừng / điểm đến (tìm kiếm hoặc chọn trực tiếp trên bản đồ OSM), chọn phương tiện và giờ khởi hành, rồi xem **thời tiết dự kiến tại từng chặng** (nhiệt độ, xác suất mưa, lượng mưa, gió), cảnh báo đoạn bất lợi, so sánh giờ khởi hành, và **lưu hành trình vào nhật ký**. Không tự xây mô hình dự đoán thời tiết.
 
 ---
 
@@ -111,12 +112,13 @@ Memoir/
 │  ├─ 08-quotes-seed.md
 │  ├─ 09-focus-garden.md
 │  ├─ 10-calendar.md
-│  └─ 11-weather-forecast.md
+│  ├─ 11-weather-forecast.md
+│  └─ 12-route-weather.md
 ├─ memoir_server/  # Backend Serverpod/Dart (client + server)
 └─ flutter_app/    # Flutter app + web (Phase 3+)
 ```
 
-> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13), Calendar (Phase 14–18) và phần còn lại của dự báo thời tiết (Phase 19–20) đã có đặc tả nhưng chưa viết code; riêng Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng xong cùng màn hình Home theo Figma, và dự báo thời tiết chỉ nằm trong mục Tiện ích.** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
+> Trạng thái hiện tại: **Phase 0–5 đã hoàn thành** (backend Serverpod/Dart đã thay thế FastAPI: 16 domain + seed 100 câu, Flutter app + web đầy đủ tính năng và upload ảnh lên Neon Object Storage). Còn lại: build APK và deploy (Phase 6–7). **Khu vườn học tập (Phase 8–13) và Calendar (Phase 14–18) đã có đặc tả nhưng chưa viết code. Dự báo thời tiết (Phase 19–20) đã dựng xong**: backend `WeatherEndpoint` (Open-Meteo + bảng `weather_snapshots` + cache 2 tầng) và màn **Tiện ích → Thời tiết** (`ui/screens/weather_screen.dart`). **Phase 21 — UI thời tiết & cảm xúc cùng một hàng — đã dựng cùng màn hình Home theo Figma; dự báo thời tiết không lặp lại trên Home. Thời tiết theo hành trình (Phase 22–27) đã dựng xong**: backend `RouteEndpoint` + `JourneysEndpoint` (OSRM + Open-Meteo) với 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình** (bản đồ OSM, biểu đồ mưa/nhiệt độ, timeline từng chặng, lưu vào nhật ký).** Chi tiết từng hạng mục xem [`PLAN.md`](PLAN.md).
 
 ---
 
@@ -138,7 +140,8 @@ Memoir/
 | [docs/08-quotes-seed.md](docs/08-quotes-seed.md) | 100 câu động viên để seed |
 | [docs/09-focus-garden.md](docs/09-focus-garden.md) | **Khu vườn học tập** *(chưa triển khai)*: timer, chống gian lân, coin/EXP, cây nảy mầm, shop, xếp hạng, sự kiện |
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |
-| [docs/11-weather-forecast.md](docs/11-weather-forecast.md) | **Dự báo thời tiết** *(chưa triển khai)*: tích hợp Open-Meteo, cache 2 tầng, ánh xạ mã WMO |
+| [docs/11-weather-forecast.md](docs/11-weather-forecast.md) | **Dự báo thời tiết** *(đã triển khai)*: tích hợp Open-Meteo, cache 2 tầng, ánh xạ mã WMO |
+| [docs/12-route-weather.md](docs/12-route-weather.md) | **Thời tiết theo hành trình** *(đã triển khai)*: quản lý lộ trình (nhiều điểm dừng, chọn trên bản đồ), routing OSRM, dự báo dọc tuyến theo điểm mẫu + ETA, quy tắc đoạn bất lợi, lưu hành trình vào nhật ký |
 
 ---
 
@@ -191,11 +194,17 @@ Chi tiết đầy đủ ở [docs/06-setup-deploy.md](docs/06-setup-deploy.md).
 - [ ] Phase 16 — Flutter: timeline ngày + form tạo/sửa
 - [ ] Phase 17 — Calendar: tuần/tháng + nhắc nhở
 - [ ] Phase 18 — Calendar: liên kết Study + Journal
-- [ ] Phase 19 — Backend: API thời tiết Open-Meteo *(đặc tả xong, chưa code)*
-- [ ] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí
+- [x] Phase 19 — Backend: API thời tiết Open-Meteo *(đã dựng: `WeatherEndpoint` + bảng `weather_snapshots` + cache 2 tầng)*
+- [x] Phase 20 — Flutter: thẻ thời tiết + đổi vị trí *(đã dựng: `ui/screens/weather_screen.dart` + `ui/weather/*`)*
 - [x] Phase 21 — UI: thời tiết & cảm xúc cùng một hàng *(đã dựng ở `home/picker_card.dart`; dự báo thời tiết chỉ nằm trong Tiện ích)*
+- [x] Phase 22 — Backend: routing + thời tiết dọc tuyến *(đã dựng: `RouteEndpoint` + `route_service` + 31 unit test)*
+- [x] Phase 23 — Backend: lưu hành trình + bản tóm tắt dự báo *(đã dựng: `JourneysEndpoint` + 3 bảng mới)*
+- [x] Phase 24 — Flutter: repository + provider cho lộ trình
+- [x] Phase 25 — Flutter UI: form quản lý lộ trình + bản đồ OSM + timeline
+- [x] Phase 26 — Flutter: lưu vào nhật ký + xem lại hành trình đã lưu
+- [x] Phase 27 — Đóng gói & docs thời tiết hành trình *(còn: vẽ frame Figma `ROUTE-01`)*
 
-> Các phase 8–20 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md) và [docs/11-weather-forecast.md](docs/11-weather-forecast.md).
+> Các phase 8–18 là **đặc tả đã chốt, chưa triển khai**. Xem [docs/09-focus-garden.md](docs/09-focus-garden.md), [docs/10-calendar.md](docs/10-calendar.md), [docs/11-weather-forecast.md](docs/11-weather-forecast.md) và [docs/12-route-weather.md](docs/12-route-weather.md).
 
 ---
 

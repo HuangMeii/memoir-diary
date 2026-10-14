@@ -50,6 +50,24 @@ import 'package:memoir_server_server/src/generated/quotes/reflection.dart'
     as _i6c9evrp;
 import 'package:memoir_server_server/src/generated/quotes/self_message.dart'
     as _in6lippz;
+import 'package:memoir_server_server/src/generated/route/journey.dart'
+    as _idopqiek;
+import 'package:memoir_server_server/src/generated/route/journey_detail.dart'
+    as _i5bn9azc;
+import 'package:memoir_server_server/src/generated/route/place_candidate.dart'
+    as _ile7spz5;
+import 'package:memoir_server_server/src/generated/route/route_departure_option.dart'
+    as _i5y2yltz;
+import 'package:memoir_server_server/src/generated/route/route_plan.dart'
+    as _izbe64dt;
+import 'package:memoir_server_server/src/generated/route/route_plan_with_weather.dart'
+    as _ingj2wq5;
+import 'package:memoir_server_server/src/generated/route/route_stop.dart'
+    as _imxvpk9j;
+import 'package:memoir_server_server/src/generated/route/route_weather_report.dart'
+    as _imejrf2q;
+import 'package:memoir_server_server/src/generated/route/route_weather_sample.dart'
+    as _iiotk9u0;
 import 'package:memoir_server_server/src/generated/stats/grid_cell.dart'
     as _iq2zvbrw;
 import 'package:memoir_server_server/src/generated/stats/stats_summary.dart'
@@ -221,6 +239,10 @@ class TestEndpoints {
 
   late final _SelfMessagesEndpoint selfMessages;
 
+  late final _JourneysEndpoint journeys;
+
+  late final _RouteEndpoint route;
+
   late final _SeedEndpoint seed;
 
   late final _StatsEndpoint stats;
@@ -288,6 +310,14 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     selfMessages = _SelfMessagesEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    journeys = _JourneysEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    route = _RouteEndpoint(
       endpoints,
       serializationManager,
     );
@@ -2583,6 +2613,368 @@ class _SelfMessagesEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _JourneysEndpoint {
+  _JourneysEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<List<_idopqiek.Journey>> list(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journeys',
+            method: 'list',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journeys',
+          methodName: 'list',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_idopqiek.Journey>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i5bn9azc.JourneyDetail> detail(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journeys',
+            method: 'detail',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journeys',
+          methodName: 'detail',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i5bn9azc.JourneyDetail>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i5bn9azc.JourneyDetail> save(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required String title,
+    required String vehicle,
+    required DateTime departureAt,
+    required List<_imxvpk9j.RouteStop> stops,
+    required int distanceMeters,
+    required int durationSeconds,
+    required String geometry,
+    String? notes,
+    _is.UuidValue? entryId,
+    List<_iiotk9u0.RouteWeatherSample>? weatherSamples,
+    bool? createEntry,
+    String? entryText,
+    int? weatherId,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journeys',
+            method: 'save',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journeys',
+          methodName: 'save',
+          parameters: _ist.testObjectToJson({
+            'title': title,
+            'vehicle': vehicle,
+            'departureAt': departureAt,
+            'stops': stops,
+            'distanceMeters': distanceMeters,
+            'durationSeconds': durationSeconds,
+            'geometry': geometry,
+            'notes': notes,
+            'entryId': entryId,
+            'weatherSamples': weatherSamples,
+            'createEntry': createEntry,
+            'entryText': entryText,
+            'weatherId': weatherId,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i5bn9azc.JourneyDetail>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> delete(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journeys',
+            method: 'delete',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journeys',
+          methodName: 'delete',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _RouteEndpoint {
+  _RouteEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<List<_ile7spz5.PlaceCandidate>> searchPlaces(
+    _ist.TestSessionBuilder sessionBuilder,
+    String query, {
+    int? limit,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'searchPlaces',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'searchPlaces',
+          parameters: _ist.testObjectToJson({
+            'query': query,
+            'limit': limit,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_ile7spz5.PlaceCandidate>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_izbe64dt.RoutePlan> plan(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _imxvpk9j.RouteStop origin,
+    required _imxvpk9j.RouteStop destination,
+    List<_imxvpk9j.RouteStop>? waypoints,
+    String? vehicle,
+    bool? alternatives,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'plan',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'plan',
+          parameters: _ist.testObjectToJson({
+            'origin': origin,
+            'destination': destination,
+            'waypoints': waypoints,
+            'vehicle': vehicle,
+            'alternatives': alternatives,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_izbe64dt.RoutePlan>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_imejrf2q.RouteWeatherReport> forecast(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _izbe64dt.RoutePlan plan,
+    required DateTime departureAt,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'forecast',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'forecast',
+          parameters: _ist.testObjectToJson({
+            'plan': plan,
+            'departureAt': departureAt,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_imejrf2q.RouteWeatherReport>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ingj2wq5.RoutePlanWithWeather> planWithWeather(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _imxvpk9j.RouteStop origin,
+    required _imxvpk9j.RouteStop destination,
+    List<_imxvpk9j.RouteStop>? waypoints,
+    String? vehicle,
+    DateTime? departureAt,
+    bool? alternatives,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'planWithWeather',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'planWithWeather',
+          parameters: _ist.testObjectToJson({
+            'origin': origin,
+            'destination': destination,
+            'waypoints': waypoints,
+            'vehicle': vehicle,
+            'departureAt': departureAt,
+            'alternatives': alternatives,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ingj2wq5.RoutePlanWithWeather>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<_i5y2yltz.RouteDepartureOption>> compareDepartures(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _izbe64dt.RoutePlan plan,
+    required DateTime departureAt,
+    List<int>? offsetsHours,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'compareDepartures',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'compareDepartures',
+          parameters: _ist.testObjectToJson({
+            'plan': plan,
+            'departureAt': departureAt,
+            'offsetsHours': offsetsHours,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_i5y2yltz.RouteDepartureOption>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

@@ -72,6 +72,17 @@ selfMessages:
   - create:
   - update:
   - delete:
+journeys:
+  - list:
+  - detail:
+  - save:
+  - delete:
+route:
+  - searchPlaces:
+  - plan:
+  - forecast:
+  - planWithWeather:
+  - compareDepartures:
 seed:
   - run:
 stats:

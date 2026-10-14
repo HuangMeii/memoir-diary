@@ -12,6 +12,12 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:memoir_server_server/src/generated/notes/note_checklist_item.dart'
     as _i6aehc7v;
+import 'package:memoir_server_server/src/generated/route/route_plan.dart'
+    as _izbe64dt;
+import 'package:memoir_server_server/src/generated/route/route_stop.dart'
+    as _imxvpk9j;
+import 'package:memoir_server_server/src/generated/route/route_weather_sample.dart'
+    as _iiotk9u0;
 import 'package:serverpod/serverpod.dart' as _is;
 import '../admin/admin_endpoint.dart' as _ido5l6pj;
 import '../auth/auth_endpoint.dart' as _iiznyhpe;
@@ -27,6 +33,8 @@ import '../quotes/daily_quotes_endpoint.dart' as _iyiyze1d;
 import '../quotes/quotes_endpoint.dart' as _i0kbgmpc;
 import '../quotes/reflections_endpoint.dart' as _igito0lv;
 import '../quotes/self_messages_endpoint.dart' as _ifxzgp8p;
+import '../route/journeys_endpoint.dart' as _i30ybwgx;
+import '../route/route_endpoint.dart' as _i26vlbfa;
 import '../shared/seed_endpoint.dart' as _iaci3p0i;
 import '../stats/stats_endpoint.dart' as _ibh8msu8;
 import '../weather/weather_endpoint.dart' as _i8nd21di;
@@ -117,6 +125,18 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'selfMessages',
+          null,
+        ),
+      'journeys': _i30ybwgx.JourneysEndpoint()
+        ..initialize(
+          server,
+          'journeys',
+          null,
+        ),
+      'route': _i26vlbfa.RouteEndpoint()
+        ..initialize(
+          server,
+          'route',
           null,
         ),
       'seed': _iaci3p0i.SeedEndpoint()
@@ -1945,6 +1965,329 @@ class Endpoints extends _is.EndpointDispatch {
                         session,
                         params['id'],
                       ),
+        ),
+      },
+    );
+    connectors['journeys'] = _is.EndpointConnector(
+      name: 'journeys',
+      endpoint: endpoints['journeys']!,
+      methodConnectors: {
+        'list': _is.MethodConnector(
+          name: 'list',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['journeys'] as _i30ybwgx.JourneysEndpoint)
+                  .list(session),
+        ),
+        'detail': _is.MethodConnector(
+          name: 'detail',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['journeys'] as _i30ybwgx.JourneysEndpoint).detail(
+                    session,
+                    params['id'],
+                  ),
+        ),
+        'save': _is.MethodConnector(
+          name: 'save',
+          params: {
+            'title': _is.ParameterDescription(
+              name: 'title',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'vehicle': _is.ParameterDescription(
+              name: 'vehicle',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'departureAt': _is.ParameterDescription(
+              name: 'departureAt',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'stops': _is.ParameterDescription(
+              name: 'stops',
+              type: _is.getType<List<_imxvpk9j.RouteStop>>(),
+              nullable: false,
+            ),
+            'distanceMeters': _is.ParameterDescription(
+              name: 'distanceMeters',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'durationSeconds': _is.ParameterDescription(
+              name: 'durationSeconds',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'geometry': _is.ParameterDescription(
+              name: 'geometry',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'notes': _is.ParameterDescription(
+              name: 'notes',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'entryId': _is.ParameterDescription(
+              name: 'entryId',
+              type: _is.getType<_is.UuidValue?>(),
+              nullable: true,
+            ),
+            'weatherSamples': _is.ParameterDescription(
+              name: 'weatherSamples',
+              type: _is.getType<List<_iiotk9u0.RouteWeatherSample>?>(),
+              nullable: true,
+            ),
+            'createEntry': _is.ParameterDescription(
+              name: 'createEntry',
+              type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+            'entryText': _is.ParameterDescription(
+              name: 'entryText',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'weatherId': _is.ParameterDescription(
+              name: 'weatherId',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['journeys'] as _i30ybwgx.JourneysEndpoint).save(
+                    session,
+                    title: params['title'],
+                    vehicle: params['vehicle'],
+                    departureAt: params['departureAt'],
+                    stops: params['stops'],
+                    distanceMeters: params['distanceMeters'],
+                    durationSeconds: params['durationSeconds'],
+                    geometry: params['geometry'],
+                    notes: params['notes'],
+                    entryId: params['entryId'],
+                    weatherSamples: params['weatherSamples'],
+                    createEntry: params['createEntry'],
+                    entryText: params['entryText'],
+                    weatherId: params['weatherId'],
+                  ),
+        ),
+        'delete': _is.MethodConnector(
+          name: 'delete',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['journeys'] as _i30ybwgx.JourneysEndpoint).delete(
+                    session,
+                    params['id'],
+                  ),
+        ),
+      },
+    );
+    connectors['route'] = _is.EndpointConnector(
+      name: 'route',
+      endpoint: endpoints['route']!,
+      methodConnectors: {
+        'searchPlaces': _is.MethodConnector(
+          name: 'searchPlaces',
+          params: {
+            'query': _is.ParameterDescription(
+              name: 'query',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['route'] as _i26vlbfa.RouteEndpoint).searchPlaces(
+                    session,
+                    params['query'],
+                    limit: params['limit'],
+                  ),
+        ),
+        'plan': _is.MethodConnector(
+          name: 'plan',
+          params: {
+            'origin': _is.ParameterDescription(
+              name: 'origin',
+              type: _is.getType<_imxvpk9j.RouteStop>(),
+              nullable: false,
+            ),
+            'destination': _is.ParameterDescription(
+              name: 'destination',
+              type: _is.getType<_imxvpk9j.RouteStop>(),
+              nullable: false,
+            ),
+            'waypoints': _is.ParameterDescription(
+              name: 'waypoints',
+              type: _is.getType<List<_imxvpk9j.RouteStop>?>(),
+              nullable: true,
+            ),
+            'vehicle': _is.ParameterDescription(
+              name: 'vehicle',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'alternatives': _is.ParameterDescription(
+              name: 'alternatives',
+              type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['route'] as _i26vlbfa.RouteEndpoint).plan(
+                session,
+                origin: params['origin'],
+                destination: params['destination'],
+                waypoints: params['waypoints'],
+                vehicle: params['vehicle'],
+                alternatives: params['alternatives'],
+              ),
+        ),
+        'forecast': _is.MethodConnector(
+          name: 'forecast',
+          params: {
+            'plan': _is.ParameterDescription(
+              name: 'plan',
+              type: _is.getType<_izbe64dt.RoutePlan>(),
+              nullable: false,
+            ),
+            'departureAt': _is.ParameterDescription(
+              name: 'departureAt',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['route'] as _i26vlbfa.RouteEndpoint).forecast(
+                    session,
+                    plan: params['plan'],
+                    departureAt: params['departureAt'],
+                  ),
+        ),
+        'planWithWeather': _is.MethodConnector(
+          name: 'planWithWeather',
+          params: {
+            'origin': _is.ParameterDescription(
+              name: 'origin',
+              type: _is.getType<_imxvpk9j.RouteStop>(),
+              nullable: false,
+            ),
+            'destination': _is.ParameterDescription(
+              name: 'destination',
+              type: _is.getType<_imxvpk9j.RouteStop>(),
+              nullable: false,
+            ),
+            'waypoints': _is.ParameterDescription(
+              name: 'waypoints',
+              type: _is.getType<List<_imxvpk9j.RouteStop>?>(),
+              nullable: true,
+            ),
+            'vehicle': _is.ParameterDescription(
+              name: 'vehicle',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'departureAt': _is.ParameterDescription(
+              name: 'departureAt',
+              type: _is.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'alternatives': _is.ParameterDescription(
+              name: 'alternatives',
+              type: _is.getType<bool?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['route'] as _i26vlbfa.RouteEndpoint)
+                  .planWithWeather(
+                    session,
+                    origin: params['origin'],
+                    destination: params['destination'],
+                    waypoints: params['waypoints'],
+                    vehicle: params['vehicle'],
+                    departureAt: params['departureAt'],
+                    alternatives: params['alternatives'],
+                  ),
+        ),
+        'compareDepartures': _is.MethodConnector(
+          name: 'compareDepartures',
+          params: {
+            'plan': _is.ParameterDescription(
+              name: 'plan',
+              type: _is.getType<_izbe64dt.RoutePlan>(),
+              nullable: false,
+            ),
+            'departureAt': _is.ParameterDescription(
+              name: 'departureAt',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'offsetsHours': _is.ParameterDescription(
+              name: 'offsetsHours',
+              type: _is.getType<List<int>?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['route'] as _i26vlbfa.RouteEndpoint)
+                  .compareDepartures(
+                    session,
+                    plan: params['plan'],
+                    departureAt: params['departureAt'],
+                    offsetsHours: params['offsetsHours'],
+                  ),
         ),
       },
     );

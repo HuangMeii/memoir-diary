@@ -1,0 +1,10 @@
+### A saved journey with its stops and its weather snapshot. The snapshot is what
+### the trip was planned with; the screen can still ask for a fresh forecast and
+### show the two side by side.
+class: JourneyDetail
+fields:
+  journey: Journey
+  ### Stops in travel order.
+  stops: List<JourneyStop>
+  ### Weather snapshot taken when the journey was saved.
+  weatherPoints: List<JourneyWeatherPoint>

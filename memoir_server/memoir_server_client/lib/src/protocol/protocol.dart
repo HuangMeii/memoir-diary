@@ -39,6 +39,16 @@ import 'package:memoir_server_client/src/protocol/quotes/reflection.dart'
     as _ivmwvttz;
 import 'package:memoir_server_client/src/protocol/quotes/self_message.dart'
     as _i4smoveg;
+import 'package:memoir_server_client/src/protocol/route/journey.dart'
+    as _i8cgeaon;
+import 'package:memoir_server_client/src/protocol/route/place_candidate.dart'
+    as _i972nhj2;
+import 'package:memoir_server_client/src/protocol/route/route_departure_option.dart'
+    as _ia1gr6j3;
+import 'package:memoir_server_client/src/protocol/route/route_stop.dart'
+    as _isj44i7w;
+import 'package:memoir_server_client/src/protocol/route/route_weather_sample.dart'
+    as _iw3tlfli;
 import 'package:memoir_server_client/src/protocol/stats/grid_cell.dart'
     as _idxtic5g;
 import 'package:memoir_server_client/src/protocol/weather/weather_day.dart'
@@ -66,6 +76,20 @@ import 'quotes/daily_quote_pair.dart' as _ip1ndbg5;
 import 'quotes/quote.dart' as _ijvippl1;
 import 'quotes/reflection.dart' as _ie2y0yiy;
 import 'quotes/self_message.dart' as _iyriup1i;
+import 'route/journey.dart' as _is36joid;
+import 'route/journey_detail.dart' as _iknanxwr;
+import 'route/journey_stop.dart' as _igofjck1;
+import 'route/journey_weather_point.dart' as _ibs4q8yo;
+import 'route/place_candidate.dart' as _ino3yrjt;
+import 'route/route_alert.dart' as _izwu4g79;
+import 'route/route_alternative.dart' as _iidrek38;
+import 'route/route_departure_option.dart' as _ixslv2d7;
+import 'route/route_leg.dart' as _inhn4us6;
+import 'route/route_plan.dart' as _ize64pbg;
+import 'route/route_plan_with_weather.dart' as _i1mr55ne;
+import 'route/route_stop.dart' as _ia9lknw1;
+import 'route/route_weather_report.dart' as _ipvx79ch;
+import 'route/route_weather_sample.dart' as _iodoclik;
 import 'shared/api_exception.dart' as _iatey69s;
 import 'stats/grid_cell.dart' as _idkvug70;
 import 'stats/stats_summary.dart' as _iaxcfmie;
@@ -94,6 +118,20 @@ export 'quotes/daily_quote_pair.dart';
 export 'quotes/quote.dart';
 export 'quotes/reflection.dart';
 export 'quotes/self_message.dart';
+export 'route/journey.dart';
+export 'route/journey_detail.dart';
+export 'route/journey_stop.dart';
+export 'route/journey_weather_point.dart';
+export 'route/place_candidate.dart';
+export 'route/route_alert.dart';
+export 'route/route_alternative.dart';
+export 'route/route_departure_option.dart';
+export 'route/route_leg.dart';
+export 'route/route_plan.dart';
+export 'route/route_plan_with_weather.dart';
+export 'route/route_stop.dart';
+export 'route/route_weather_report.dart';
+export 'route/route_weather_sample.dart';
 export 'shared/api_exception.dart';
 export 'stats/grid_cell.dart';
 export 'stats/stats_summary.dart';
@@ -202,6 +240,48 @@ class Protocol extends _isc.SerializationManager {
     if (t == _iyriup1i.SelfMessage) {
       return _iyriup1i.SelfMessage.fromJson(data) as T;
     }
+    if (t == _is36joid.Journey) {
+      return _is36joid.Journey.fromJson(data) as T;
+    }
+    if (t == _iknanxwr.JourneyDetail) {
+      return _iknanxwr.JourneyDetail.fromJson(data) as T;
+    }
+    if (t == _igofjck1.JourneyStop) {
+      return _igofjck1.JourneyStop.fromJson(data) as T;
+    }
+    if (t == _ibs4q8yo.JourneyWeatherPoint) {
+      return _ibs4q8yo.JourneyWeatherPoint.fromJson(data) as T;
+    }
+    if (t == _ino3yrjt.PlaceCandidate) {
+      return _ino3yrjt.PlaceCandidate.fromJson(data) as T;
+    }
+    if (t == _izwu4g79.RouteAlert) {
+      return _izwu4g79.RouteAlert.fromJson(data) as T;
+    }
+    if (t == _iidrek38.RouteAlternative) {
+      return _iidrek38.RouteAlternative.fromJson(data) as T;
+    }
+    if (t == _ixslv2d7.RouteDepartureOption) {
+      return _ixslv2d7.RouteDepartureOption.fromJson(data) as T;
+    }
+    if (t == _inhn4us6.RouteLeg) {
+      return _inhn4us6.RouteLeg.fromJson(data) as T;
+    }
+    if (t == _ize64pbg.RoutePlan) {
+      return _ize64pbg.RoutePlan.fromJson(data) as T;
+    }
+    if (t == _i1mr55ne.RoutePlanWithWeather) {
+      return _i1mr55ne.RoutePlanWithWeather.fromJson(data) as T;
+    }
+    if (t == _ia9lknw1.RouteStop) {
+      return _ia9lknw1.RouteStop.fromJson(data) as T;
+    }
+    if (t == _ipvx79ch.RouteWeatherReport) {
+      return _ipvx79ch.RouteWeatherReport.fromJson(data) as T;
+    }
+    if (t == _iodoclik.RouteWeatherSample) {
+      return _iodoclik.RouteWeatherSample.fromJson(data) as T;
+    }
     if (t == _iatey69s.ApiException) {
       return _iatey69s.ApiException.fromJson(data) as T;
     }
@@ -291,6 +371,62 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_iyriup1i.SelfMessage?>()) {
       return (data != null ? _iyriup1i.SelfMessage.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_is36joid.Journey?>()) {
+      return (data != null ? _is36joid.Journey.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_iknanxwr.JourneyDetail?>()) {
+      return (data != null ? _iknanxwr.JourneyDetail.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_igofjck1.JourneyStop?>()) {
+      return (data != null ? _igofjck1.JourneyStop.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ibs4q8yo.JourneyWeatherPoint?>()) {
+      return (data != null
+              ? _ibs4q8yo.JourneyWeatherPoint.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _isc.getType<_ino3yrjt.PlaceCandidate?>()) {
+      return (data != null ? _ino3yrjt.PlaceCandidate.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_izwu4g79.RouteAlert?>()) {
+      return (data != null ? _izwu4g79.RouteAlert.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_iidrek38.RouteAlternative?>()) {
+      return (data != null ? _iidrek38.RouteAlternative.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_ixslv2d7.RouteDepartureOption?>()) {
+      return (data != null
+              ? _ixslv2d7.RouteDepartureOption.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _isc.getType<_inhn4us6.RouteLeg?>()) {
+      return (data != null ? _inhn4us6.RouteLeg.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ize64pbg.RoutePlan?>()) {
+      return (data != null ? _ize64pbg.RoutePlan.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i1mr55ne.RoutePlanWithWeather?>()) {
+      return (data != null
+              ? _i1mr55ne.RoutePlanWithWeather.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _isc.getType<_ia9lknw1.RouteStop?>()) {
+      return (data != null ? _ia9lknw1.RouteStop.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ipvx79ch.RouteWeatherReport?>()) {
+      return (data != null ? _ipvx79ch.RouteWeatherReport.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_iodoclik.RouteWeatherSample?>()) {
+      return (data != null ? _iodoclik.RouteWeatherSample.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_iatey69s.ApiException?>()) {
       return (data != null ? _iatey69s.ApiException.fromJson(data) : null) as T;
     }
@@ -329,6 +465,48 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<_isn947xq.DiaryEntry>) {
       return (data as List)
               .map((e) => deserialize<_isn947xq.DiaryEntry>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_igofjck1.JourneyStop>) {
+      return (data as List)
+              .map((e) => deserialize<_igofjck1.JourneyStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ibs4q8yo.JourneyWeatherPoint>) {
+      return (data as List)
+              .map((e) => deserialize<_ibs4q8yo.JourneyWeatherPoint>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ia9lknw1.RouteStop>) {
+      return (data as List)
+              .map((e) => deserialize<_ia9lknw1.RouteStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_inhn4us6.RouteLeg>) {
+      return (data as List)
+              .map((e) => deserialize<_inhn4us6.RouteLeg>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iidrek38.RouteAlternative>) {
+      return (data as List)
+              .map((e) => deserialize<_iidrek38.RouteAlternative>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iodoclik.RouteWeatherSample>) {
+      return (data as List)
+              .map((e) => deserialize<_iodoclik.RouteWeatherSample>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_izwu4g79.RouteAlert>) {
+      return (data as List)
+              .map((e) => deserialize<_izwu4g79.RouteAlert>(e))
               .toList()
           as T;
     }
@@ -451,6 +629,61 @@ class Protocol extends _isc.SerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_i8cgeaon.Journey>) {
+      return (data as List)
+              .map((e) => deserialize<_i8cgeaon.Journey>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_isj44i7w.RouteStop>) {
+      return (data as List)
+              .map((e) => deserialize<_isj44i7w.RouteStop>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iw3tlfli.RouteWeatherSample>) {
+      return (data as List)
+              .map((e) => deserialize<_iw3tlfli.RouteWeatherSample>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_iw3tlfli.RouteWeatherSample>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_iw3tlfli.RouteWeatherSample>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_i972nhj2.PlaceCandidate>) {
+      return (data as List)
+              .map((e) => deserialize<_i972nhj2.PlaceCandidate>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_isj44i7w.RouteStop>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_isj44i7w.RouteStop>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_ia1gr6j3.RouteDepartureOption>) {
+      return (data as List)
+              .map((e) => deserialize<_ia1gr6j3.RouteDepartureOption>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<int>) {
+      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
+    }
+    if (t == _isc.getType<List<int>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<int>(e)).toList()
+              : null)
+          as T;
+    }
     if (t == List<_idxtic5g.GridCell>) {
       return (data as List)
               .map((e) => deserialize<_idxtic5g.GridCell>(e))
@@ -490,6 +723,20 @@ class Protocol extends _isc.SerializationManager {
       _ijvippl1.Quote => 'Quote',
       _ie2y0yiy.Reflection => 'Reflection',
       _iyriup1i.SelfMessage => 'SelfMessage',
+      _is36joid.Journey => 'Journey',
+      _iknanxwr.JourneyDetail => 'JourneyDetail',
+      _igofjck1.JourneyStop => 'JourneyStop',
+      _ibs4q8yo.JourneyWeatherPoint => 'JourneyWeatherPoint',
+      _ino3yrjt.PlaceCandidate => 'PlaceCandidate',
+      _izwu4g79.RouteAlert => 'RouteAlert',
+      _iidrek38.RouteAlternative => 'RouteAlternative',
+      _ixslv2d7.RouteDepartureOption => 'RouteDepartureOption',
+      _inhn4us6.RouteLeg => 'RouteLeg',
+      _ize64pbg.RoutePlan => 'RoutePlan',
+      _i1mr55ne.RoutePlanWithWeather => 'RoutePlanWithWeather',
+      _ia9lknw1.RouteStop => 'RouteStop',
+      _ipvx79ch.RouteWeatherReport => 'RouteWeatherReport',
+      _iodoclik.RouteWeatherSample => 'RouteWeatherSample',
       _iatey69s.ApiException => 'ApiException',
       _idkvug70.GridCell => 'GridCell',
       _iaxcfmie.StatsSummary => 'StatsSummary',
@@ -557,6 +804,34 @@ class Protocol extends _isc.SerializationManager {
         return 'Reflection';
       case _iyriup1i.SelfMessage():
         return 'SelfMessage';
+      case _is36joid.Journey():
+        return 'Journey';
+      case _iknanxwr.JourneyDetail():
+        return 'JourneyDetail';
+      case _igofjck1.JourneyStop():
+        return 'JourneyStop';
+      case _ibs4q8yo.JourneyWeatherPoint():
+        return 'JourneyWeatherPoint';
+      case _ino3yrjt.PlaceCandidate():
+        return 'PlaceCandidate';
+      case _izwu4g79.RouteAlert():
+        return 'RouteAlert';
+      case _iidrek38.RouteAlternative():
+        return 'RouteAlternative';
+      case _ixslv2d7.RouteDepartureOption():
+        return 'RouteDepartureOption';
+      case _inhn4us6.RouteLeg():
+        return 'RouteLeg';
+      case _ize64pbg.RoutePlan():
+        return 'RoutePlan';
+      case _i1mr55ne.RoutePlanWithWeather():
+        return 'RoutePlanWithWeather';
+      case _ia9lknw1.RouteStop():
+        return 'RouteStop';
+      case _ipvx79ch.RouteWeatherReport():
+        return 'RouteWeatherReport';
+      case _iodoclik.RouteWeatherSample():
+        return 'RouteWeatherSample';
       case _iatey69s.ApiException():
         return 'ApiException';
       case _idkvug70.GridCell():
@@ -644,6 +919,48 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'SelfMessage') {
       return deserialize<_iyriup1i.SelfMessage>(data['data']);
+    }
+    if (dataClassName == 'Journey') {
+      return deserialize<_is36joid.Journey>(data['data']);
+    }
+    if (dataClassName == 'JourneyDetail') {
+      return deserialize<_iknanxwr.JourneyDetail>(data['data']);
+    }
+    if (dataClassName == 'JourneyStop') {
+      return deserialize<_igofjck1.JourneyStop>(data['data']);
+    }
+    if (dataClassName == 'JourneyWeatherPoint') {
+      return deserialize<_ibs4q8yo.JourneyWeatherPoint>(data['data']);
+    }
+    if (dataClassName == 'PlaceCandidate') {
+      return deserialize<_ino3yrjt.PlaceCandidate>(data['data']);
+    }
+    if (dataClassName == 'RouteAlert') {
+      return deserialize<_izwu4g79.RouteAlert>(data['data']);
+    }
+    if (dataClassName == 'RouteAlternative') {
+      return deserialize<_iidrek38.RouteAlternative>(data['data']);
+    }
+    if (dataClassName == 'RouteDepartureOption') {
+      return deserialize<_ixslv2d7.RouteDepartureOption>(data['data']);
+    }
+    if (dataClassName == 'RouteLeg') {
+      return deserialize<_inhn4us6.RouteLeg>(data['data']);
+    }
+    if (dataClassName == 'RoutePlan') {
+      return deserialize<_ize64pbg.RoutePlan>(data['data']);
+    }
+    if (dataClassName == 'RoutePlanWithWeather') {
+      return deserialize<_i1mr55ne.RoutePlanWithWeather>(data['data']);
+    }
+    if (dataClassName == 'RouteStop') {
+      return deserialize<_ia9lknw1.RouteStop>(data['data']);
+    }
+    if (dataClassName == 'RouteWeatherReport') {
+      return deserialize<_ipvx79ch.RouteWeatherReport>(data['data']);
+    }
+    if (dataClassName == 'RouteWeatherSample') {
+      return deserialize<_iodoclik.RouteWeatherSample>(data['data']);
     }
     if (dataClassName == 'ApiException') {
       return deserialize<_iatey69s.ApiException>(data['data']);

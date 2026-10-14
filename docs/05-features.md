@@ -172,19 +172,37 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ---
 
-## 17. Dự báo thời tiết (Open-Meteo) — CHƯA TRIỂN KHAI
+## 17. Dự báo thời tiết (Open-Meteo) — ĐÃ TRIỂN KHAI
 
-> **Đặc tả, chưa có trong mã nguồn.** Xem [11-weather-forecast.md](11-weather-forecast.md). Lộ trình: [Phase 19–20](../PLAN.md).
+> Đặc tả: [11-weather-forecast.md](11-weather-forecast.md). Lộ trình: [Phase 19–20](../PLAN.md) *(đã xong)*.
 
 - **Mô tả**: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện thời tiết thật.
-- **Dữ liệu**: bảng `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) + vị trí lưu trên `users`.
-- **UI**: thẻ thời tiết trên Home + màn hình đổi vị trí + nút **"Dùng thời tiết hôm nay"** cạnh ô chọn thời tiết.
-- **Quy tắc**: backend gọi API (không cho client gọi thẳng), **cache 2 tầng**, timeout 5s, lỗi thì trả dữ liệu cache kèm nhãn "cập nhật lúc HH:mm".
+- **Dữ liệu**: bảng `weather_snapshots` (`UNIQUE (user_id, forecast_date)`) + vị trí lưu trên `users` (`weather_lat` / `weather_lon` / `weather_location_name`).
+- **Backend**: `WeatherEndpoint` — `current` · `daily` · `history` · `setLocation`; gọi HTTP bằng gói `http` của Dart (không còn `httpx`).
+- **UI**: màn **Tiện ích → Thời tiết** (`ui/screens/weather_screen.dart` + `ui/weather/*`, tab `Tuần / Ngày / Theo giờ`), đổi vị trí qua `ui/weather/location_dialog.dart`, và `WeatherForecastView`. **Dự báo không lặp lại trên Home** — Home chỉ còn phần chọn nhanh.
+- **Quy tắc**: backend gọi API (không cho client gọi thẳng), **cache 2 tầng**, timeout 5s, lỗi thì trả dữ liệu cache kèm nhãn `Dữ liệu cũ · cập nhật HH:mm`.
 - **Ánh xạ**: mã WMO → 5 nhóm `weathers` sẵn có (nắng/râm/mưa/bão/khác).
+- **Còn lại**: số liệu **theo giờ / lượng mưa / xác suất / gió / độ ẩm** trên UI hiện là **minh họa** — backend **đã** lấy mưa thật (`precipitation_sum` → `precipitationMm`) nhưng Flutter chưa map field đó.
 
 ---
 
-## 18. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
+## 18. Thời tiết theo hành trình (Route Weather Planner) — ĐÃ TRIỂN KHAI
+
+> Đã dựng: backend `RouteEndpoint` + `JourneysEndpoint` + 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình**. Xem [12-route-weather.md](12-route-weather.md) — khác biệt so với đặc tả nằm ở §18. Lộ trình: [Phase 22–27](../PLAN.md) *(đã xong; còn vẽ frame Figma)*.
+
+- **Mục tiêu**: nhập một lộ trình rồi xem **thời tiết dự kiến tại từng chặng trên đường đi**; không dùng để dẫn đường.
+- **Quản lý lộ trình**: điểm xuất phát → **nhiều điểm dừng trung gian** → điểm đến; **tìm kiếm địa điểm** hoặc **chọn trực tiếp trên bản đồ**; chọn **phương tiện** (`car` / `bike` / `foot` ↔ profile OSRM); **ngày + giờ khởi hành**; **thời gian dừng** tại mỗi điểm; **đảo chiều hành trình**; chọn **tuyến thay thế** khi routing API có trả; hiện **khoảng cách / thời gian di chuyển ước tính / thời gian đến dự kiến**.
+- **Dự báo theo lộ trình**: lấy hình học tuyến từ routing API → sinh **điểm mẫu đại diện** dọc tuyến → ước tính **thời điểm đi qua** từ `leg.duration` + `dwell` → gọi weather API theo **toạ độ + thời điểm** → hiện **nhiệt độ, trạng thái, xác suất mưa, lượng mưa, tốc độ gió** (chỉ chỉ số nào có dữ liệu); **đánh dấu đoạn bất lợi** theo bảng ngưỡng cố định; phân biệt **dự báo / không có sẵn / đã lỗi thời**.
+- **Tương tác**: bản đồ có marker địa điểm + marker thời tiết; chọn marker ↔ highlight mục timeline; đổi điểm dừng / phương tiện / giờ khởi hành thì tính lại tuyến và dự báo.
+- **Tích hợp nhật ký**: lưu hành trình vào tài khoản (tên chuyến, điểm dừng, tuyến, giờ khởi hành, thời gian dự kiến), liên kết **một nhật ký hiện có** hoặc tạo nhật ký mới cho ngày khởi hành, bổ sung **ghi chú + ảnh**, và xem lại **bản tóm tắt dự báo đã lưu** (tách khỏi dự báo mới nhất).
+- **Dữ liệu**: `journeys` · `journey_stops` · `journey_weather_points`; liên kết mềm `journeys.entry_id → diary_entries`.
+- **Nhà cung cấp**: **OSRM** (routing, không key) · **Open-Meteo Geocoding** (tìm địa điểm) · **Open-Meteo Forecast** (nhiều toạ độ trong một request, tối đa **16 ngày**) · **tile OSM** (nền bản đồ).
+- **Quy tắc**: backend gọi API (không cho client gọi thẳng); timeout 5s; cache 30 phút; trần **25 điểm mẫu**; mọi ngưỡng bất lợi là **quy tắc hiển thị của Memoir**, không phải khuyến nghị an toàn giao thông chính thức.
+- **Không làm**: **không tự xây mô hình dự đoán thời tiết**, **không khẳng định** mưa/bão/nắng "sẽ xảy ra", không dẫn đường turn-by-turn, không tự định vị GPS.
+
+---
+
+## 19. Bảng tổng hợp yêu cầu ↔ thực thể dữ liệu
 
 | Yêu cầu | Bảng | Cột/Trường |
 |---|---|---|
@@ -213,3 +231,6 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 | *(P14–18)* Lịch / sự kiện | events (gộp schedule_items) | start_at, end_at, recurrence_rule, reminder_minutes, status |
 | *(P14–18)* Liên kết lịch ↔ nhật ký / học | events | entry_id, focus_session_id |
 | *(P19–20)* Dự báo thời tiết | weather_snapshots, users | weather_code, temp_max, temp_min, weather_lat, weather_lon |
+| *(P22–27)* Thời tiết hành trình | journeys, journey_stops | title, vehicle, departure_at, distance_meters, duration_seconds, geometry, entry_id |
+| *(P22–27)* Điểm dừng & ETA | journey_stops | seq, kind, lat, lon, dwell_minutes, arrival_at, distance_from_start_meters |
+| *(P22–27)* Bản tóm tắt dự báo đã lưu | journey_weather_points | sample_at, weather_code, temp_c, precipitation_mm, precipitation_probability, wind_speed_kmh, severity |

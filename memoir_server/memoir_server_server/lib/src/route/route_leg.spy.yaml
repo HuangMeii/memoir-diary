@@ -1,0 +1,7 @@
+### One leg of a route: from the previous stop to stop number [toIndex].
+class: RouteLeg
+fields:
+  distanceMeters: int
+  durationSeconds: int
+  ### Index into `RoutePlan.stops` this leg arrives at (leg i ends at stop i + 1).
+  toIndex: int

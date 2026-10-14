@@ -34,6 +34,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   fl_chart: ^1.2.0
 
+  # Route weather planner: a real, tiled map with pan/zoom and tap-to-pick.
+  # OpenStreetMap tiles need no API key, like the weather and routing providers.
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+
   # Generated Serverpod client SDK for the Dart backend (memoir_server).
   # Lets the app talk to Serverpod through ServerpodDataSource.
   memoir_server_client:

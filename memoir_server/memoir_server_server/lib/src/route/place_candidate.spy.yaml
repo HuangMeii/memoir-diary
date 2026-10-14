@@ -1,0 +1,9 @@
+### A place found by the geocoding API.
+class: PlaceCandidate
+fields:
+  name: String
+  ### Province / state, when the provider knows it.
+  admin: String?
+  country: String?
+  lat: double
+  lon: double
