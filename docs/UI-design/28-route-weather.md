@@ -35,10 +35,12 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   Khối này **chạy full-width ngay dưới dải 2 cột**.
 - **Dải 2 cột trên** (`route_weather_screen.dart`): trên cửa sổ rộng, form **Quản lý
   lộ trình** (cột trái, `4/12` ≈ 384 px — **kích thước không đổi**) và **bản đồ**
-  (cột phải, `8/12`, khối cao 360 như cũ) nằm **chung một hàng**, hai cột căn đỉnh và
-  giữ chiều cao riêng. Hẹp hơn ngưỡng thì xếp dọc lại: form → bản đồ → dữ liệu trực
-  tiếp. Mọi trạng thái (chưa đủ điểm / loading / lỗi) hiện ở cột phải **thay chỗ bản
-  đồ**, nên form luôn đứng nguyên bên trái.
+  (cột phải, `8/12`) nằm **chung một hàng**; khi đã có lộ trình, hàng cao bằng cột form
+  và **bản đồ giãn đúng chiều cao đó**, nên hai cột kết thúc trên cùng một dòng. Chưa
+  có lộ trình thì cột phải là thẻ trạng thái ngắn và hai cột giữ chiều cao riêng. Hẹp
+  hơn ngưỡng thì xếp dọc lại: form → bản đồ (cao 360 như cũ) → dữ liệu trực tiếp. Mọi
+  trạng thái (chưa đủ điểm / loading / lỗi) hiện ở cột phải **thay chỗ bản đồ**, nên
+  form luôn đứng nguyên bên trái.
 - **Form Quản lý lộ trình** (`route_planner_panel.dart`): điểm xuất phát / điểm dừng /
   điểm đến, **ô của mỗi điểm vừa là ô nhập địa chỉ** (gợi ý từ Nominatim hiện ngay dưới
   điểm đó, **chỉ chạy khi bấm nút Tìm / Enter** — không tìm lúc đang gõ; nút bị chặn

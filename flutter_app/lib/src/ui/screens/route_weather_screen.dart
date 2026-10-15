@@ -43,8 +43,11 @@ const double kRoutePlannerColumnWidth = 384;
 /// design width.
 const double kRouteMapColumnMinWidth = 520;
 
-/// Height of the map block on the right of the band: the height this screen has
-/// always drawn it at, so only its place on the page changed.
+/// Height of the map block when the band stacks.
+///
+/// Side by side the map takes the height of the planner column instead, so the
+/// two columns end on the same line; stacked there is no row to take it from,
+/// and this is the height the map draws itself at.
 const double kRouteMapHeight = 360;
 
 /// Gap between the two columns of the band: the frame's 28 px `gap-7`.
@@ -104,7 +107,6 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   int? _alternative;
   RoutePlan? _alternativePlan;
   RouteWeatherReport? _alternativeReport;
-  bool _loadingAlternative = false;
 
   bool _showDepartures = false;
 
@@ -215,7 +217,6 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       _alternative = index;
       _alternativePlan = route;
       _alternativeReport = null;
-      _loadingAlternative = true;
     });
 
     try {
@@ -225,11 +226,9 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       if (!mounted || _alternative != index) return;
       setState(() {
         _alternativeReport = report;
-        _loadingAlternative = false;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() => _loadingAlternative = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('$error')));
     }
@@ -277,7 +276,8 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
                 label: 'Mở nhật ký',
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => EntryEditorScreen(date: _departure.toLocal()),
+                    builder: (_) =>
+                        EntryEditorScreen(date: _departure.toLocal()),
                   ),
                 ),
               )
@@ -312,7 +312,8 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = ref.watch(authProvider).user?['display_name'] as String?;
+    final displayName =
+        ref.watch(authProvider).user?['display_name'] as String?;
 
     return Scaffold(
       body: LayoutBuilder(
@@ -356,8 +357,7 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
                               builder: (_) => const MonthGridsScreen(),
                             ),
                           );
-                        } else if (destination ==
-                            AppDestination.eventHistory) {
+                        } else if (destination == AppDestination.eventHistory) {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const CalendarScreen(),
@@ -488,27 +488,65 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
                   panel,
                   SizedBox(height: MemoirSpace.s4 * scale),
                   hasRoute
-                      ? _mapSection(context, scale, plan, report)
+                      ? _mapSection(
+                          scale,
+                          plan,
+                          report,
+                          height: kRouteMapHeight,
+                        )
                       : _statusCard(context, scale, plan, report, async),
                 ],
               );
             }
-            // Both columns keep their own height, so the form is never resized
-            // by whatever the map needs.
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: kRoutePlannerColumnWidth * scale,
-                  child: panel,
-                ),
-                SizedBox(width: kRouteColumnGap * scale),
-                Expanded(
-                  child: hasRoute
-                      ? _mapSection(context, scale, plan, report)
-                      : _statusCard(context, scale, plan, report, async),
-                ),
-              ],
+            final planner = SizedBox(
+              width: kRoutePlannerColumnWidth * scale,
+              child: panel,
+            );
+            final gap = SizedBox(width: kRouteColumnGap * scale);
+
+            // Without a route the right column is one short card, and stretching
+            // it to the form's height would only draw an empty panel, so the
+            // columns keep their own heights.
+            if (!hasRoute) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  planner,
+                  gap,
+                  Expanded(
+                    child: _statusCard(context, scale, plan, report, async),
+                  ),
+                ],
+              );
+            }
+
+            // With a route the map runs the whole height of the form, so the two
+            // columns end on the same line. `IntrinsicHeight` is what gives the
+            // row a height to hand out — the page this band sits in is a vertical
+            // `ListView`, so a stretched row on its own would ask for an infinite
+            // height and take the page's layout down with it.
+            //
+            // The map then takes that height through a `Stack`: `flutter_map`
+            // builds a `LayoutBuilder`, which refuses intrinsic queries, and a
+            // positioned child is left out of the stack's own intrinsics, so the
+            // map is never asked for a height it cannot give.
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  planner,
+                  gap,
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _mapSection(scale, plan, report),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -597,8 +635,8 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       if (_showDepartures) ...[
         SizedBox(height: MemoirSpace.s4 * scale),
         RouteDepartureCompare(
-          options:
-              ref.watch(routeDeparturesProvider(_query)).valueOrNull ?? const [],
+          options: ref.watch(routeDeparturesProvider(_query)).valueOrNull ??
+              const [],
           scale: scale,
           onApply: (option) => _changeDeparture(option.departureAt.toLocal()),
         ),
@@ -615,59 +653,25 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     ];
   }
 
-  /// The map of the route, and the header that says what a tap on it does.
+  /// The map of the route.
+  ///
+  /// [height] is what the map draws itself at when it has to size itself, which
+  /// is the stacked band on a narrow window. Side by side it stays null: the
+  /// band's row already hands out a height — the planner column's — and the map
+  /// takes all of it, so the two columns end on the same line.
   Widget _mapSection(
-    BuildContext context,
     double scale,
     RoutePlan plan,
-    RouteWeatherReport report,
-  ) {
-    final target = _pickTarget;
-    final role = target == null || target >= _stops.length
-        ? null
-        : _stops[target].isOrigin
-            ? 'điểm xuất phát'
-            : _stops[target].isDestination
-                ? 'điểm đến'
-                : 'điểm dừng';
-
-    return RouteSection(
-      overline: 'Bản đồ lộ trình',
-      title: 'Tuyến đường & trạm quan sát thời tiết',
-      subtitle: role == null
-          ? 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
-              'mưa), xám – chưa có dự báo; bấm vào một điểm trên hành trình '
-              'để xem chi tiết.'
-          : 'Màu đường là thời tiết dự kiến: xanh – mưa, vàng – nắng (không '
-              'mưa), xám – chưa có dự báo; bấm lên bản đồ để đặt $role.',
+    RouteWeatherReport report, {
+    double? height,
+  }) {
+    return RouteMapView(
+      plan: plan,
+      report: report,
+      selectedSeq: _selectedSeq,
+      height: height,
       scale: scale,
-      trailing: _alternative == null
-          ? null
-          : TextButton.icon(
-              onPressed: () => _selectAlternative(null),
-              icon: Icon(Icons.undo, size: 16 * scale),
-              label: const Text(
-                'Về tuyến đề xuất',
-                style: TextStyle(fontSize: 13),
-              ),
-            ),
-      child: Column(
-        children: [
-          if (_loadingAlternative)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: LinearProgressIndicator(minHeight: 2),
-            ),
-          RouteMapView(
-            plan: plan,
-            report: report,
-            selectedSeq: _selectedSeq,
-            height: kRouteMapHeight,
-            scale: scale,
-            onPickPoint: _onPickPoint,
-          ),
-        ],
-      ),
+      onPickPoint: _onPickPoint,
     );
   }
 

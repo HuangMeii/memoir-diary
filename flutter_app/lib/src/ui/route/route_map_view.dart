@@ -61,7 +61,13 @@ class RouteMapView extends StatefulWidget {
   /// Called with the coordinates of a tap on the map.
   final void Function(double lat, double lon) onPickPoint;
 
-  final double height;
+  /// Height the map draws itself at when the parent leaves it to size itself.
+  ///
+  /// Null takes the height the parent hands out instead, which is how the route
+  /// screen stretches the map to the planner column beside it; the parent must
+  /// give it a bounded height in that case.
+  final double? height;
+
   final double scale;
 
   @override
@@ -122,7 +128,9 @@ class _RouteMapViewState extends State<RouteMapView> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(MemoirRadius.control * widget.scale),
       child: SizedBox(
-        height: widget.height * widget.scale,
+        // Null lets the parent's height through, so the map can be stretched to
+        // the height of the panel beside it.
+        height: widget.height == null ? null : widget.height! * widget.scale,
         child: Stack(
           children: [
             FlutterMap(
@@ -313,7 +321,7 @@ class _RouteMapLegend extends StatelessWidget {
 
   static const List<(String, String)> _entries = [
     (RouteWeatherBucket.rain, 'Mưa'),
-    (RouteWeatherBucket.sun, 'Nắng · không mưa'),
+    (RouteWeatherBucket.sun, 'Nắng'),
   ];
 
   @override
@@ -423,4 +431,3 @@ class _StopMarker extends StatelessWidget {
     );
   }
 }
-

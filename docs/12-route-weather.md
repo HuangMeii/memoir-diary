@@ -539,6 +539,7 @@ ROUTE_API_ENABLED=true
 ### 18.5. Còn lại (chưa làm)
 
 - **Chưa vẽ frame Figma** cho `ROUTE-01` theo §13: màn đã dựng theo đúng ngôn ngữ thị giác nhưng chưa có bản vẽ để đối chiếu.
+- **Hàng nút trong hero tràn khi cửa sổ hẹp vừa phải.** Từ ~720 px (ngưỡng đổi bố cục của `RouteHero`) tới ~1000 px, dải nút *Hành trình đã lưu / So sánh giờ khởi hành / Lưu vào nhật ký* tràn phải (`Wrap` là con **không-flex** của `Row` nên nhận bề rộng vô hạn và **không bao giờ xuống dòng**; đo ở cửa sổ 900 px: `Wrap` rộng **943,3 px** trong hàng rộng 868 px ⇒ tràn **91 px**). Chưa xử lý — hướng sửa: cho `Wrap` một bề rộng hữu hạn (bọc `Flexible`) hoặc đẩy dải nút xuống dưới tiêu đề ở dải hẹp.
 - **Gộp bảng WMO** giữa `weather_endpoint.dart` và `route_rules.dart` (mục 18.3.5).
 - Số liệu **theo giờ trong màn thời tiết cũ** vẫn là minh họa (việc riêng của Phase 19–20).
 - **`transit`** vẫn chưa hỗ trợ, đúng như đặc tả §2.
@@ -573,6 +574,32 @@ Heuristic thay cho OSRM tự host (§19.4 mới): vẫn gọi OSRM công khai, p
 | Test | `route_service_test.dart` thêm group `vietnam pins` (7 test: tuyến cắt biên thật → true, thị xã biên Điện Biên/Hà Giang/Hà Tiên/Phú Quốc → false, nhiễu 1–2 đỉnh → false, ghim đúng đoạn + tối đa 3, chặng ngắn không ghim, gộp legs 2 case, legs lệch passthrough) — thuần Dart, không mạng |
 | Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **41/41 xanh** (34 cũ + 7 mới); `route_smoke.dart` mạng thật: `Hà Nội → TP.HCM` = **1.696 km / 21,8 h, `leavesVietnam=false`** (15.10.2026) |
 | Chưa làm | Verify trên app với đích đúng (trung tâm TP.HCM, không phải "Hồ, Tân Hòa") |
+
+### 18.9. Sửa lỗi màn hành trình trắng trang (15.10.2026)
+
+Bấm **Hành trình** trên cửa sổ rộng ra **trang trắng** — header còn nguyên, phần nội dung mất hẳn — và console báo `BoxConstraints forces an infinite height`, rồi một chuỗi assert nối theo: `box.dart:2251 'hasSize'` (`RenderBox was not laid out`), `sliver_multi_box_adaptor.dart:629` (`child.hasSize`) và `Unexpected null value.`
+
+| Việc | Chi tiết |
+|---|---|
+| Nguyên nhân | Dải 2 cột (`_plannerBand`) đổi `crossAxisAlignment` của hàng thành `stretch`. `RenderFlex` với `stretch` phát cho mỗi cột `BoxConstraints.tightFor(height: constraints.maxHeight)` (`flex.dart:892`), mà trang chứa nó là `ListView` dọc nên `maxHeight` là **vô hạn** ⇒ khung bố cục hỏng ngay (`box.dart:614`), cả trang không được vẽ; các assert sau là hệ quả lúc paint. Chỉ xảy ra ở nhánh 2 cột: `width ≥ (384 + 28 + 520) × scale` ≈ **1.386 px** (cửa sổ 1904 px ⇒ `scale` 1,4875), bản xếp dọc không lỗi |
+| Bản sửa | Trả `CrossAxisAlignment.start` — đúng brief `docs/UI-design/28-route-weather.md` (mục *Dải 2 cột trên*): hai cột **căn đỉnh và giữ chiều cao riêng** — kèm comment tại chỗ để `stretch` không bị đưa trở lại: `flutter_app/lib/src/ui/screens/route_weather_screen.dart` → `_plannerBand` |
+| Test | `test/route_weather_screen_test.dart` (mới): dựng `RouteWeatherScreen` ở **1904 × 1024** trong `ProviderScope` với session rỗng (không gọi mạng) — **trước bản sửa** fail đúng chuỗi lỗi trên, **sau bản sửa** xanh |
+| Kiểm chứng | `flutter analyze` **sạch**; `flutter test` **118/118 xanh** (117 cũ + 1 mới) |
+
+> §18.10 đổi lại phần chiều cao: khi **đã có lộ trình** hai cột cùng cao — bản đồ giãn bằng cột form; còn lúc **chưa có lộ trình** thì hai cột vẫn giữ chiều cao riêng như mục này.
+
+### 18.10. Bản đồ cao bằng cột form (15.10.2026)
+
+§18.9 để hai cột giữ chiều cao riêng; nay **khi đã có lộ trình**, bản đồ giãn hết chiều cao khung **Quản lý lộ trình**, nên dải 2 cột kết thúc trên cùng một dòng.
+
+| Việc | Chi tiết |
+|---|---|
+| Cách làm | Hàng 2 cột lấy chiều cao từ cột form: `IntrinsicHeight` + `Row(crossAxisAlignment: stretch)`; cột bản đồ là một `Stack` chỉ chứa `Positioned.fill` |
+| Vì sao phải đi qua `Stack` | `flutter_map` dựng một `LayoutBuilder` ở bên trong, mà `LayoutBuilder` **từ chối truy vấn intrinsic** (`LayoutBuilder does not support returning intrinsic dimensions`) ⇒ đặt bản đồ trực tiếp trong `IntrinsicHeight` là hỏng cả trang. Con `Positioned` bị **bỏ qua** khi tính intrinsic của `Stack`, nên `IntrinsicHeight` không bao giờ hỏi bản đồ một chiều cao nó không đưa được, còn lúc layout thì `Positioned.fill` phát đúng chiều cao của hàng cho bản đồ |
+| Chưa có lộ trình | Cột phải là thẻ trạng thái ngắn (chưa đủ điểm / đang tính / lỗi) nên hai cột vẫn **giữ chiều cao riêng** — kéo giãn nó chỉ tạo một khung rỗng |
+| Cửa sổ hẹp | Nhánh xếp dọc không đổi: bản đồ cao `kRouteMapHeight` 360. `RouteMapView.height` giờ **nullable**: `null` = lấy chiều cao cha truyền xuống |
+| Kiểm chứng | `flutter analyze` **sạch**; `flutter test` **118/118 xanh**; đo bằng widget test tạm (1904 × 1024, lộ trình giả): **bản đồ 603,2 px = form 603,2 px**, không exception |
+
 
 ## 19. Vì sao routing phải chạy trên extract **Việt Nam** (15.10.2026)
 
