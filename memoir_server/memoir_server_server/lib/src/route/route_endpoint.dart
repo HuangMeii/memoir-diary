@@ -15,6 +15,17 @@ class RouteEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
+  /// Logged once per server run when the public OSRM graph is in use, so a
+  /// forgotten `ROUTE_API_URL_*` shows up in the logs instead of silently
+  /// drawing cross-border routes (docs/12 §19).
+  static bool _publicBackendWarned = false;
+
+  void _warnOnPublicBackends(Session session) {
+    if (_publicBackendWarned || !routing.usesPublicRouteBackends()) return;
+    _publicBackendWarned = true;
+    session.log(routing.publicRouteBackendWarning);
+  }
+
   /// Places matching [query], for the planner's search box.
   Future<List<PlaceCandidate>> searchPlaces(
     Session session,
@@ -38,6 +49,7 @@ class RouteEndpoint extends Endpoint {
     bool? alternatives,
   }) async {
     try {
+      _warnOnPublicBackends(session);
       return await routing.fetchRoutePlan(
         stops: [origin, ...?waypoints, destination],
         vehicle: vehicle ?? 'car',

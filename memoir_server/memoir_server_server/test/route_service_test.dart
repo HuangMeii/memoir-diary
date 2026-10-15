@@ -67,6 +67,53 @@ HourlySeries series({
     );
 
 void main() {
+  group('route backends', () {
+    test('empty environment falls back to the public instances', () {
+      final backends = resolveRouteBackends(const {});
+
+      expect(
+        backends['car'],
+        'https://routing.openstreetmap.de/routed-car/route/v1/driving',
+      );
+      expect(
+        backends['bike'],
+        'https://routing.openstreetmap.de/routed-bike/route/v1/driving',
+      );
+      expect(
+        backends['foot'],
+        'https://routing.openstreetmap.de/routed-foot/route/v1/driving',
+      );
+      expect(usesPublicRouteBackends(backends), isTrue);
+    });
+
+    test('environment overrides win over the defaults', () {
+      final backends = resolveRouteBackends(const {
+        'ROUTE_API_URL_CAR': 'http://localhost:5000/route/v1/driving',
+        'ROUTE_API_URL_BIKE': 'http://localhost:5001/route/v1/driving',
+        'ROUTE_API_URL_FOOT': 'http://localhost:5002/route/v1/driving',
+      });
+
+      expect(backends['car'], 'http://localhost:5000/route/v1/driving');
+      expect(backends['bike'], 'http://localhost:5001/route/v1/driving');
+      expect(backends['foot'], 'http://localhost:5002/route/v1/driving');
+      expect(usesPublicRouteBackends(backends), isFalse);
+    });
+
+    test('blank values and stray spaces fall back or get trimmed', () {
+      final backends = resolveRouteBackends(const {
+        'ROUTE_API_URL_CAR': '   ',
+        'ROUTE_API_URL_BIKE': '  http://localhost:5001/route/v1/driving  ',
+      });
+
+      expect(
+        backends['car'],
+        'https://routing.openstreetmap.de/routed-car/route/v1/driving',
+      );
+      expect(backends['bike'], 'http://localhost:5001/route/v1/driving');
+      expect(usesPublicRouteBackends(backends), isTrue);
+    });
+  });
+
   group('geometry', () {
     test('haversine matches a degree of latitude', () {
       final meters = haversineMeters(

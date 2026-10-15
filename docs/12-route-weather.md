@@ -553,9 +553,20 @@ ROUTE_API_ENABLED=true
 | Code | `route_segments.dart` (`RouteWeatherBucket`, `routeWeatherBucket`, `_stretchBucket`, `_onlyBucket`, `RouteSegment.bucket`), `route_format.dart` (`routeWeatherLineColor` thay `routeLineColor`), `route_map_view.dart` (`_baseLine`, bỏ viền riêng của lát, bỏ nét đứt, chú thích 3 mục), `theme.dart` (`routeRainLine` / `routeSunLine`), phụ đề màn hình |
 | Kiểm chứng | `flutter analyze` **sạch**; `flutter test` **chưa chạy lại** riêng cho đợt này — thang `severity` giữ nguyên nên hành vi mà `route_segments_test.dart` kiểm tra không đổi, người dùng tự kiểm |
 
+### 18.7. Routing đọc URL từ môi trường (15.10.2026)
+
+Đặc tả §19 chốt trước, code theo sau — đây là phần code của Phase 28.
+
+| Việc | Chi tiết |
+|---|---|
+| Code | `route_service.dart`: `resolveRouteBackends([environment])` đọc `ROUTE_API_URL_CAR\|BIKE\|FOOT` (trim, rỗng → fallback), getter `routeBackends` giữ tương thích, `usesPublicRouteBackends` + `publicRouteBackendWarning`, `fetchRoutePlan(..., {backends})` để test được; `route_endpoint.dart`: log cảnh báo **một lần** mỗi lần chạy server khi vẫn dùng đồ thị công khai |
+| Test | `route_service_test.dart` thêm group `route backends` (3 test: fallback rỗng, override thắng, blank/space) — thuần Dart, không mạng |
+| Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **34/34 xanh** (31 cũ + 3 mới) |
+| Chưa làm | Dựng OSRM trên `vietnam-latest.osm.pbf` (máy dev **không có Docker** — xem `docs/06-setup-deploy.md` §5.1 để chạy `osrm-extract/partition/customize` + `osrm-routed` ở máy có Docker); `route_smoke.dart` với instance Việt Nam; verify `Hà Nội → TP.HCM` ~1.63x km trên app |
+
 ## 19. Vì sao routing phải chạy trên extract **Việt Nam** (15.10.2026)
 
-> **Trạng thái**: đặc tả + quyết định. Phần code (đọc `ROUTE_API_URL_*` từ môi trường) và mục §18.7 ghi tiếp sau khi dựng.
+> **Trạng thái**: đặc tả + quyết định + **code đọc env đã xong** (§18.7). Còn lại: dựng OSRM extract Việt Nam + `route_smoke.dart` với instance đó.
 
 ### 19.1. Hiện tượng
 

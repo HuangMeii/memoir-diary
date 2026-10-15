@@ -24,7 +24,9 @@ services:
     volumes:
       - memoir_server_test_data:/var/lib/postgresql/data
 
-  # Routing — chỉ dữ liệu Việt Nam (dựng dữ liệu theo docs/06-setup-deploy.md §5.1)
+  # Routing — chỉ dữ liệu Việt Nam (dựng dữ liệu theo docs/06-setup-deploy.md §5.1).
+  # Kẹt ở bước extract khi chưa có dữ liệu: service vẫn định nghĩa ở đây để
+  # `docker compose up osrm_car` là chạy, nhưng lần đầu phải build graph trước.
   osrm_car:
     image: ghcr.io/project-osrm/osrm-backend
     command: osrm-routed --algorithm mld /data/vietnam-latest.osrm
@@ -32,6 +34,23 @@ services:
       - "5000:5000"
     volumes:
       - ./osrm/vn:/data
+
+  # Hai profile còn lại (bike 5001, foot 5002) dựng từ cùng file .pbf với
+  # /opt/bicycle.lua và /opt/foot.lua — xem docs/06-setup-deploy.md §5.1.
+  # osrm_bike:
+  #   image: ghcr.io/project-osrm/osrm-backend
+  #   command: osrm-routed --algorithm mld /data/vietnam-latest-bike.osrm
+  #   ports:
+  #     - "5001:5000"
+  #   volumes:
+  #     - ./osrm/vn:/data
+  # osrm_foot:
+  #   image: ghcr.io/project-osrm/osrm-backend
+  #   command: osrm-routed --algorithm mld /data/vietnam-latest-foot.osrm
+  #   ports:
+  #     - "5002:5000"
+  #   volumes:
+  #     - ./osrm/vn:/data
 
 
 volumes:

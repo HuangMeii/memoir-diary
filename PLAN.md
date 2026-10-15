@@ -216,12 +216,11 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] Verify trên thiết bị thật (`flutter run` web/mobile) — chưa chạy trong phiên này
 
 ### ⏳ Phase 28 — Routing chỉ dữ liệu Việt Nam (ĐANG LÀM)
-- [x] `docs/12` (§2, §12, §17.4, §19), `docs/06-setup-deploy` (§5.1, §8), `docs/05-features`, `PLAN.md` (Phase 28, rủi ro, M12): đặc tả routing Việt Nam-only
-- [ ] `route_service.dart`: `ROUTE_API_URL_CAR|BIKE|FOOT` đọc từ môi trường (theo `ObjectStorageConfig.fromEnvironment`), fallback = 3 URL công khai hiện tại
-- [ ] Log cảnh báo một lần khi vẫn dùng URL công khai ("tuyến có thể đi qua Lào/Campuchia")
-- [ ] OSRM tự host trên `vietnam-latest.osm.pbf` (car / bike / foot) + service trong `docker-compose.yaml`
-- [ ] `dart test` cho việc đọc env; `dart run tool/route_smoke.dart` xác nhận `Hà Nội → TP.HCM` nằm trong nước
-- [ ] Thêm `docs/12` §18.7 (nhật ký bản dựng + kết quả `dart test`)
+- [x] `docs/12` (§2, §12, §17.4, §18.7, §19), `docs/06-setup-deploy` (§5.1, §8), `docs/05-features`, `PLAN.md` (Phase 28, rủi ro, M12): đặc tả routing Việt Nam-only
+- [x] `route_service.dart`: `ROUTE_API_URL_CAR|BIKE|FOOT` đọc từ môi trường (theo `ObjectStorageConfig.fromEnvironment`), fallback = 3 URL công khai hiện tại — `dart analyze` sạch, `dart test` **34/34 xanh**
+- [x] Log cảnh báo một lần khi vẫn dùng URL công khai ("tuyến có thể đi qua Lào/Campuchia")
+- [x] OSRM tự host trên `vietnam-latest.osm.pbf` (car / bike / foot) + service trong `docker-compose.yaml` — **định nghĩa xong, chưa dựng được vì máy dev không có Docker**
+- [ ] Dựng OSRM ở máy có Docker + `dart run tool/route_smoke.dart` xác nhận `Hà Nội → TP.HCM` nằm trong nước + verify trên app
 
 
 ---

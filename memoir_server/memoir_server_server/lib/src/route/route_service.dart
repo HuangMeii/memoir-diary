@@ -8,6 +8,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
@@ -28,13 +29,60 @@ class RouteFailure implements Exception {
 }
 
 /// Routing backends, mirroring docs/12-route-weather.md §12. Public OSRM
-/// instances need no API key; swapping in a self-hosted one is a one-line change
-/// here and nothing else in the app has to move.
-const Map<String, String> routeBackends = {
-  'car': 'https://routing.openstreetmap.de/routed-car/route/v1/driving',
-  'bike': 'https://routing.openstreetmap.de/routed-bike/route/v1/driving',
-  'foot': 'https://routing.openstreetmap.de/routed-foot/route/v1/driving',
-};
+/// instances need no API key.
+///
+/// The URLs resolve from `ROUTE_API_URL_CAR|BIKE|FOOT` (docs/12 §19):
+/// a self-hosted instance on `vietnam-latest.osm.pbf` keeps every route
+/// inside Vietnam, because OSRM has no "avoid country" parameter. The public
+/// FOSSGIS instances stay as the fallback so a dev machine without a local
+/// OSRM still works.
+///
+/// Pass an explicit [environment] in tests to avoid touching
+/// [Platform.environment]; production callers omit it.
+Map<String, String> resolveRouteBackends([Map<String, String>? environment]) {
+  final env = environment ?? Platform.environment;
+  String pick(String key, String fallback) {
+    final value = env[key]?.trim();
+    return (value == null || value.isEmpty) ? fallback : value;
+  }
+
+  return {
+    'car': pick(
+      'ROUTE_API_URL_CAR',
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving',
+    ),
+    'bike': pick(
+      'ROUTE_API_URL_BIKE',
+      'https://routing.openstreetmap.de/routed-bike/route/v1/driving',
+    ),
+    'foot': pick(
+      'ROUTE_API_URL_FOOT',
+      'https://routing.openstreetmap.de/routed-foot/route/v1/driving',
+    ),
+  };
+}
+
+/// The default backends: environment overrides, else the public instances.
+///
+/// Kept as a getter (not a const) so setting `ROUTE_API_URL_*` before boot
+/// takes effect without a restart of the analysis server. Pure helpers keep
+/// using this; tests inject their own map via [resolveRouteBackends].
+Map<String, String> get routeBackends => resolveRouteBackends();
+
+/// True when [backends] still point at the global public graph, whose
+/// long north-south routes cut through Laos and Cambodia (docs/12 §19).
+bool usesPublicRouteBackends([Map<String, String>? backends]) {
+  final resolved = backends ?? routeBackends;
+  return resolved.values.any(
+    (url) => url.contains('routing.openstreetmap.de'),
+  );
+}
+
+/// One-line warning for the server log when the public graph is in use.
+String get publicRouteBackendWarning =>
+    'Routing dùng OSRM công khai (đồ thị toàn cầu) — '
+    'tuyến dài có thể đi qua Lào/Campuchia; '
+    'đặt ROUTE_API_URL_CAR|BIKE|FOOT trỏ instance extract Việt Nam (§19).';
 
 /// Nominatim geocodes OpenStreetMap data, which keeps addresses down to
 /// the street / ward level - the reason it replaced Open-Meteo Geocoding
@@ -606,13 +654,15 @@ Future<RoutePlan> fetchRoutePlan({
   required List<RouteStop> stops,
   required String vehicle,
   bool wantAlternatives = true,
+  Map<String, String>? backends,
 }) async {
   final ordered = normalizeStops(stops);
   if (ordered.length < 2) {
     throw RouteFailure('noRoute', 'Cần ít nhất điểm đi và điểm đến');
   }
 
-  final base = routeBackends[vehicle] ?? routeBackends['car']!;
+  final resolved = backends ?? routeBackends;
+  final base = resolved[vehicle] ?? resolved['car']!;
   final coordinates = ordered
       .map((stop) => '${stop.lon},${stop.lat}')
       .join(';');
@@ -644,7 +694,7 @@ Future<RoutePlan> fetchRoutePlan({
     legs: _legsOf(primary),
     alternatives: _alternativesOf(routes.skip(1), ordered.length),
     source: routePlanSource,
-    vehicle: routeBackends.containsKey(vehicle) ? vehicle : 'car',
+    vehicle: resolved.containsKey(vehicle) ? vehicle : 'car',
   );
 }
 
