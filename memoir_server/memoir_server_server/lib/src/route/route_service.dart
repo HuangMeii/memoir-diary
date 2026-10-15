@@ -733,22 +733,39 @@ bool routeLeavesVietnam(List<RouteCoord> line) {
   return false;
 }
 
-/// Pins between [origin] and [destination] by latitude, nearest to the
-/// straight connector first, capped at [routeVietnamMaxPins].
+/// Pins between [origin] and [destination], spread evenly by latitude so no
+/// long segment is left unpinned (docs/12 §19.7). The span is split into
+/// [routeVietnamMaxPins] + 1 equal parts; each part contributes its nearest
+/// pin. Picking by closeness to the straight connector instead bunched every
+/// pin in the north (Hue/Dong Ha/Da Nang for Hanoi–HCMC) and left the
+/// ~900 km Da Nang–HCMC leg free to swing through Cambodia.
 List<RouteCoord> vietnamPinsBetween(RouteCoord origin, RouteCoord destination) {
   final low = origin.lat < destination.lat ? origin.lat : destination.lat;
   final high = origin.lat < destination.lat ? destination.lat : origin.lat;
-  final midLon = (origin.lon + destination.lon) / 2;
+  final span = high - low;
+  if (span <= 0) return const [];
   final candidates = routeVietnamPins
       .where((pin) => pin.lat > low && pin.lat < high)
-      .toList(growable: false)
-    ..sort(
-      (a, b) => (a.lon - midLon).abs().compareTo((b.lon - midLon).abs()),
-    );
-  final picked = candidates.take(routeVietnamMaxPins).toList(growable: false)
-    ..sort((a, b) => origin.lat < destination.lat
-        ? a.lat.compareTo(b.lat)
-        : b.lat.compareTo(a.lat));
+      .toList(growable: false);
+  if (candidates.isEmpty) return const [];
+  final picked = <RouteCoord>[];
+  for (var i = 1; i <= routeVietnamMaxPins; i++) {
+    final target = low + span * i / (routeVietnamMaxPins + 1);
+    RouteCoord? best;
+    var bestGap = double.infinity;
+    for (final pin in candidates) {
+      if (picked.contains(pin)) continue;
+      final gap = (pin.lat - target).abs();
+      if (gap < bestGap) {
+        bestGap = gap;
+        best = pin;
+      }
+    }
+    if (best != null) picked.add(best);
+  }
+  picked.sort((a, b) => origin.lat < destination.lat
+      ? a.lat.compareTo(b.lat)
+      : b.lat.compareTo(a.lat));
   return picked;
 }
 

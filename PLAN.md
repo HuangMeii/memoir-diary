@@ -221,9 +221,9 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [x] Log cảnh báo một lần khi vẫn dùng URL công khai ("tuyến có thể đi qua Lào/Campuchia")
 - [x] OSRM tự host trên `vietnam-latest.osm.pbf` (car / bike / foot) + service trong `docker-compose.yaml` — **định nghĩa xong, chưa dựng được vì máy dev không có Docker**
 - [x] Đổi §19.4 sang **heuristic ghim waypoint** (§19.7) — không cần Docker/hạ tầng mới
-- [x] Code heuristic: `routeLeavesVietnam` (biên tây gấp khúc) + `routeVietnamPins` + gọi lại OSRM tối đa 1 lần + gộp legs về stops gốc — `dart analyze` sạch, `dart test` **41/41 xanh** (§18.8)
-- [x] `route_smoke.dart` case `Hà Nội → TP.HCM` in km + cờ `leavesVietnam`
-- [ ] `route_smoke.dart` với mạng thật + verify `Hà Nội → TP.HCM` ~1.63x km trên app
+- [x] Code heuristic: `routeLeavesVietnam` (biên tây gấp khúc) + `routeVietnamPins` rải đều theo vĩ độ + gọi lại OSRM tối đa 1 lần + gộp legs về stops gốc — `dart analyze` sạch, `dart test` **41/41 xanh** (§18.8)
+- [x] `route_smoke.dart` case `Hà Nội → TP.HCM`: **1.696 km / 21,8 h, `leavesVietnam=false`** (mạng thật 15.10.2026)
+- [ ] Verify trên app với đích đúng (trung tâm TP.HCM, không phải "Hồ, Tân Hòa")
 
 
 ---

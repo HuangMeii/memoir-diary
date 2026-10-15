@@ -571,8 +571,8 @@ Heuristic thay cho OSRM tự host (§19.4 mới): vẫn gọi OSRM công khai, p
 |---|---|
 | Code | `route_service.dart`: biên tây gấp khúc `routeVietnamWestBoundary` + `routeVietnamMinLonAt(lat)` (bbox chữ nhật không phân biệt được Điện Biên ~102 °E với đất Lào ~104–105 °E), `routeLeavesVietnam` (≥ 3 đỉnh liên tiếp ngoài biên), `routeVietnamPins` (7 điểm QL1A) + `vietnamPinsBetween` (tối đa 3, theo vĩ độ), `fetchRoutePlan` tách `_fetchOnce` + gọi lại tối đa 1 lần (tắt alternatives) + `mergePinnedLegs` gộp về stops gốc; `tool/route_smoke.dart` thêm case `Hà Nội → TP.HCM` in km + cờ `leavesVietnam` |
 | Test | `route_service_test.dart` thêm group `vietnam pins` (7 test: tuyến cắt biên thật → true, thị xã biên Điện Biên/Hà Giang/Hà Tiên/Phú Quốc → false, nhiễu 1–2 đỉnh → false, ghim đúng đoạn + tối đa 3, chặng ngắn không ghim, gộp legs 2 case, legs lệch passthrough) — thuần Dart, không mạng |
-| Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **41/41 xanh** (34 cũ + 7 mới) |
-| Chưa làm | `route_smoke.dart` với mạng thật; verify `Hà Nội → TP.HCM` ~1.63x km trên app |
+| Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **41/41 xanh** (34 cũ + 7 mới); `route_smoke.dart` mạng thật: `Hà Nội → TP.HCM` = **1.696 km / 21,8 h, `leavesVietnam=false`** (15.10.2026) |
+| Chưa làm | Verify trên app với đích đúng (trung tâm TP.HCM, không phải "Hồ, Tân Hòa") |
 
 ## 19. Vì sao routing phải chạy trên extract **Việt Nam** (15.10.2026)
 
@@ -660,7 +660,7 @@ Hình học (33 đỉnh, `overview=simplified`) đi ra ngoài lãnh thổ; đố
 | Quy Nhơn | 13,7667 | 109,2333 |
 | Nha Trang | 12,2500 | 109,1833 |
 
-- Chỉ chèn điểm ghim nằm **giữa** vĩ độ origin và destination (theo hướng đi), tối đa **3 điểm** gần đường thẳng nối nhất.
+- Chỉ chèn điểm ghim nằm **giữa** vĩ độ origin và destination (theo hướng đi); chia đoạn thành 4 phần đều theo vĩ độ, mỗi phần lấy ghim gần nhất — tối đa **3 điểm**, rải đều Bắc–Trung–Nam (bản đầu chọn theo gần đường thẳng nên dồn cả 3 ở 16–17 °N, bỏ trống đoạn Đà Nẵng → TP.HCM cho OSRM vòng Campuchia).
 - Điểm ghim có `kind: 'waypoint'`, tên prefixed `Ghim · ` để phân biệt trong log (không hiện riêng trên UI vì legs đã gộp).
 
 **Luồng gọi lại** — trong `fetchRoutePlan`:

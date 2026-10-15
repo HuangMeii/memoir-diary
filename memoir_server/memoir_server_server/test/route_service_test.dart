@@ -149,20 +149,23 @@ void main() {
       expect(routeLeavesVietnam(stray), isFalse);
     });
 
-    test('pins span the trip latitude and cap at three', () {
+    test('pins spread evenly instead of bunching in the north', () {
       final pins = vietnamPinsBetween(
         const RouteCoord(21.0283, 105.8540),
         const RouteCoord(10.7769, 106.7009),
       );
       expect(pins.length, routeVietnamMaxPins);
-      for (final pin in pins) {
-        expect(pin.lat, greaterThan(10.7769));
-        expect(pin.lat, lessThan(21.0283));
-      }
       // Travel order: descending latitude for a north-to-south trip.
       for (var i = 1; i < pins.length; i++) {
         expect(pins[i].lat, lessThan(pins[i - 1].lat));
       }
+      // Even spread: one pin per third of the span — north, middle, south.
+      // The old closest-to-connector pick bunched Hue/Dong Ha/Da Nang and
+      // left the ~900 km Da Nang–HCMC leg free to swing through Cambodia.
+      expect(pins[0].lat, greaterThan(16.0));
+      expect(pins[1].lat, greaterThan(13.0));
+      expect(pins[1].lat, lessThan(17.0));
+      expect(pins[2].lat, lessThan(14.0));
     });
 
     test('a short hop spans no pins', () {
