@@ -504,11 +504,11 @@
           "$value": {
             "colorSpace": "srgb",
             "components": [
-              0.635294,
-              0.823529,
-              1
+              0.482353,
+              0.372549,
+              0.980392
             ],
-            "hex": "#A2D2FF"
+            "hex": "#7B5FFA"
           },
           "$description": "Route line where the forecast has rain."
         },
@@ -517,11 +517,11 @@
           "$value": {
             "colorSpace": "srgb",
             "components": [
-              1,
-              0.952941,
-              0.690196
+              0.988235,
+              0.796078,
+              0.435294
             ],
-            "hex": "#FFF3B0"
+            "hex": "#FCCB6F"
           },
           "$description": "Route line where the forecast has no rain."
         }

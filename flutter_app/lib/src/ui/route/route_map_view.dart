@@ -33,7 +33,7 @@ List<LatLng> decodeRoutePoints(String geoJson) {
 /// map.
 ///
 /// The route is one unbroken line, cut into stretches painted for the weather
-/// they will be ridden through - rain blue, no rain pale yellow - on top of a
+/// they will be ridden through - rain violet, no rain amber - on top of a
 /// grey bed. The stretches themselves come from
 /// `route_segments.dart`; the pale bed and casing that hold them together are
 /// drawn by a single line underneath.
@@ -225,8 +225,8 @@ class _RouteMapViewState extends State<RouteMapView> {
     return routeWeatherBucket(sample);
   }
 
-  /// One stretch of the route, painted for the weather along it: rain blue, no
-  /// rain pale yellow. A stretch the forecast does not cover is skipped, so
+  /// One stretch of the route, painted for the weather along it: rain violet, no
+  /// rain amber. A stretch the forecast does not cover is skipped, so
   /// the grey [_baseLine] bed underneath shows through. Every painted stretch
   /// is a solid stroke - the route is one continuous line, and the bed that
   /// keeps it that way comes from [_baseLine].

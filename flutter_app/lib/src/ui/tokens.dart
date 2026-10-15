@@ -36,8 +36,8 @@ abstract final class MemoirColorsLight {
   static const Color illustrationPaper = Color(0xFFFFFDF9);
   static const Color illustrationShadow = Color(0xFF667252);
   static const Color illustrationWriting = Color(0xFFD1D6C7);
-  static const Color mapRouteRainy = Color(0xFFA2D2FF);
-  static const Color mapRouteSunny = Color(0xFFFFF3B0);
+  static const Color mapRouteRainy = Color(0xFF7B5FFA);
+  static const Color mapRouteSunny = Color(0xFFFCCB6F);
   static const Color statusDefault = Color(0xFF49634D);
   static const Color surfaceBrandSubtle = Color(0xFFE9EDE3);
   static const Color surfaceCard = Color(0xFFFFFDF9);
@@ -77,8 +77,8 @@ abstract final class MemoirColorsDark {
   static const Color illustrationPaper = Color(0xFFF7F4EE);
   static const Color illustrationShadow = Color(0xFF1C211E);
   static const Color illustrationWriting = Color(0xFFAEB7A8);
-  static const Color mapRouteRainy = Color(0xFFA2D2FF);
-  static const Color mapRouteSunny = Color(0xFFFFF3B0);
+  static const Color mapRouteRainy = Color(0xFF7B5FFA);
+  static const Color mapRouteSunny = Color(0xFFFCCB6F);
   static const Color statusDefault = Color(0xFF8FA58F);
   static const Color surfaceBrandSubtle = Color(0xFF2B342D);
   static const Color surfaceCard = Color(0xFF262B28);

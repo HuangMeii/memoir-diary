@@ -190,7 +190,7 @@ class MemoirPalette {
   /// Colour of the route line where the forecast has rain (`map.route.rainy`).
   ///
   /// It intentionally differs from [rainChart] (kept teal): the route colours
-  /// were set to #A2D2FF / #FFF3B0 on request.
+  /// were set to #7B5FFA / #FCCB6F on request.
   Color get routeRainLine =>
       _dark ? MemoirColorsDark.mapRouteRainy : MemoirColorsLight.mapRouteRainy;
 

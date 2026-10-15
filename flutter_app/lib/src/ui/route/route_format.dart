@@ -47,7 +47,7 @@ Color routeSeverityColor(BuildContext context, String severity) =>
 ///
 /// The map answers one question - "will this stretch be ridden through rain?" -
 /// so the line carries the *weather*, not the severity: a wet stretch takes the
-/// route rain blue, a dry one takes the route pale yellow. The chips, the
+/// route violet, a dry one takes the route amber. The chips, the
 /// safety callout and the departure comparison
 /// keep the severity scale ([routeSeverityColor]), which is another question.
 ///
