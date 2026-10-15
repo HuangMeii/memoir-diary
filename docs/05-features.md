@@ -188,7 +188,7 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 
 ## 18. Thời tiết theo hành trình (Route Weather Planner) — ĐÃ TRIỂN KHAI
 
-> Đã dựng: backend `RouteEndpoint` + `JourneysEndpoint` + 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình**. Xem [12-route-weather.md](12-route-weather.md) — khác biệt so với đặc tả nằm ở §18. Lộ trình: [Phase 22–27](../PLAN.md) *(đã xong; còn vẽ frame Figma)*.
+> Đã dựng: backend `RouteEndpoint` + `JourneysEndpoint` + 3 bảng hành trình, và màn **Tiện ích → Thời tiết hành trình**. Xem [12-route-weather.md](12-route-weather.md) — khác biệt so với đặc tả nằm ở §18–§19. Lộ trình: [Phase 22–27](../PLAN.md) *(đã xong; còn vẽ frame Figma)* + [Phase 28](../PLAN.md) *(routing Việt Nam-only, đang làm)*.
 
 - **Mục tiêu**: nhập một lộ trình rồi xem **thời tiết dự kiến tại từng chặng trên đường đi**; không dùng để dẫn đường.
 - **Quản lý lộ trình**: điểm xuất phát → **nhiều điểm dừng trung gian** → điểm đến; **gõ địa chỉ thẳng vào ô của mỗi điểm rồi bấm Tìm / Enter** hoặc **chọn trực tiếp trên bản đồ**; chọn **phương tiện** (`car` / `bike` / `foot` ↔ profile OSRM); **ngày + giờ khởi hành**; **thời gian dừng** tại mỗi điểm; **đảo chiều hành trình**; chọn **tuyến thay thế** khi routing API có trả; hiện **khoảng cách / thời gian di chuyển ước tính / thời gian đến dự kiến**.
@@ -196,7 +196,8 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 - **Tương tác**: bản đồ có marker địa điểm; **tuyến là một nét liền tô màu theo thời tiết** (xanh – mưa, vàng – không mưa, xám – chưa có dự báo); chọn mục timeline / điểm trên biểu đồ ↔ làm dày lát và cuộn tới mẫu; đổi điểm dừng / phương tiện / giờ khởi hành thì tính lại tuyến và dự báo.
 - **Tích hợp nhật ký**: lưu hành trình vào tài khoản (tên chuyến, điểm dừng, tuyến, giờ khởi hành, thời gian dự kiến), liên kết **một nhật ký hiện có** hoặc tạo nhật ký mới cho ngày khởi hành, bổ sung **ghi chú + ảnh**, và xem lại **bản tóm tắt dự báo đã lưu** (tách khỏi dự báo mới nhất).
 - **Dữ liệu**: `journeys` · `journey_stops` · `journey_weather_points`; liên kết mềm `journeys.entry_id → diary_entries`.
-- **Nhà cung cấp**: **OSRM** (routing, không key) · **Nominatim** (tìm địa điểm, chỉ Việt Nam) · **Open-Meteo Forecast** (nhiều toạ độ trong một request, tối đa **16 ngày**) · **tile OSM** (nền bản đồ).
+- **Nhà cung cấp**: **OSRM** (*tự host trên extract Việt Nam* — xem [12-route-weather.md §19](12-route-weather.md); URL đặt bằng `ROUTE_API_URL_*`) · **Nominatim** (tìm địa điểm, **chỉ Việt Nam**) · **Open-Meteo Forecast** (nhiều toạ độ trong một request, tối đa **16 ngày**) · **tile OSM** (nền bản đồ).
+- **Phạm vi lãnh thổ**: lộ trình **chỉ trong Việt Nam**; tuyến xuyên biên giới (qua Lào/Campuchia) **không** được hỗ trợ.
 - **Quy tắc**: backend gọi API (không cho client gọi thẳng); timeout 5s; cache 30 phút; trần **25 điểm mẫu**; mọi ngưỡng bất lợi là **quy tắc hiển thị của Memoir**, không phải khuyến nghị an toàn giao thông chính thức.
 - **Không làm**: **không tự xây mô hình dự đoán thời tiết**, **không khẳng định** mưa/bão/nắng "sẽ xảy ra", không dẫn đường turn-by-turn, không tự định vị GPS.
 

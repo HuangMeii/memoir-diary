@@ -167,6 +167,42 @@ serverpod start
   dart bin\main.dart
   ```
 
+### 5.1. OSRM tự host — **chỉ dữ liệu Việt Nam** (bắt buộc để tuyến không đi qua Lào/Campuchia)
+
+> Vì sao: [12-route-weather.md §19](12-route-weather.md). Instance công khai dùng đồ thị toàn cầu nên trả tuyến vòng qua **Lào + Campuchia** cho `Hà Nội → TP.HCM` (1.494 km).
+
+```powershell
+# 1) Dữ liệu (Geofabrik, ~250 MB)
+curl.exe -O https://download.geofabrik.de/asia/vietnam-latest.osm.pbf
+New-Item -ItemType Directory -Force osrm\vn | Out-Null
+Move-Item vietnam-latest.osm.pbf osrm\vn\
+
+# 2) Dựng đồ thị — car (đổi sang /opt/bicycle.lua hoặc /opt/foot.lua cho 2 chế độ còn lại)
+docker run -t -v "${PWD}\osrm\vn:/data" ghcr.io/project-osrm/osrm-backend `
+  osrm-extract -p /opt/car.lua /data/vietnam-latest.osrm.pbf
+docker run -t -v "${PWD}\osrm\vn:/data" ghcr.io/project-osrm/osrm-backend `
+  osrm-partition /data/vietnam-latest.osrm
+docker run -t -v "${PWD}\osrm\vn:/data" ghcr.io/project-osrm/osrm-backend `
+  osrm-customize /data/vietnam-latest.osrm
+
+# 3) Chạy (car 5000 · bike 5001 · foot 5002)
+docker run -d --name memoir-osrm-car -p 5000:5000 -v "${PWD}\osrm\vn:/data" `
+  ghcr.io/project-osrm/osrm-backend osrm-routed --algorithm mld /data/vietnam-latest.osrm
+```
+
+Đặt biến môi trường **trước khi chạy server**:
+
+```powershell
+$env:ROUTE_API_URL_CAR  = 'http://localhost:5000/route/v1/driving'
+$env:ROUTE_API_URL_BIKE = 'http://localhost:5001/route/v1/driving'
+$env:ROUTE_API_URL_FOOT = 'http://localhost:5002/route/v1/driving'
+```
+
+- Kiểm tra nhanh: `curl.exe "http://localhost:5000/route/v1/driving/105.8340410,21.0283334;106.7009019,10.7768899?overview=simplified"` → `distance` ≈ **1,6xx km** (không còn 1.494 km).
+- **Quên đặt biến** ⇒ server dùng lại instance công khai (toàn cầu) và tuyến **có thể đi qua Lào/Campuchia**.
+- Cập nhật dữ liệu: tải lại `.pbf` rồi chạy lại bước (2) (Geofabrik cập nhật hằng ngày).
+- Staging/production: dựng OSRM trên host/VPS riêng rồi đặt `ROUTE_API_URL_*` trỏ tới đó — server không cần Docker cục bộ.
+
 ---
 
 ## 6. Cài & chạy Flutter
@@ -225,3 +261,4 @@ flutter build apk --release --dart-define=SERVERPOD_URL=https://api.example.com
 - [ ] Health endpoint trả OK
 - [ ] Đăng ký/đăng nhập/upload ảnh smoke test OK
 - [ ] Web build chạy, gọi được API Serverpod (`SERVERPOD_URL` đúng)
+- [ ] `ROUTE_API_URL_*` đã trỏ OSRM **extract Việt Nam** (không để mặc định công khai)

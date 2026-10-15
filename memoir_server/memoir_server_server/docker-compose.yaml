@@ -24,6 +24,15 @@ services:
     volumes:
       - memoir_server_test_data:/var/lib/postgresql/data
 
+  # Routing — chỉ dữ liệu Việt Nam (dựng dữ liệu theo docs/06-setup-deploy.md §5.1)
+  osrm_car:
+    image: ghcr.io/project-osrm/osrm-backend
+    command: osrm-routed --algorithm mld /data/vietnam-latest.osrm
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./osrm/vn:/data
+
 
 volumes:
   memoir_server_data:

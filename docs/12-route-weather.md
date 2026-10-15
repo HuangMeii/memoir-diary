@@ -51,6 +51,8 @@ Người dùng nhập một lộ trình (điểm xuất phát, các điểm dừ
 
 > ⚠️ Instance OSRM công khai là **server demo**: có giới hạn truy vấn và không cam kết SLA. Vì vậy đặc tả luôn dùng timeout cứng 5 s (§11), cache 30 phút, base URL ghi đè được bằng biến cấu hình (§12), và mọi chỗ hiển thị đều ghi rõ nguồn dữ liệu.
 
+> ⚠️ **Routing phải là instance *chỉ có dữ liệu Việt Nam*.** Đồ thị toàn cầu không có tham số "tránh quốc gia", nên với tuyến dài Bắc–Nam OSRM chọn hành lang qua **Lào + Campuchia**: đo thật `Hà Nội → TP.HCM` = **1.494 km / 18 h 54**, vượt biên ở ~18,2 °N. Mọi môi trường **phải** đặt `ROUTE_API_URL_*` trỏ instance tự host trên `vietnam-latest.osm.pbf` — xem §12 và §19.
+
 > ⚠️ Nominatim là server **do cộng đồng quyên góp** và **cấm auto-complete search** (usage policy). Vì vậy tìm địa điểm **chỉ chạy khi user bấm nút / Enter**, client chặn **1,5 giây** giữa hai lần tìm (§11), và query luôn kèm `countrycodes=vn`.
 
 ---
@@ -369,10 +371,11 @@ Ngoài ra, mọi chỗ hiển thị thời tiết phải phân biệt được *
 ## 12. Cấu hình
 
 ```env
-# OSRM — không cần key. Có thể tự host.
-ROUTE_API_URL_CAR=https://routing.openstreetmap.de/routed-car/route/v1/driving
-ROUTE_API_URL_BIKE=https://routing.openstreetmap.de/routed-bike/route/v1/driving
-ROUTE_API_URL_FOOT=https://routing.openstreetmap.de/routed-foot/route/v1/driving
+# OSRM — không cần key. Nên TỰ HOST trên extract Việt Nam (xem §19).
+# Ba biến dưới đây là những biến **code thật sự đọc** (fallback = instance công khai FOSSGIS).
+ROUTE_API_URL_CAR=http://localhost:5000/route/v1/driving
+ROUTE_API_URL_BIKE=http://localhost:5001/route/v1/driving
+ROUTE_API_URL_FOOT=http://localhost:5002/route/v1/driving
 # Geocoding — Nominatim, không cần key. Có thể tự host.
 ROUTE_GEOCODING_URL=https://nominatim.openstreetmap.org/search
 ROUTE_GEOCODING_COUNTRY=vn
@@ -385,6 +388,8 @@ ROUTE_API_ENABLED=true
 ```
 
 > Dùng lại `WEATHER_API_URL` của [11-weather-forecast.md §7](11-weather-forecast.md) cho phần `hourly`; **không** tạo biến trùng.
+
+> **Bản dựng hiện tại**: chỉ `ROUTE_API_URL_CAR` / `ROUTE_API_URL_BIKE` / `ROUTE_API_URL_FOOT` được đọc từ môi trường (`route_service.dart`, theo cách `ObjectStorageConfig.fromEnvironment` đang làm). Các biến còn lại là **đặc tả**: giá trị tương ứng đang là hằng số trong code (timeout 5 s, cache 30 phút, bước 25 km, trần 25 mẫu, 16 ngày) và **chưa** đọc từ env.
 
 ---
 
@@ -450,7 +455,7 @@ ROUTE_API_ENABLED=true
 1. **Chưa chốt:** bản đồ dùng **tile OSM thật** (`flutter_map` + `latlong2`) hay **vẽ lại "bản đồ giấy" stylized** như SVG thiết kế. Đề xuất: tile thật để thoả "chọn trực tiếp trên bản đồ"; nếu ưu tiên khớp pixel tuyệt đối thì dùng bản đồ giấy (đánh đổi: mất pan/zoom thật, "chọn trên bản đồ" chỉ còn là chọn trên sơ đồ).
 2. **Chưa chốt:** có lưu **lịch sử mọi hành trình** hay chỉ giữ hành trình user chủ động lưu. Đề xuất: chỉ lưu khi bấm lưu (đã phản ánh ở §8, §1.2.5).
 3. **Chưa chốt:** `compareDepartures` gọi bao nhiêu mốc giờ. Đề xuất **3** (sớm hơn / đang chọn / muộn hơn), đúng bản thiết kế.
-4. Giả định instance OSRM công khai đủ dùng cho quy mô cá nhân; nếu bị chặn thì đổi `ROUTE_API_URL_*` sang instance tự host — **không phải sửa code**.
+4. ~~Giả định instance OSRM công khai đủ dùng cho quy mô cá nhân; nếu bị chặn thì đổi `ROUTE_API_URL_*` sang instance tự host — **không phải sửa code**.~~ → **đã bỏ (15.10.2026)**: instance công khai trả **tuyến xuyên biên giới** (§19) và đã có lúc không kết nối được. Nay giả định là **instance tự host trên extract Việt Nam**; đổi URL bằng 3 biến `ROUTE_API_URL_*` (code **đã** đọc env — xem §12).
 5. Giả định Open-Meteo multi-coordinate trả **đúng thứ tự** toạ độ đã gửi. **Phải kiểm chứng bằng request thật ở Phase 22** trước khi viết logic ghép mẫu.
 6. `transit` (công cộng) **không** hỗ trợ ở bản đầu (§2).
 7. Bản đầu chỉ giữ **một tuyến đang chọn**; danh sách tuyến thay thế đọc từ `plan.alternatives`.
@@ -547,6 +552,71 @@ ROUTE_API_ENABLED=true
 | Token | thêm `map.route.rainy` `#7C9693` + `map.route.sunny` `#D9A62E` cho **cả hai chế độ**, ghi **hex trực tiếp** (token dạng alias bị `tool/gen_tokens.dart` bỏ qua nên không sinh ra hằng số), rồi chạy `dart run tool/gen_tokens.dart` |
 | Code | `route_segments.dart` (`RouteWeatherBucket`, `routeWeatherBucket`, `_stretchBucket`, `_onlyBucket`, `RouteSegment.bucket`), `route_format.dart` (`routeWeatherLineColor` thay `routeLineColor`), `route_map_view.dart` (`_baseLine`, bỏ viền riêng của lát, bỏ nét đứt, chú thích 3 mục), `theme.dart` (`routeRainLine` / `routeSunLine`), phụ đề màn hình |
 | Kiểm chứng | `flutter analyze` **sạch**; `flutter test` **chưa chạy lại** riêng cho đợt này — thang `severity` giữ nguyên nên hành vi mà `route_segments_test.dart` kiểm tra không đổi, người dùng tự kiểm |
+
+## 19. Vì sao routing phải chạy trên extract **Việt Nam** (15.10.2026)
+
+> **Trạng thái**: đặc tả + quyết định. Phần code (đọc `ROUTE_API_URL_*` từ môi trường) và mục §18.7 ghi tiếp sau khi dựng.
+
+### 19.1. Hiện tượng
+
+Màn **Hành trình** vẽ `Hà Nội → TP.HCM` **vòng sang Lào rồi Campuchia** mới về TP.HCM, kèm số liệu *1496 km · 18 giờ 57 phút*.
+
+### 19.2. Đo thật — không phải lỗi vẽ bản đồ
+
+Request đúng như code gửi (`routing.openstreetmap.de/routed-car`, `overview=full&geometries=geojson&steps=false&alternatives=true`), `Hà Nội (21.0283334, 105.8540410) → TP.HCM (10.7768899, 106.7009019)`:
+
+| Chỉ số | Giá trị trả về |
+|---|---|
+| `code` | `Ok` |
+| `routes` | **1** — không có tuyến thay thế nào để chọn |
+| `distance` | **1 494 128,6 m** (1.494 km) — khớp *1496 km* trên UI |
+| `duration` | **68 054,7 s** (18 h 54) — khớp *18 giờ 57 phút* trên UI |
+
+Hình học (33 đỉnh, `overview=simplified`) đi ra ngoài lãnh thổ; đối chiếu từng đỉnh bằng Nominatim `reverse`:
+
+| Đỉnh | Toạ độ | Kết quả reverse |
+|---|---|---|
+| 9 | `105.2264, 18.4466` | Hà Tĩnh, **Việt Nam** (còn trong nước) |
+| 10 | `104.9757, 18.2045` | Khamkeut, Bolikhamsai, **Lào** ← vượt biên ở ~18,2 °N |
+| 11–16 | `104.83–105.13, 16.28–17.41` | Khammouane / Savannakhet, **Lào** |
+| 17–22 | `105.72–105.98, 14.58–15.68` | Salavan / Champasak, **Lào** |
+| 24–30 | `105.87–106.42, 12.07–13.90` | Kratie, **Campuchia** |
+| 31 | `106.5975, 11.9010` | Đồng Nai, **Việt Nam** (đã về nước rồi mới tới đích) |
+
+### 19.3. Vì sao OSRM chọn như vậy
+
+- OSRM tối ưu **thời gian** và **không có** tham số tránh quốc gia (`exclude=` chỉ nhận lớp đường: motorway, toll, ferry…).
+- Theo dữ liệu OSM, hành lang Lào + Campuchia **ngắn và nhanh hơn** tuyến trong nước — đo cùng máy chủ, cùng cặp điểm:
+
+| Phương án | Khoảng cách | Thời gian |
+|---|---|---|
+| OSRM tự chọn (qua Lào + Campuchia) | 1 494 km | 18 h 54 |
+| Bám QL1A (chèn waypoint Đà Nẵng) | 1 629 km | 21 h 02 |
+| Bám QL1A + ven biển (Đà Nẵng + Nha Trang) | 1 684 km | 21 h 46 |
+
+⇒ Không ràng buộc lãnh thổ thì OSRM **sẽ không bao giờ** trả tuyến trong nước cho các cặp điểm dài Bắc–Nam. Tuyến ngắn vẫn đúng: `Hà Nội → Huế` 667 km · `Hà Nội → Đà Nẵng` 769 km · `Vinh → Đông Hà` 302 km (đều trong nước).
+
+<!-- §19.4 tiếp theo -->
+
+### 19.4. Quyết định
+
+1. **Routing chạy trên instance OSRM tự host với extract Việt Nam** (`vietnam-latest.osm.pbf`, Geofabrik). Đồ thị chỉ có đường Việt Nam ⇒ **không thể** ra khỏi biên giới, cho **mọi** cặp điểm, không cần heuristic nào.
+2. **URL đọc từ môi trường**: `ROUTE_API_URL_CAR|BIKE|FOOT` (§12); fallback vẫn là 3 URL công khai để dev chưa dựng OSRM không vỡ.
+3. Giữ nguyên Nominatim (`countrycodes=vn`) và Open-Meteo.
+
+### 19.5. Hệ quả
+
+- `Hà Nội → TP.HCM` sẽ là ~**1 63x km**, đến muộn hơn ~2 h so với con số cũ — **đúng** thực tế đường bộ.
+- Xe đạp / đi bộ: instance công khai **giới hạn cự ly** (đo thật: bike còn chạy ở ~341 km, foot ở ~60 km, nhưng `Hà Nội → TP.HCM` trả `NoRoute`); instance tự host bỏ giới hạn này.
+- Bớt phụ thuộc server demo không SLA (đã gặp: `routing.openstreetmap.de` không kết nối được từ máy dev).
+- **Không** hỗ trợ lộ trình xuyên biên giới thật (`Hà Nội → Viêng Chăn`) — nhất quán với việc tìm địa điểm đã lọc `countrycodes=vn`.
+- Hành trình **đã lưu** giữ hình học cũ trong `journeys.geometry` (vẽ lại đúng như lúc lưu); **không** migrate.
+
+### 19.6. Cách kiểm chứng
+
+- `cd memoir_server/memoir_server_server; dart test` — test thuần cho việc đọc env.
+- `dart run tool/route_smoke.dart` với `ROUTE_API_URL_*` trỏ instance Việt Nam → tuyến không có đỉnh nào ngoài Việt Nam.
+- Trên app: đặt lại `Hà Nội → TP.HCM`; hình học **không** vượt ~104,8 °E ở dải 16–18,5 °N và không đi qua Kratie.
 
 ---
 
