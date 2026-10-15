@@ -189,16 +189,16 @@ class MemoirPalette {
 
   /// Colour of the route line where the forecast has rain (`map.route.rainy`).
   ///
-  /// It is the same teal as [rainChart], so the line on the map and the bars of
-  /// the chart above it answer "where will it rain" with one colour.
+  /// It intentionally differs from [rainChart] (kept teal): the route colours
+  /// were set to #A2D2FF / #FFF3B0 on request.
   Color get routeRainLine =>
       _dark ? MemoirColorsDark.mapRouteRainy : MemoirColorsLight.mapRouteRainy;
 
   /// Colour of the route line where the forecast has no rain
   /// (`map.route.sunny`).
   ///
-  /// The map tiles are the light OpenStreetMap set in both themes, so this stays
-  /// one legible yellow rather than following the palette down into the dark.
+  /// The map tiles are the light OpenStreetMap set in both themes; this stays
+  /// the requested pale yellow in both.
   Color get routeSunLine =>
       _dark ? MemoirColorsDark.mapRouteSunny : MemoirColorsLight.mapRouteSunny;
 

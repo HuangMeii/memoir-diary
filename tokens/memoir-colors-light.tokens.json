@@ -560,26 +560,26 @@
           "$value": {
             "colorSpace": "srgb",
             "components": [
-              0.486275,
-              0.588235,
-              0.576471
+              0.635294,
+              0.823529,
+              1
             ],
-            "hex": "#7c9693"
+            "hex": "#A2D2FF"
           },
-          "$description": "Route line where the forecast has rain; the teal of the rain bars in the route chart."
+          "$description": "Route line where the forecast has rain."
         },
         "sunny": {
           "$type": "color",
           "$value": {
             "colorSpace": "srgb",
             "components": [
-              0.85098,
-              0.65098,
-              0.180392
+              1,
+              0.952941,
+              0.690196
             ],
-            "hex": "#d9a62e"
+            "hex": "#FFF3B0"
           },
-          "$description": "Route line where the forecast has no rain; dark enough to read on the light OSM tiles."
+          "$description": "Route line where the forecast has no rain."
         }
       }
     }

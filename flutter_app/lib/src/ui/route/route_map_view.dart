@@ -33,8 +33,8 @@ List<LatLng> decodeRoutePoints(String geoJson) {
 /// map.
 ///
 /// The route is one unbroken line, cut into stretches painted for the weather
-/// they will be ridden through - rain teal, no rain yellow - with the stretches
-/// the forecast never reached left grey. The stretches themselves come from
+/// they will be ridden through - rain blue, no rain pale yellow - on top of a
+/// grey bed. The stretches themselves come from
 /// `route_segments.dart`; the pale bed and casing that hold them together are
 /// drawn by a single line underneath.
 ///
@@ -147,14 +147,15 @@ class _RouteMapViewState extends State<RouteMapView> {
                     polylines: [
                       _baseLine(context, line),
                       for (final segment in segments)
-                        _routeLine(
-                          context,
-                          segment,
-                          selected: selected != null &&
-                              segment.covers(
-                                selected.distanceFromStartMeters.toDouble(),
-                              ),
-                        ),
+                        if (segment.bucket != RouteWeatherBucket.unknown)
+                          _routeLine(
+                            context,
+                            segment,
+                            selected: selected != null &&
+                                segment.covers(
+                                  selected.distanceFromStartMeters.toDouble(),
+                                ),
+                          ),
                     ],
                   ),
                 MarkerLayer(markers: _stopMarkers()),
@@ -224,10 +225,11 @@ class _RouteMapViewState extends State<RouteMapView> {
     return routeWeatherBucket(sample);
   }
 
-  /// One stretch of the route, painted for the weather along it: rain teal, no
-  /// rain yellow, no forecast grey. Every stretch is a solid stroke - the route
-  /// is one continuous line, and the bed that keeps it that way comes from
-  /// [_baseLine].
+  /// One stretch of the route, painted for the weather along it: rain blue, no
+  /// rain pale yellow. A stretch the forecast does not cover is skipped, so
+  /// the grey [_baseLine] bed underneath shows through. Every painted stretch
+  /// is a solid stroke - the route is one continuous line, and the bed that
+  /// keeps it that way comes from [_baseLine].
   Polyline _routeLine(
     BuildContext context,
     RouteSegment segment, {
@@ -302,8 +304,8 @@ class _SelectedSampleDot extends StatelessWidget {
 /// What the colours of the route mean, written on the map itself.
 ///
 /// The line carries the meaning now, so the scale has to be readable where it
-/// is read - and the grey entry has to be there too, or a stretch the forecast
-/// never reached would read as a dry one.
+/// is read. The grey bed underneath has no entry: it is only there to keep
+/// the line whole.
 class _RouteMapLegend extends StatelessWidget {
   const _RouteMapLegend({required this.scale});
 
@@ -312,7 +314,6 @@ class _RouteMapLegend extends StatelessWidget {
   static const List<(String, String)> _entries = [
     (RouteWeatherBucket.rain, 'Mưa'),
     (RouteWeatherBucket.sun, 'Nắng · không mưa'),
-    (RouteWeatherBucket.unknown, 'Chưa có dự báo'),
   ];
 
   @override

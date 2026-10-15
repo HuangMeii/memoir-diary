@@ -47,18 +47,18 @@ Color routeSeverityColor(BuildContext context, String severity) =>
 ///
 /// The map answers one question - "will this stretch be ridden through rain?" -
 /// so the line carries the *weather*, not the severity: a wet stretch takes the
-/// teal of the rain bars in the chart just above the map, a dry one takes the
-/// route yellow. The chips, the safety callout and the departure comparison
+/// route rain blue, a dry one takes the route pale yellow. The chips, the
+/// safety callout and the departure comparison
 /// keep the severity scale ([routeSeverityColor]), which is another question.
 ///
-/// A stretch the forecast does not cover is grey rather than yellow: missing
-/// data must never look like a dry, good stretch of road.
+/// A stretch the forecast does not cover is never painted: only the grey bed
+/// underneath shows there, and it has no entry in the legend.
 Color routeWeatherLineColor(BuildContext context, String bucket) {
   final palette = MemoirPalette.of(context);
   return switch (bucket) {
     RouteWeatherBucket.rain => palette.routeRainLine,
     RouteWeatherBucket.sun => palette.routeSunLine,
-    _ => palette.textDisabled,
+    _ => palette.textDisabled.withValues(alpha: 0.45),
   };
 }
 
