@@ -49,6 +49,32 @@ Future<void> main() async {
   final twoPoint = await fetchRoutePlan(stops: [stops.first, stops.last], vehicle: 'car');
   print('two-point route alternatives=${twoPoint.alternatives.length}');
 
+  print('--- Hanoi to HCMC (pinned-waypoint check) ---');
+  final longHaul = await fetchRoutePlan(
+    stops: [
+      RouteStop(
+        name: 'Ha Noi',
+        lat: 21.0283334,
+        lon: 105.8540410,
+        dwellMinutes: 0,
+        kind: 'origin',
+      ),
+      RouteStop(
+        name: 'TP. Ho Chi Minh',
+        lat: 10.7768899,
+        lon: 106.7009019,
+        dwellMinutes: 0,
+        kind: 'destination',
+      ),
+    ],
+    vehicle: 'car',
+  );
+  final longLine = decodeLineString(longHaul.geometry);
+  print('${(longHaul.distanceMeters / 1000).round()} km, '
+      '${(longHaul.durationSeconds / 3600).toStringAsFixed(1)} h, '
+      'legs=${longHaul.legs.length}, stops=${longHaul.stops.length}, '
+      'leavesVietnam=${routeLeavesVietnam(longLine)}');
+
   print('--- weather along the route ---');
   final departure = DateTime.now().toUtc().add(const Duration(hours: 12));
   final report = await weatherAlongRoute(plan: plan, departureAt: departure);

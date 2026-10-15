@@ -562,11 +562,21 @@ ROUTE_API_ENABLED=true
 | Code | `route_service.dart`: `resolveRouteBackends([environment])` đọc `ROUTE_API_URL_CAR\|BIKE\|FOOT` (trim, rỗng → fallback), getter `routeBackends` giữ tương thích, `usesPublicRouteBackends` + `publicRouteBackendWarning`, `fetchRoutePlan(..., {backends})` để test được; `route_endpoint.dart`: log cảnh báo **một lần** mỗi lần chạy server khi vẫn dùng đồ thị công khai |
 | Test | `route_service_test.dart` thêm group `route backends` (3 test: fallback rỗng, override thắng, blank/space) — thuần Dart, không mạng |
 | Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **34/34 xanh** (31 cũ + 3 mới) |
-| Chưa làm | Dựng OSRM trên `vietnam-latest.osm.pbf` (máy dev **không có Docker** — xem `docs/06-setup-deploy.md` §5.1 để chạy `osrm-extract/partition/customize` + `osrm-routed` ở máy có Docker); `route_smoke.dart` với instance Việt Nam; verify `Hà Nội → TP.HCM` ~1.63x km trên app |
+
+### 18.8. Ghim waypoint giữ tuyến trong Việt Nam (15.10.2026)
+
+Heuristic thay cho OSRM tự host (§19.4 mới): vẫn gọi OSRM công khai, phát hiện hình học ra khỏi VN thì gọi lại với điểm ghim.
+
+| Việc | Chi tiết |
+|---|---|
+| Code | `route_service.dart`: biên tây gấp khúc `routeVietnamWestBoundary` + `routeVietnamMinLonAt(lat)` (bbox chữ nhật không phân biệt được Điện Biên ~102 °E với đất Lào ~104–105 °E), `routeLeavesVietnam` (≥ 3 đỉnh liên tiếp ngoài biên), `routeVietnamPins` (7 điểm QL1A) + `vietnamPinsBetween` (tối đa 3, theo vĩ độ), `fetchRoutePlan` tách `_fetchOnce` + gọi lại tối đa 1 lần (tắt alternatives) + `mergePinnedLegs` gộp về stops gốc; `tool/route_smoke.dart` thêm case `Hà Nội → TP.HCM` in km + cờ `leavesVietnam` |
+| Test | `route_service_test.dart` thêm group `vietnam pins` (7 test: tuyến cắt biên thật → true, thị xã biên Điện Biên/Hà Giang/Hà Tiên/Phú Quốc → false, nhiễu 1–2 đỉnh → false, ghim đúng đoạn + tối đa 3, chặng ngắn không ghim, gộp legs 2 case, legs lệch passthrough) — thuần Dart, không mạng |
+| Kiểm chứng | `dart analyze` **sạch**; `dart test test/route_service_test.dart` **41/41 xanh** (34 cũ + 7 mới) |
+| Chưa làm | `route_smoke.dart` với mạng thật; verify `Hà Nội → TP.HCM` ~1.63x km trên app |
 
 ## 19. Vì sao routing phải chạy trên extract **Việt Nam** (15.10.2026)
 
-> **Trạng thái**: đặc tả + quyết định + **code đọc env đã xong** (§18.7). Còn lại: dựng OSRM extract Việt Nam + `route_smoke.dart` với instance đó.
+> **Trạng thái**: đặc tả + quyết định + **code đọc env (§18.7) và heuristic ghim waypoint (§18.8) đã xong**. Còn lại: `route_smoke.dart` với mạng thật + verify trên app.
 
 ### 19.1. Hiện tượng
 
@@ -634,9 +644,9 @@ Hình học (33 đỉnh, `overview=simplified`) đi ra ngoài lãnh thổ; đố
 
 **Phát hiện ra khỏi VN** — hàm thuần `routeLeavesVietnam(List<RouteCoord> line)`:
 
-- Bbox Việt Nam (nới ~0,15° để chịu sai số snap đường biên): lat **8,15–23,65**, lon **101,85–110,10**.
-- Một đỉnh ngoài bbox = nghi ngờ; kết luận `true` khi có **≥ 3 đỉnh liên tiếp** ngoài bbox (trừ nhiễu 1–2 đỉnh snap lệch).
-- Ngưỡng 3 là hằng số `routeVietnamOutlierRun = 3`, có test riêng.
+- Biên tây là đường gấp khúc theo dãy Trường Sơn (hằng số `routeVietnamWestBoundary`, nội suy tuyến tính qua `routeVietnamMinLonAt(lat)`): Điện Biên ~101,9 °E, Hà Giang ~102,5–103,5 °E, dải 18,5–13 °N ~105,0–106,5 °E, cực Nam ~103,2 °E. Biên đông 110,10 °E, vĩ độ 8,15–23,65. **Không dùng bbox chữ nhật** — Điện Biên (~102 °E) nằm về phía tây của đất Lào ở cùng dải nam (~104–105 °E), nên một `minLon` duy nhất hoặc nuốt Điện Biên hoặc bỏ lọt Lào.
+- Một đỉnh ngoài biên = nghi ngờ; kết luận `true` khi có **≥ 3 đỉnh liên tiếp** ngoài biên (trừ nhiễu 1–2 đỉnh snap lệch).
+- Ngưỡng 3 là hằng số `routeVietnamOutlierRun = 3`, có test riêng (kèm case thị xã biên thật: Điện Biên Phủ, Hà Giang, Hà Tiên, Phú Quốc không bị báo oan).
 
 **Điểm ghim** — hằng số `routeVietnamPins` (~7 điểm dọc QL1A/đường HCM, từ Bắc vào Nam):
 

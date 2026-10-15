@@ -114,6 +114,115 @@ void main() {
     });
   });
 
+  group('vietnam pins', () {
+    test('a Hanoi–HCMC crossing line leaves, real border towns do not', () {
+      // Simplified shape of the real OSRM answer: exits around 18.2°N,
+      // runs through Laos (~104.8-105.1E) before re-entering at Dong Nai.
+      final crossing = [
+        const RouteCoord(21.03, 105.85),
+        const RouteCoord(18.45, 105.23),
+        const RouteCoord(18.20, 104.98),
+        const RouteCoord(17.41, 104.83),
+        const RouteCoord(16.28, 105.13),
+        const RouteCoord(10.78, 106.70),
+      ];
+      expect(routeLeavesVietnam(crossing), isTrue);
+
+      // Real border towns keep their roads: Dien Bien Phu (far west),
+      // Ha Giang (far north), Ha Tien and Phu Quoc (far south-west).
+      final borderTowns = [
+        const RouteCoord(21.39, 103.02),
+        const RouteCoord(22.83, 104.99),
+        const RouteCoord(10.38, 104.48),
+        const RouteCoord(10.23, 103.96),
+      ];
+      expect(routeLeavesVietnam(borderTowns), isFalse);
+    });
+
+    test('one or two stray vertices do not count as leaving', () {
+      final stray = [
+        const RouteCoord(21.03, 105.85),
+        const RouteCoord(18.20, 104.90),
+        const RouteCoord(18.45, 105.23),
+        const RouteCoord(16.06, 108.21),
+      ];
+      expect(routeLeavesVietnam(stray), isFalse);
+    });
+
+    test('pins span the trip latitude and cap at three', () {
+      final pins = vietnamPinsBetween(
+        const RouteCoord(21.0283, 105.8540),
+        const RouteCoord(10.7769, 106.7009),
+      );
+      expect(pins.length, routeVietnamMaxPins);
+      for (final pin in pins) {
+        expect(pin.lat, greaterThan(10.7769));
+        expect(pin.lat, lessThan(21.0283));
+      }
+      // Travel order: descending latitude for a north-to-south trip.
+      for (var i = 1; i < pins.length; i++) {
+        expect(pins[i].lat, lessThan(pins[i - 1].lat));
+      }
+    });
+
+    test('a short hop spans no pins', () {
+      expect(
+        vietnamPinsBetween(
+          const RouteCoord(21.0283, 105.8540),
+          const RouteCoord(20.0000, 105.9000),
+        ),
+        isEmpty,
+      );
+    });
+
+    test('merging folds pinned legs back onto one user leg', () {
+      RouteLeg leg(int meters, int seconds) => RouteLeg(
+            distanceMeters: meters,
+            durationSeconds: seconds,
+            toIndex: 0,
+          );
+      final merged = mergePinnedLegs(
+        rawLegs: [leg(100, 10), leg(200, 20), leg(300, 30), leg(400, 40)],
+        userLegCount: 1,
+        pinCount: 3,
+      );
+      expect(merged, hasLength(1));
+      expect(merged.first.distanceMeters, 1000);
+      expect(merged.first.durationSeconds, 100);
+      expect(merged.first.toIndex, 1);
+    });
+
+    test('merging keeps later user legs one-to-one', () {
+      RouteLeg leg(int meters, int seconds) => RouteLeg(
+            distanceMeters: meters,
+            durationSeconds: seconds,
+            toIndex: 0,
+          );
+      final merged = mergePinnedLegs(
+        rawLegs: [leg(100, 1), leg(200, 2), leg(300, 3)],
+        userLegCount: 2,
+        pinCount: 1,
+      );
+      expect(merged, hasLength(2));
+      expect(merged[0].distanceMeters, 300);
+      expect(merged[1].distanceMeters, 300);
+      expect(merged[1].toIndex, 2);
+    });
+
+    test('merging passes through mismatched raw legs untouched', () {
+      RouteLeg leg(int meters) => RouteLeg(
+            distanceMeters: meters,
+            durationSeconds: 0,
+            toIndex: 0,
+          );
+      final raw = [leg(100), leg(200)];
+      expect(
+        mergePinnedLegs(rawLegs: raw, userLegCount: 1, pinCount: 3),
+        same(raw),
+      );
+    });
+  });
+
   group('geometry', () {
     test('haversine matches a degree of latitude', () {
       final meters = haversineMeters(

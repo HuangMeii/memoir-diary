@@ -645,11 +645,155 @@ RouteFailure? routeFailureFor(dynamic body, List<dynamic> routes) {
   );
 }
 
+/// Western boundary of Vietnam as (latitude, min-longitude) breakpoints,
+/// north to south (docs/12 §19.7). A single min-lon cannot work: Dien Bien
+/// is at ~102°E while eastern Laos at the same southern latitudes is at
+/// ~104-105°E, so the boundary follows the Annamite range instead.
+const List<RouteCoord> routeVietnamWestBoundary = [
+  RouteCoord(23.65, 101.85),
+  RouteCoord(21.00, 102.50),
+  RouteCoord(20.00, 103.50),
+  RouteCoord(19.00, 104.00),
+  RouteCoord(18.50, 105.15),
+  RouteCoord(18.00, 105.00),
+  RouteCoord(17.00, 105.40),
+  RouteCoord(16.00, 105.90),
+  RouteCoord(15.00, 106.20),
+  RouteCoord(14.00, 106.40),
+  RouteCoord(13.00, 106.50),
+  RouteCoord(12.00, 106.40),
+  RouteCoord(11.00, 105.80),
+  RouteCoord(10.00, 103.20),
+  RouteCoord(8.15, 103.20),
+];
+
+/// Latitude range of Vietnam, padded slightly.
+const double routeVietnamMinLat = 8.15;
+const double routeVietnamMaxLat = 23.65;
+
+/// Eastern edge, padded slightly (Hoang Sa waters).
+const double routeVietnamMaxLon = 110.10;
+
+/// Western longitude limit at [lat], linearly interpolated between the
+/// breakpoints above. Pure, so it is unit tested without a network.
+double routeVietnamMinLonAt(double lat) {
+  final edge = routeVietnamWestBoundary;
+  if (lat >= edge.first.lat) return edge.first.lon;
+  if (lat <= edge.last.lat) return edge.last.lon;
+  for (var i = 0; i < edge.length - 1; i++) {
+    final upper = edge[i];
+    final lower = edge[i + 1];
+    if (lat <= upper.lat && lat >= lower.lat) {
+      final span = upper.lat - lower.lat;
+      final mix = span <= 0 ? 0.0 : (upper.lat - lat) / span;
+      return upper.lon + (lower.lon - upper.lon) * mix;
+    }
+  }
+  return edge.last.lon;
+}
+
+/// How many consecutive vertices outside the box it takes to call a route
+/// out of Vietnam. One or two stray points are usually a snap artefact.
+const int routeVietnamOutlierRun = 3;
+
+/// Fixed pins along QL1A, north to south (docs/12 §19.7). Inserted between
+/// the origin and destination when the engine's first answer leaves Vietnam.
+const List<RouteCoord> routeVietnamPins = [
+  RouteCoord(18.6833, 105.6833), // Vinh
+  RouteCoord(17.4833, 106.6167), // Dong Hoi
+  RouteCoord(16.8167, 107.1000), // Dong Ha
+  RouteCoord(16.4637, 107.5900), // Hue
+  RouteCoord(16.0600, 108.2100), // Da Nang
+  RouteCoord(13.7667, 109.2333), // Quy Nhon
+  RouteCoord(12.2500, 109.1833), // Nha Trang
+];
+
+/// Maximum pins inserted on a retry.
+const int routeVietnamMaxPins = 3;
+
+bool _outsideVietnam(RouteCoord point) =>
+    point.lat < routeVietnamMinLat ||
+    point.lat > routeVietnamMaxLat ||
+    point.lon < routeVietnamMinLonAt(point.lat) ||
+    point.lon > routeVietnamMaxLon;
+
+/// True when [line] runs outside Vietnam: at least [routeVietnamOutlierRun]
+/// consecutive vertices outside the padded box. Pure, so it is unit tested
+/// without a network.
+bool routeLeavesVietnam(List<RouteCoord> line) {
+  var run = 0;
+  for (final point in line) {
+    if (_outsideVietnam(point)) {
+      run++;
+      if (run >= routeVietnamOutlierRun) return true;
+    } else {
+      run = 0;
+    }
+  }
+  return false;
+}
+
+/// Pins between [origin] and [destination] by latitude, nearest to the
+/// straight connector first, capped at [routeVietnamMaxPins].
+List<RouteCoord> vietnamPinsBetween(RouteCoord origin, RouteCoord destination) {
+  final low = origin.lat < destination.lat ? origin.lat : destination.lat;
+  final high = origin.lat < destination.lat ? destination.lat : origin.lat;
+  final midLon = (origin.lon + destination.lon) / 2;
+  final candidates = routeVietnamPins
+      .where((pin) => pin.lat > low && pin.lat < high)
+      .toList(growable: false)
+    ..sort(
+      (a, b) => (a.lon - midLon).abs().compareTo((b.lon - midLon).abs()),
+    );
+  final picked = candidates.take(routeVietnamMaxPins).toList(growable: false)
+    ..sort((a, b) => origin.lat < destination.lat
+        ? a.lat.compareTo(b.lat)
+        : b.lat.compareTo(a.lat));
+  return picked;
+}
+
+/// Merges the legs of a pinned retry back onto the user's stops: distances
+/// and durations are summed per user leg, [toIndex] is renumbered. The pins
+/// stay invisible to the client.
+List<RouteLeg> mergePinnedLegs({
+  required List<RouteLeg> rawLegs,
+  required int userLegCount,
+  required int pinCount,
+}) {
+  if (rawLegs.length != userLegCount + pinCount || userLegCount < 1) {
+    return rawLegs;
+  }
+  // Pins are always inserted as one block right after the origin here, so the
+  // first user leg absorbs pinCount + 1 raw legs and the rest stay 1:1.
+  final merged = <RouteLeg>[];
+  var rawIndex = 0;
+  for (var leg = 0; leg < userLegCount; leg++) {
+    var distance = 0;
+    var duration = 0;
+    final take = leg == 0 ? pinCount + 1 : 1;
+    for (var k = 0; k < take && rawIndex < rawLegs.length; k++) {
+      distance += rawLegs[rawIndex].distanceMeters;
+      duration += rawLegs[rawIndex].durationSeconds;
+      rawIndex++;
+    }
+    merged.add(
+      RouteLeg(
+          distanceMeters: distance, durationSeconds: duration, toIndex: leg + 1),
+    );
+  }
+  return merged;
+}
+
 /// Asks the routing engine for a route through [stops].
 ///
 /// Alternatives are requested only for a plain two-point route: OSRM returns
 /// them for two waypoints and silently ignores the flag otherwise, so asking
 /// with more stops would only make the UI look broken.
+///
+/// When the first answer leaves Vietnam ([routeLeavesVietnam]) and the trip
+/// spans at least one of [routeVietnamPins], the request is retried once with
+/// pins inserted — then the legs are merged back onto the user's stops so the
+/// pins stay invisible (docs/12 §19.7). The retry never asks for alternatives.
 Future<RoutePlan> fetchRoutePlan({
   required List<RouteStop> stops,
   required String vehicle,
@@ -662,6 +806,60 @@ Future<RoutePlan> fetchRoutePlan({
   }
 
   final resolved = backends ?? routeBackends;
+  var plan = await _fetchOnce(
+    ordered: ordered,
+    vehicle: vehicle,
+    wantAlternatives: wantAlternatives,
+    resolved: resolved,
+  );
+
+  final pins = vietnamPinsBetween(
+    RouteCoord(ordered.first.lat, ordered.first.lon),
+    RouteCoord(ordered.last.lat, ordered.last.lon),
+  );
+  if (pins.isEmpty) return plan;
+  if (!routeLeavesVietnam(decodeLineString(plan.geometry))) return plan;
+
+  final pinned = [
+    ordered.first,
+    for (final pin in pins)
+      RouteStop(
+        name: 'Ghim · ${pin.lat.toStringAsFixed(2)},'
+            '${pin.lon.toStringAsFixed(2)}',
+        lat: pin.lat,
+        lon: pin.lon,
+        kind: 'waypoint',
+      ),
+    ordered.last,
+  ];
+  final retry = await _fetchOnce(
+    ordered: pinned,
+    vehicle: vehicle,
+    wantAlternatives: false,
+    resolved: resolved,
+  );
+  return RoutePlan(
+    stops: ordered,
+    distanceMeters: retry.distanceMeters,
+    durationSeconds: retry.durationSeconds,
+    geometry: retry.geometry,
+    legs: mergePinnedLegs(
+      rawLegs: retry.legs,
+      userLegCount: ordered.length - 1,
+      pinCount: pins.length,
+    ),
+    alternatives: const [],
+    source: routePlanSource,
+    vehicle: resolved.containsKey(vehicle) ? vehicle : 'car',
+  );
+}
+
+Future<RoutePlan> _fetchOnce({
+  required List<RouteStop> ordered,
+  required String vehicle,
+  required bool wantAlternatives,
+  required Map<String, String> resolved,
+}) async {
   final base = resolved[vehicle] ?? resolved['car']!;
   final coordinates = ordered
       .map((stop) => '${stop.lon},${stop.lat}')
