@@ -215,12 +215,14 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 - [ ] Vẽ frame Figma `ROUTE-01` để đối chiếu (màn đã dựng theo ngôn ngữ thị giác, chưa có bản vẽ)
 - [ ] Verify trên thiết bị thật (`flutter run` web/mobile) — chưa chạy trong phiên này
 
-### ⏳ Phase 28 — Routing chỉ dữ liệu Việt Nam (ĐANG LÀM)
+### ⏳ Phase 28 — Routing chỉ trong Việt Nam (ĐANG LÀM, phương án ghim waypoint)
 - [x] `docs/12` (§2, §12, §17.4, §18.7, §19), `docs/06-setup-deploy` (§5.1, §8), `docs/05-features`, `PLAN.md` (Phase 28, rủi ro, M12): đặc tả routing Việt Nam-only
 - [x] `route_service.dart`: `ROUTE_API_URL_CAR|BIKE|FOOT` đọc từ môi trường (theo `ObjectStorageConfig.fromEnvironment`), fallback = 3 URL công khai hiện tại — `dart analyze` sạch, `dart test` **34/34 xanh**
 - [x] Log cảnh báo một lần khi vẫn dùng URL công khai ("tuyến có thể đi qua Lào/Campuchia")
 - [x] OSRM tự host trên `vietnam-latest.osm.pbf` (car / bike / foot) + service trong `docker-compose.yaml` — **định nghĩa xong, chưa dựng được vì máy dev không có Docker**
-- [ ] Dựng OSRM ở máy có Docker + `dart run tool/route_smoke.dart` xác nhận `Hà Nội → TP.HCM` nằm trong nước + verify trên app
+- [x] Đổi §19.4 sang **heuristic ghim waypoint** (§19.7) — không cần Docker/hạ tầng mới
+- [ ] Code heuristic: `routeLeavesVietnam` + `routeVietnamPins` + gọi lại OSRM tối đa 1 lần + gộp legs về stops gốc
+- [ ] `dart test` (bbox + chọn ghim + gộp legs) + `route_smoke.dart` case `Hà Nội → TP.HCM` + verify trên app
 
 
 ---
@@ -266,7 +268,7 @@ Chi tiết: [docs/01-architecture.md](docs/01-architecture.md).
 | *(Phase 19–20)* Open-Meteo chậm / mất mạng làm treo app | Trung *(đã chốt thiết kế)* | Timeout cứng 5s + cache 2 tầng + luôn có đường về bằng `weather_snapshots`; lỗi thì trả cache chứ không trả lỗi |
 | *(Phase 19–20)* Gọi Open-Meteo quá nhiều lần bị giới hạn | Thấp | Cache bộ nhớ 30 phút theo tọa độ; `WEATHER_API_ENABLED=false` để tắt hẳn |
 | *(Phase 22–27)* Instance OSRM công khai là server demo, có giới hạn và không cam kết SLA | **Cao** *(đã chốt thiết kế)* | Timeout cứng 5s + cache 30 phút + trần 25 điểm mẫu; đổi `ROUTE_API_URL_*` sang instance tự host (**đã đọc từ env** — xem Phase 28); OSRM lỗi thì tuyến cũ vẫn hiển thị |
-| *(Phase 28)* OSRM công khai trả **tuyến xuyên biên giới**: `Hà Nội → TP.HCM` đi qua Lào + Campuchia, 1.494 km thay vì ~1.63x km đường bộ Việt Nam | **Cao** *(đã đo 15.10.2026)* | **Tự host OSRM trên extract Việt Nam** + `ROUTE_API_URL_*` đọc từ môi trường; bằng chứng và quyết định: [docs/12-route-weather.md §19](docs/12-route-weather.md) |
+| *(Phase 28)* OSRM công khai trả **tuyến xuyên biên giới**: `Hà Nội → TP.HCM` đi qua Lào + Campuchia, 1.494 km thay vì ~1.63x km đường bộ Việt Nam | **Cao** *(đã đo 15.10.2026)* | **Heuristic ghim waypoint** trong code (§19.7): phát hiện hình học ra khỏi VN → chèn điểm ghim QL1A → gọi lại OSRM tối đa 1 lần → gộp legs; bằng chứng và đặc tả: [docs/12-route-weather.md §19](docs/12-route-weather.md) |
 | *(Phase 22–27)* Tile OSM bị chặn nếu lạm dụng | Trung | Chỉ dùng cho một khung bản đồ nhỏ trong app, có User-Agent, khối lượng thấp; đổi tile provider khi cần |
 | *(Phase 22–27)* Open-Meteo chỉ dự báo tối đa **16 ngày** | Thấp *(đã chốt)* | Trả trạng thái `beyondRange` rõ ràng + nhãn "ngoài phạm vi dự báo"; **không** đoán cho phần vượt |
 | *(Phase 22–27)* Nhiều toạ độ trong một request Open-Meteo có thể trả thiếu | Trung *(đã chốt)* | Báo cáo `coverage = partial`, mẫu thiếu hiển thị `—` (vẫn giữ vị trí + ETA) — xem docs/12 §5.4 |

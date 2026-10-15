@@ -609,25 +609,62 @@ Hình học (33 đỉnh, `overview=simplified`) đi ra ngoài lãnh thổ; đố
 
 <!-- §19.4 tiếp theo -->
 
-### 19.4. Quyết định
+### 19.4. Quyết định (sửa 15.10.2026 — không tự host, ghim waypoint)
 
-1. **Routing chạy trên instance OSRM tự host với extract Việt Nam** (`vietnam-latest.osm.pbf`, Geofabrik). Đồ thị chỉ có đường Việt Nam ⇒ **không thể** ra khỏi biên giới, cho **mọi** cặp điểm, không cần heuristic nào.
-2. **URL đọc từ môi trường**: `ROUTE_API_URL_CAR|BIKE|FOOT` (§12); fallback vẫn là 3 URL công khai để dev chưa dựng OSRM không vỡ.
+1. ~~**Routing chạy trên instance OSRM tự host với extract Việt Nam** (`vietnam-latest.osm.pbf`, Geofabrik). Đồ thị chỉ có đường Việt Nam ⇒ **không thể** ra khỏi biên giới, cho **mọi** cặp điểm, không cần heuristic nào.~~ → **đã bỏ**: máy dev **không có Docker** và không muốn thêm hạ tầng. Thay bằng **heuristic ghim waypoint trong code** (chi tiết §19.7): vẫn gọi OSRM công khai, nhưng khi phát hiện hình học ra khỏi Việt Nam thì tự chèn điểm ghim dọc QL1A và gọi lại **tối đa 1 lần**.
+2. **URL đọc từ môi trường**: `ROUTE_API_URL_CAR|BIKE|FOOT` (§12, §18.7) — giữ nguyên để sau này vẫn có thể trỏ instance tự host mà không sửa code.
 3. Giữ nguyên Nominatim (`countrycodes=vn`) và Open-Meteo.
 
 ### 19.5. Hệ quả
 
-- `Hà Nội → TP.HCM` sẽ là ~**1 63x km**, đến muộn hơn ~2 h so với con số cũ — **đúng** thực tế đường bộ.
-- Xe đạp / đi bộ: instance công khai **giới hạn cự ly** (đo thật: bike còn chạy ở ~341 km, foot ở ~60 km, nhưng `Hà Nội → TP.HCM` trả `NoRoute`); instance tự host bỏ giới hạn này.
-- Bớt phụ thuộc server demo không SLA (đã gặp: `routing.openstreetmap.de` không kết nối được từ máy dev).
+- `Hà Nội → TP.HCM` sẽ là ~**1 63x km**, đến muộn hơn ~2 h so với con số cũ — **đúng** thực tế đường bộ (nhưng là tuyến OSRM tính trên đồ thị toàn cầu với điểm ghim, **không** đảm bảo tối ưu như instance VN-only).
+- Heuristic có thể **lọt lưới**: cặp điểm lạ mà tuyến vòng vẫn tránh được mọi điểm ghim sẽ còn ra khỏi VN — khi đó log cảnh báo ở endpoint là dấu hiệu duy nhất (§18.7).
+- Xe đạp / đi bộ: instance công khai **giới hạn cự ly** (đo thật: bike còn chạy ở ~341 km, foot ở ~60 km, nhưng `Hà Nội → TP.HCM` trả `NoRoute`) — heuristic không gỡ được giới hạn này, khác với instance tự host.
+- Vẫn phụ thuộc server demo không SLA (đã gặp: `routing.openstreetmap.de` không kết nối được từ máy dev).
 - **Không** hỗ trợ lộ trình xuyên biên giới thật (`Hà Nội → Viêng Chăn`) — nhất quán với việc tìm địa điểm đã lọc `countrycodes=vn`.
 - Hành trình **đã lưu** giữ hình học cũ trong `journeys.geometry` (vẽ lại đúng như lúc lưu); **không** migrate.
 
 ### 19.6. Cách kiểm chứng
 
-- `cd memoir_server/memoir_server_server; dart test` — test thuần cho việc đọc env.
-- `dart run tool/route_smoke.dart` với `ROUTE_API_URL_*` trỏ instance Việt Nam → tuyến không có đỉnh nào ngoài Việt Nam.
+- `cd memoir_server/memoir_server_server; dart test` — test thuần (đọc env + bbox + chọn điểm ghim + gộp legs), không cần mạng.
+- `dart run tool/route_smoke.dart` → case `Hà Nội → TP.HCM` in km + cờ `trong VN / ra ngoài VN`.
 - Trên app: đặt lại `Hà Nội → TP.HCM`; hình học **không** vượt ~104,8 °E ở dải 16–18,5 °N và không đi qua Kratie.
+
+### 19.7. Đặc tả heuristic ghim waypoint (để code theo)
+
+**Phát hiện ra khỏi VN** — hàm thuần `routeLeavesVietnam(List<RouteCoord> line)`:
+
+- Bbox Việt Nam (nới ~0,15° để chịu sai số snap đường biên): lat **8,15–23,65**, lon **101,85–110,10**.
+- Một đỉnh ngoài bbox = nghi ngờ; kết luận `true` khi có **≥ 3 đỉnh liên tiếp** ngoài bbox (trừ nhiễu 1–2 đỉnh snap lệch).
+- Ngưỡng 3 là hằng số `routeVietnamOutlierRun = 3`, có test riêng.
+
+**Điểm ghim** — hằng số `routeVietnamPins` (~7 điểm dọc QL1A/đường HCM, từ Bắc vào Nam):
+
+| Điểm ghim | lat | lon |
+|---|---|---|
+| Vinh | 18,6833 | 105,6833 |
+| Đồng Hới | 17,4833 | 106,6167 |
+| Đông Hà | 16,8167 | 107,1000 |
+| Huế | 16,4637 | 107,5900 |
+| Đà Nẵng | 16,0600 | 108,2100 |
+| Quy Nhơn | 13,7667 | 109,2333 |
+| Nha Trang | 12,2500 | 109,1833 |
+
+- Chỉ chèn điểm ghim nằm **giữa** vĩ độ origin và destination (theo hướng đi), tối đa **3 điểm** gần đường thẳng nối nhất.
+- Điểm ghim có `kind: 'waypoint'`, tên prefixed `Ghim · ` để phân biệt trong log (không hiện riêng trên UI vì legs đã gộp).
+
+**Luồng gọi lại** — trong `fetchRoutePlan`:
+
+1. Gọi OSRM lần 1 với stops của user.
+2. Giải mã hình học, chạy `routeLeavesVietnam` → nếu `false`, trả như hiện tại (không tốn thêm request).
+3. Nếu `true`: chèn điểm ghim vào giữa origin/destination, gọi OSRM lần 2 với `wantAlternatives: false`.
+4. Trả tuyến lần 2 **kể cả khi nó vẫn ra khỏi VN** (không gọi lần 3 — chặn vòng lặp và chặn ×3 thời gian chờ).
+
+**Gộp legs về stops gốc** (quyết định đã chốt):
+
+- OSRM lần 2 trả N legs cho (stops user + điểm ghim); server gộp thành đúng `stops user − 1` legs bằng cách cộng dồn `distanceMeters` / `durationSeconds` theo đoạn, `toIndex` đánh lại theo stops gốc.
+- `plan.stops` trả về **chỉ stops của user** (điểm ghim vô hình với client); hình học giữ nguyên tuyến lần 2.
+- `alternatives` của lần 2 luôn rỗng (đã tắt ở bước 3) — UI không hiện chọn tuyến thay thế cho tuyến đã ghim, tránh lẫn.
 
 ---
 
