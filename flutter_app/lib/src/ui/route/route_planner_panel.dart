@@ -69,13 +69,12 @@ class RoutePlannerPanel extends ConsumerStatefulWidget {
 /// How long the form waits after the last keystroke before it looks the text
 /// up. Long enough that a half-typed address never reaches the geocoder,
 /// short enough that the list still feels like an answer to the typing.
-const Duration _searchDebounce = Duration(seconds: 1);
+const Duration _searchDebounce = Duration(seconds: 2);
 
-/// How long the Search button stays disabled after a search. Comfortably
-/// over the 1 second a Nominatim request may take, so presses can never
-/// queue up into a burst. One counter for the whole form, so pressing fast
-/// on two different stops is blocked just the same.
-const Duration _throttleSeconds = Duration(milliseconds: 1500);
+/// How long to wait before allowing another search. Comfortably over the
+/// 1 second a Nominatim request may take, so requests cannot queue up into a
+/// burst. One counter covers the whole form.
+const Duration _throttleSeconds = Duration(milliseconds: 2500);
 
 class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
   /// Which stop's suggestions are showing, or null when none are.
@@ -106,13 +105,13 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
 
   /// Sends the search for [term] under stop [index].
   ///
-  /// Reached three ways: the typing pause running out, Enter in the stop
-  /// field, and the Search button beside it — never once per keystroke, which
-  /// is what the [_searchDebounce] pause is for (docs/12-route-weather.md
-  /// §11). A search arriving while the counter or an earlier request is still
-  /// running is held back and tried again rather than dropped, so the list the
-  /// user is waiting for always turns up, and Nominatim still sees at most one
-  /// request per second.
+  /// Reached when the typing pause runs out or the user presses Enter in the
+  /// stop field — never once per keystroke, which is what the
+  /// [_searchDebounce] pause is for (docs/12-route-weather.md §11). A search
+  /// arriving while the counter or an earlier request is still running is held
+  /// back and tried again rather than dropped, so the list the user is waiting
+  /// for always turns up, and Nominatim still sees at most one request per
+  /// second.
   void _search(int index, String term) {
     final trimmed = term.trim();
     // Two characters is the server's own floor; asking with one is a wasted
@@ -245,8 +244,8 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
       overline: 'Quản lý lộ trình',
       title: 'Chọn hành trình và các điểm dừng',
       subtitle: 'Nhập tên đường hoặc địa chỉ vào ô của điểm; danh sách địa '
-          'điểm hiện ra sau khi bạn ngừng gõ một giây — hoặc nhấn Enter / nút '
-          'tìm kiếm để tìm ngay.',
+          'điểm hiện ra sau khi bạn ngừng gõ hai giây — hoặc nhấn Enter để '
+          'tìm ngay.',
       scale: scale,
       trailing: TextButton.icon(
         onPressed: stops.length < 2 ? null : _reverse,
@@ -260,9 +259,7 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
             _StopRow(
               index: i,
               stop: stops[i],
-              searching: _resultsIndex == i,
               picking: widget.pickTarget == i,
-              canSearch: !_coolingDown,
               scale: scale,
               onName: (value) => _onNameChanged(i, value),
               onSearch: (term) => _search(i, term),
@@ -369,9 +366,7 @@ class _StopRow extends StatefulWidget {
   const _StopRow({
     required this.index,
     required this.stop,
-    required this.searching,
     required this.picking,
-    required this.canSearch,
     required this.scale,
     required this.onName,
     required this.onSearch,
@@ -383,13 +378,7 @@ class _StopRow extends StatefulWidget {
   final int index;
   final RouteStop stop;
 
-  /// True while this stop's suggestions are on screen.
-  final bool searching;
   final bool picking;
-
-  /// False while the search counter is running, so the button cannot be
-  /// pressed into a burst.
-  final bool canSearch;
 
   final double scale;
 
@@ -451,7 +440,7 @@ class _StopRowState extends State<_StopRow> {
               child: TextField(
                 controller: _controller,
                 onChanged: widget.onName,
-                // Enter locates, exactly like the Search button beside it.
+                // Enter starts the same lookup as the typing debounce.
                 onSubmitted: widget.onSearch,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
@@ -469,17 +458,6 @@ class _StopRowState extends State<_StopRow> {
                   fontSize: MemoirType.bodyInput,
                 ),
               ),
-            ),
-            SizedBox(width: MemoirSpace.s1 * scale),
-            IconButton(
-              tooltip: 'Tìm địa chỉ trong ô này',
-              isSelected: widget.searching,
-              // Disabled while the counter runs, which is what keeps presses
-              // inside Nominatim's 1 request per second (docs/12 §11).
-              onPressed:
-                  widget.canSearch ? () => widget.onSearch(_controller.text) : null,
-              icon: Icon(Icons.search, size: 18 * scale),
-              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: 'Chọn trên bản đồ',
@@ -583,8 +561,8 @@ class _StepButton extends StatelessWidget {
 }
 
 /// The suggestions for one stop. Shown once a search has run: either the
-/// typing paused for a second, or the user asked for it straight away with
-/// Enter or the Search button — never once per keystroke.
+/// typing paused for a second or the user pressed Enter — never once per
+/// keystroke.
 ///
 /// It holds no state of its own: the term and the counters live in the panel,
 /// so one counter covers the whole form and two stops cannot slip a second
@@ -640,8 +618,7 @@ class _PlaceResults extends ConsumerWidget {
                                 ? null
                                 : Text(
                                     place.subtitle,
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
+                                    style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                       fontSize: MemoirType.caption,
                                     ),
@@ -758,7 +735,3 @@ class _Alternatives extends StatelessWidget {
     );
   }
 }
-
-
-
-
