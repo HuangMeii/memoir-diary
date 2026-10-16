@@ -66,6 +66,11 @@ class RoutePlannerPanel extends ConsumerStatefulWidget {
   ConsumerState<RoutePlannerPanel> createState() => _RoutePlannerPanelState();
 }
 
+/// How long the form waits after the last keystroke before it looks the text
+/// up. Long enough that a half-typed address never reaches the geocoder,
+/// short enough that the list still feels like an answer to the typing.
+const Duration _searchDebounce = Duration(seconds: 1);
+
 /// How long the Search button stays disabled after a search. Comfortably
 /// over the 1 second a Nominatim request may take, so presses can never
 /// queue up into a burst. One counter for the whole form, so pressing fast
@@ -77,14 +82,18 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
   int? _resultsIndex;
 
   /// The term the suggestions belong to. Empty means "nothing searched yet",
-  /// which is what keeps results off the screen until the user asks.
+  /// which is what keeps results off the screen until a search has run.
   String _query = '';
 
   Timer? _throttle;
 
+  /// The pause between the last keystroke and the search it asks for.
+  Timer? _debounce;
+
   @override
   void dispose() {
     _throttle?.cancel();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -95,17 +104,28 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
   bool get _inFlight =>
       _query.isNotEmpty && ref.read(placeSearchProvider(_query)).isLoading;
 
-  /// A search is only ever sent from here, and only ever because the user
-  /// asked for one: Enter in a stop field, or the Search button beside it.
-  /// Never while they are still typing — Nominatim's usage policy lists
-  /// auto-complete search under Unacceptable Use (docs/12-route-weather.md
-  /// §11).
+  /// Sends the search for [term] under stop [index].
+  ///
+  /// Reached three ways: the typing pause running out, Enter in the stop
+  /// field, and the Search button beside it — never once per keystroke, which
+  /// is what the [_searchDebounce] pause is for (docs/12-route-weather.md
+  /// §11). A search arriving while the counter or an earlier request is still
+  /// running is held back and tried again rather than dropped, so the list the
+  /// user is waiting for always turns up, and Nominatim still sees at most one
+  /// request per second.
   void _search(int index, String term) {
-    if (_coolingDown || _inFlight) return;
     final trimmed = term.trim();
     // Two characters is the server's own floor; asking with one is a wasted
     // round trip that only burns into the throttle.
     if (trimmed.length < 2) return;
+
+    if (_coolingDown || _inFlight) {
+      _armSearch(index, term, _throttleSeconds);
+      return;
+    }
+
+    // The text is on its way now, so the pause that asked for it is spent.
+    _debounce?.cancel();
 
     setState(() {
       _query = trimmed;
@@ -115,6 +135,38 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
     _throttle = Timer(_throttleSeconds, () {
       if (mounted) setState(() {});
     });
+  }
+
+  /// Restarts the pause before [term] is looked up: [after] from now.
+  void _armSearch(int index, String term, [Duration after = _searchDebounce]) {
+    _debounce?.cancel();
+    _debounce = Timer(after, () {
+      if (mounted) _search(index, term);
+    });
+  }
+
+  /// The user is editing a stop's name.
+  ///
+  /// The new name goes up straight away with `immediate: false`, so the screen
+  /// holds the route request back until the typing pauses, and the search for
+  /// the address starts its own pause.
+  void _onNameChanged(int index, String value) {
+    _replaceStop(
+      index,
+      widget.stops[index].copyWith(name: value),
+      // Still typing: the route request can wait.
+      immediate: false,
+    );
+
+    final trimmed = value.trim();
+    // Another stop's list must not sit under this field, and text too short to
+    // search has no list at all. The same stop's own last answer stays put
+    // until the new one lands, so the list does not flicker between keys.
+    if (_resultsIndex != index || trimmed.length < 2) _clearResults();
+
+    _debounce?.cancel();
+    if (trimmed.length < 2) return;
+    _armSearch(index, value);
   }
 
   /// The results no longer describe what is in the field.
@@ -192,8 +244,9 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
     return RouteSection(
       overline: 'Quản lý lộ trình',
       title: 'Chọn hành trình và các điểm dừng',
-      subtitle: 'Nhập tên đường hoặc địa chỉ vào ô của điểm, rồi nhấn Enter '
-          'hoặc nút tìm kiếm để định vị.',
+      subtitle: 'Nhập tên đường hoặc địa chỉ vào ô của điểm; danh sách địa '
+          'điểm hiện ra sau khi bạn ngừng gõ một giây — hoặc nhấn Enter / nút '
+          'tìm kiếm để tìm ngay.',
       scale: scale,
       trailing: TextButton.icon(
         onPressed: stops.length < 2 ? null : _reverse,
@@ -211,16 +264,7 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
               picking: widget.pickTarget == i,
               canSearch: !_coolingDown,
               scale: scale,
-              onName: (value) {
-                _replaceStop(
-                  i,
-                  stops[i].copyWith(name: value),
-                  // Still typing: the route request can wait.
-                  immediate: false,
-                );
-                // What is on screen no longer matches what was searched.
-                _clearResults();
-              },
+              onName: (value) => _onNameChanged(i, value),
               onSearch: (term) => _search(i, term),
               onTogglePick: () =>
                   widget.onPickTarget(widget.pickTarget == i ? null : i),
@@ -229,14 +273,16 @@ class _RoutePlannerPanelState extends ConsumerState<RoutePlannerPanel> {
               onRemove:
                   i == 0 || i == stops.length - 1 ? null : () => _removeStop(i),
             ),
-            // Nothing is fetched, and so nothing is shown, until a search has
-            // actually been asked for.
+            // Nothing is fetched, and so nothing is shown, until the typing
+            // has settled long enough for a search to run.
             if (_resultsIndex == i && _query.length >= 2)
               _PlaceResults(
                 query: _query,
                 scale: scale,
                 onPick: (place) {
                   _replaceStop(i, place.toStop(stops[i].kind));
+                  // The stop has its place, so no lookup is owed any more.
+                  _debounce?.cancel();
                   setState(() {
                     _resultsIndex = null;
                     _query = '';
@@ -536,13 +582,13 @@ class _StepButton extends StatelessWidget {
   }
 }
 
-/// The suggestions for one stop. A search is sent only when the user asks for
-/// one — Enter in the stop field, or the Search button beside it — never while
-/// they are still typing.
+/// The suggestions for one stop. Shown once a search has run: either the
+/// typing paused for a second, or the user asked for it straight away with
+/// Enter or the Search button — never once per keystroke.
 ///
-/// It holds no state of its own: the term and the counter live in the panel, so
-/// one counter covers the whole form and a fast press on one stop cannot slip a
-/// second request past another. See docs/12-route-weather.md §11.
+/// It holds no state of its own: the term and the counters live in the panel,
+/// so one counter covers the whole form and two stops cannot slip a second
+/// request past another. See docs/12-route-weather.md §11.
 class _PlaceResults extends ConsumerWidget {
   const _PlaceResults({
     required this.query,
@@ -575,7 +621,7 @@ class _PlaceResults extends ConsumerWidget {
               error: (error, _) => RouteNote(message: '$error', scale: scale),
               data: (places) => places.isEmpty
                   ? RouteNote(
-                      message: 'Không tìm thấy địa điểm nào.',
+                      message: 'Không có địa điểm phù hợp.',
                       scale: scale,
                     )
                   : Column(

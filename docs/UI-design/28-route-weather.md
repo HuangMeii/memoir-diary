@@ -43,7 +43,7 @@ liệu một phần, vượt phạm vi dự báo, lưu thành công / thất b�
   form luôn đứng nguyên bên trái.
 - **Form Quản lý lộ trình** (`route_planner_panel.dart`): điểm xuất phát / điểm dừng /
   điểm đến, **ô của mỗi điểm vừa là ô nhập địa chỉ** (gợi ý từ Nominatim hiện ngay dưới
-  điểm đó, **chỉ chạy khi bấm nút Tìm / Enter** — không tìm lúc đang gõ; nút bị chặn
+  điểm đó, **tự tìm sau khi ngừng gõ 1 giây** — Enter / nút Tìm thì tìm ngay; nút bị chặn
   1,5 giây sau mỗi lần tìm, dùng chung cho mọi điểm),
   **chọn trên bản đồ**, `Thời gian dừng` cho từng điểm dừng (± 15 phút),
   `Đảo chiều`, chọn ngày–giờ khởi hành, segmented `Ô tô / Xe đạp / Đi bộ`, danh sách

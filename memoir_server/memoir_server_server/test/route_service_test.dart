@@ -371,6 +371,46 @@ void main() {
     });
   });
 
+  group('geocode cache', () {
+    // Not const: the generated PlaceCandidate has no const constructor.
+    final hit = <PlaceCandidate>[
+      PlaceCandidate(
+        name: 'Đà Lạt, Tỉnh Lâm Đồng',
+        admin: 'Tỉnh Lâm Đồng',
+        country: 'Việt Nam',
+        lat: 11.9404,
+        lon: 108.4583,
+      ),
+    ];
+
+    setUp(routeGeocodeCache.clear);
+    tearDown(routeGeocodeCache.clear);
+
+    test('a fresh entry answers the search without a request', () async {
+      // Seed the key searchPlaces builds, so the provider is never reached: a
+      // miss here would hang the test on a real Nominatim call.
+      routeGeocodeCache['đà lạt|8'] = (DateTime.now().toUtc(), hit);
+
+      expect(await searchPlaces('Đà Lạt'), same(hit));
+      expect(await searchPlaces('  ĐÀ LẠT  '), same(hit));
+    });
+
+    test('an entry past the TTL is dropped', () {
+      final expired = DateTime.now()
+          .toUtc()
+          .subtract(routeGeocodeTtl + const Duration(minutes: 1));
+      routeGeocodeCache['huế|8'] = (expired, const []);
+
+      expect(cachedGeocode('huế|8'), isNull);
+    });
+
+    test('one character is never looked up, cached or not', () async {
+      routeGeocodeCache['h|8'] = (DateTime.now().toUtc(), hit);
+
+      expect(await searchPlaces('H'), isEmpty);
+    });
+  });
+
   group('routing failures', () {
     test('a normal answer is not a failure', () {
       expect(

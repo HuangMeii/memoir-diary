@@ -578,15 +578,50 @@ PlaceCandidate fromNominatim(Map row) {
   );
 }
 
+/// Geocoding answers, keyed by lower-cased query and limit, for
+/// [routeGeocodeTtl].
+///
+/// The form asks once per typing pause, so the same text comes round again as
+/// soon as the user backspaces or refocuses; answering those here is what
+/// keeps repeat lookups off Nominatim. Errors are deliberately never stored —
+/// the next attempt must reach the provider again rather than be answered
+/// with a failure the user has already seen.
+final Map<String, (DateTime, List<PlaceCandidate>)> routeGeocodeCache = {};
+
+/// How long one answer stays worth reusing: long enough that retyping the
+/// same address never costs a request, short enough that a corrected OSM
+/// entry still shows up within a session.
+const Duration routeGeocodeTtl = Duration(minutes: 30);
+
+/// Entries kept in [routeGeocodeCache]; the map is emptied once it is full.
+const int routeGeocodeCacheMax = 256;
+
+/// The cached answer for [key], or null when there is none or it is older
+/// than [routeGeocodeTtl].
+List<PlaceCandidate>? cachedGeocode(String key) {
+  final cached = routeGeocodeCache[key];
+  if (cached == null) return null;
+  if (DateTime.now().toUtc().difference(cached.$1) >= routeGeocodeTtl) {
+    return null;
+  }
+  return cached.$2;
+}
+
 /// Places matching [query], for the search box of the planner.
 ///
-/// Only ever called from an explicit user action (Search button or Enter):
-/// Nominatim's usage policy forbids auto-complete search, and caps the public
-/// instance at 1 request per second — see docs/12-route-weather.md §11.
+/// Asked once per typing pause rather than once per key — the form waits out
+/// its one-second debounce — and answered from [routeGeocodeCache] whenever
+/// the same text comes round again. The public Nominatim instance caps at one
+/// request per second and its usage policy frowns on auto-complete, so
+/// repeat lookups must never leave this server (docs/12-route-weather.md §11).
 Future<List<PlaceCandidate>> searchPlaces(String query, {int limit = 8}) async {
   final trimmed = query.trim();
   // One character matches half the country; not worth a round trip.
   if (trimmed.length < 2) return const [];
+
+  final key = '${trimmed.toLowerCase()}|$limit';
+  final hit = cachedGeocode(key);
+  if (hit != null) return hit;
 
   final uri =
       Uri.parse(routeGeocodingUrl).replace(queryParameters: geocodingParams(
@@ -594,8 +629,15 @@ Future<List<PlaceCandidate>> searchPlaces(String query, {int limit = 8}) async {
     limit,
   ));
   final results = await _getJsonList(uri);
+  final places = results.whereType<Map>().map(fromNominatim).toList();
 
-  return results.whereType<Map>().map(fromNominatim).toList();
+  // One long typing session can produce a lot of distinct prefixes; once the
+  // map is full every entry in it is old enough to drop anyway.
+  if (routeGeocodeCache.length >= routeGeocodeCacheMax) {
+    routeGeocodeCache.clear();
+  }
+  routeGeocodeCache[key] = (DateTime.now().toUtc(), places);
+  return places;
 }
 
 /// Forces `kind` to match the position: first stop is the origin, last is the

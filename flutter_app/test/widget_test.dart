@@ -912,7 +912,7 @@ void main() {
     /// The stand-in owns the stop list and feeds it back, which is what the real
     /// screen does — without that the field would be reset by the panel's own
     /// rebuild and a test could pass for the wrong reason.
-    Future<void> pumpPanel(WidgetTester tester) async {
+    Future<void> pumpPanel(WidgetTester tester, {List<String>? searched}) async {
       var stops = const [
         RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
         RouteStop(name: '', lat: 0, lon: 0, kind: 'destination'),
@@ -922,9 +922,11 @@ void main() {
         ProviderScope(
           overrides: [
             // There is no backend in a widget test. An empty answer is enough to
-            // show that a search actually ran.
-            placeSearchProvider
-                .overrideWith((ref, query) async => const <PlaceCandidate>[]),
+            // show that a search actually ran, and [searched] records the terms.
+            placeSearchProvider.overrideWith((ref, query) async {
+              searched?.add(query);
+              return const <PlaceCandidate>[];
+            }),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -969,26 +971,81 @@ void main() {
         isTrue,
         reason: 'typing must never ask for a route straight away',
       );
+
+      // Typing also arms the one-second search pause; let it and the 1.5 s
+      // counter after it run out, so no timer outlives the test.
+      await tester.pump(const Duration(seconds: 3));
     });
 
-    // The point of the whole screen: you type an address and ask for it, rather
-    // than opening a search box first — but still only when you ask.
-    testWidgets('typing does not search, Enter does', (tester) async {
-      await pumpPanel(tester);
+    // The point of the whole screen: you type an address and the list appears
+    // once you stop — no button press, no Enter. But only once the text has
+    // settled, so a half-typed address never reaches the geocoder.
+    testWidgets('typing searches one second after the last keystroke',
+        (tester) async {
+      final searched = <String>[];
+      await pumpPanel(tester, searched: searched);
+
       await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
       await tester.pump();
+      expect(searched, isEmpty);
       expect(
-        find.text('Không tìm thấy địa điểm nào.'),
+        find.text('Không có địa điểm phù hợp.'),
         findsNothing,
-        reason: 'Nominatim forbids auto-complete, so nothing may be looked up',
+        reason: 'the lookup waits for the typing to stop',
       );
 
+      // One millisecond short of the pause: still nothing may have been sent.
+      await tester.pump(const Duration(milliseconds: 999));
+      expect(searched, isEmpty);
+
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.pump();
+      await tester.pump();
+      expect(searched, ['Đà Lạt']);
+      expect(find.text('Không có địa điểm phù hợp.'), findsOneWidget);
+
+      // Let the 1.5 s search counter run out, so no timer outlives the test.
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    // Every keystroke restarts the pause, so the search always carries the
+    // text the user actually stopped on — never a prefix of it.
+    testWidgets('a keystroke inside the pause restarts it', (tester) async {
+      final searched = <String>[];
+      await pumpPanel(tester, searched: searched);
+
+      await tester.enterText(find.byType(TextField).first, 'Đà');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        searched,
+        isEmpty,
+        reason: 'only 600 ms have passed since the last keystroke',
+      );
+
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
+      await tester.pump();
+      expect(searched, ['Đà Lạt']);
+
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    // Enter and the Search button stay the impatient shortcut: they look the
+    // text up straight away instead of waiting out the pause.
+    testWidgets('Enter searches without waiting for the pause', (tester) async {
+      final searched = <String>[];
+      await pumpPanel(tester, searched: searched);
+
+      await tester.enterText(find.byType(TextField).first, 'Đà Lạt');
+      await tester.pump();
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pump();
       await tester.pump();
-      expect(find.text('Không tìm thấy địa điểm nào.'), findsOneWidget);
+      expect(searched, ['Đà Lạt']);
+      expect(find.text('Không có địa điểm phù hợp.'), findsOneWidget);
 
-      // Let the 1.5 s search counter run out, so no timer outlives the test.
       await tester.pump(const Duration(seconds: 2));
     });
 
