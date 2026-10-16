@@ -106,6 +106,8 @@ const String routeForecastUrl = 'https://api.open-meteo.com/v1/forecast';
 const String routePlanSource = 'osrm';
 
 const Duration routeTimeout = Duration(seconds: 5);
+const Duration routeForecastTimeout = Duration(seconds: 30);
+const int routeForecastChunkSize = 8;
 const Duration routeCacheTtl = Duration(minutes: 30);
 
 /// Sampling rules of docs/12-route-weather.md §5.1.
@@ -494,13 +496,17 @@ DateTime routeForecastHorizon() =>
 /// instead: Nominatim's `/reverse` answers 404 for a point that has no
 /// address at all (open water, an unlabelled field), and "nothing here" is
 /// an answer the caller can show, not an outage.
-Future<dynamic> _getJson(Uri uri, {bool notFoundIsNull = false}) async {
+Future<dynamic> _getJson(
+  Uri uri, {
+  bool notFoundIsNull = false,
+  Duration timeout = routeTimeout,
+}) async {
   final http.Response response;
   try {
     response = await http.get(
       uri,
       headers: const {'User-Agent': 'Memoir-RoutePlanner/1.0'},
-    ).timeout(routeTimeout);
+    ).timeout(timeout);
   } on TimeoutException {
     throw RouteFailure('unavailable', 'Máy chủ dữ liệu không phản hồi kịp');
   } catch (_) {
@@ -1120,45 +1126,65 @@ List<int?> _ints(dynamic value) => ((value as List?) ?? const [])
     .map((entry) => (entry as num?)?.toInt())
     .toList();
 
-/// One request for every sample coordinate: the provider accepts a comma
-/// separated list and answers with an entry per coordinate.
+/// One request per [routeForecastChunkSize] coordinates: the provider accepts
+/// a comma separated list and answers with an entry per coordinate, but a
+/// 25-point route x 16 days x 7 hourly variables is several MB in one URL
+/// and always trips the 5 s [routeTimeout] on slow links (HN-HCM showed only
+/// "Chua co du lieu du bao" for this reason). Chunks run sequentially with
+/// the longer [routeForecastTimeout]; a failed chunk keeps the coordinates
+/// of the other chunks instead of failing the whole route.
 Future<List<HourlySeries>> fetchHourlySeries(List<RouteCoord> coords) async {
   if (coords.isEmpty) return const [];
 
-  final uri = Uri.parse(routeForecastUrl).replace(queryParameters: {
-    'latitude': coords.map((c) => c.lat.toStringAsFixed(4)).join(','),
-    'longitude': coords.map((c) => c.lon.toStringAsFixed(4)).join(','),
-    'hourly': _hourlyVariables,
-    'forecast_days': '$routeForecastMaxDays',
-    'timezone': routeForecastTimezone,
-  });
-
-  final decoded = await _getJson(uri);
-  // A single coordinate comes back as an object, several as an array.
-  final entries = decoded is List ? decoded : [decoded];
-
   final series = <HourlySeries>[];
-  for (final entry in entries) {
-    if (entry is! Map) continue;
-    final hourly = entry['hourly'];
-    if (hourly is! Map) continue;
-    final rawTimes = (hourly['time'] as List?) ?? const [];
-    series.add(HourlySeries(
-      lat: ((entry['latitude'] as num?) ?? 0).toDouble(),
-      lon: ((entry['longitude'] as num?) ?? 0).toDouble(),
-      // The request asks for GMT, so the naive timestamps are UTC.
-      times: rawTimes
-          .whereType<String>()
-          .map((raw) => DateTime.parse('${raw}Z'))
-          .toList(),
-      temperature: _doubles(hourly['temperature_2m']),
-      precipitation: _doubles(hourly['precipitation']),
-      probability: _ints(hourly['precipitation_probability']),
-      windSpeed: _doubles(hourly['wind_speed_10m']),
-      windGust: _doubles(hourly['wind_gusts_10m']),
-      visibility: _doubles(hourly['visibility']),
-      weatherCode: _ints(hourly['weather_code']),
-    ));
+  for (var i = 0; i < coords.length; i += routeForecastChunkSize) {
+    final chunk = coords.sublist(
+      i,
+      (i + routeForecastChunkSize).clamp(0, coords.length),
+    );
+
+    final uri = Uri.parse(routeForecastUrl).replace(queryParameters: {
+      'latitude': chunk.map((c) => c.lat.toStringAsFixed(4)).join(','),
+      'longitude': chunk.map((c) => c.lon.toStringAsFixed(4)).join(','),
+      'hourly': _hourlyVariables,
+      'forecast_days': '$routeForecastMaxDays',
+      'timezone': routeForecastTimezone,
+    });
+
+    List<dynamic> entries;
+    try {
+      final decoded = await _getJson(uri, timeout: routeForecastTimeout);
+      // A single coordinate comes back as an object, several as an array.
+      entries = decoded is List ? decoded : [decoded];
+    } on RouteFailure {
+      // One slow chunk must not wipe the samples the other chunks fetched:
+      // those coordinates simply get no series and fall back to `unavailable`
+      // samples downstream instead of failing the whole report.
+      continue;
+    }
+
+    for (final entry in entries) {
+      if (entry is! Map) continue;
+      final hourly = entry['hourly'];
+      if (hourly is! Map) continue;
+      final rawTimes = (hourly['time'] as List?) ?? const [];
+      series.add(HourlySeries(
+        lat: ((entry['latitude'] as num?) ?? 0).toDouble(),
+        lon: ((entry['longitude'] as num?) ?? 0).toDouble(),
+        // The request asks for GMT, so the naive timestamps are UTC.
+        times: rawTimes
+            .whereType<String>()
+            .map((raw) => DateTime.parse('${raw}Z'))
+            .toList(),
+        temperature: _doubles(hourly['temperature_2m']),
+        precipitation: _doubles(hourly['precipitation']),
+        probability: _ints(hourly['precipitation_probability']),
+        windSpeed: _doubles(hourly['wind_speed_10m']),
+        windGust: _doubles(hourly['wind_gusts_10m']),
+        visibility: _doubles(hourly['visibility']),
+        weatherCode: _ints(hourly['weather_code']),
+      ));
+    }
   }
   return series;
 }
