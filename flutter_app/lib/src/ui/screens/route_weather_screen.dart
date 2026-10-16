@@ -616,7 +616,14 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
         ),
         if (hasRoute) ...[
           SizedBox(height: MemoirSpace.s4 * scale),
-          RouteSummary(plan: plan, report: report, scale: scale),
+          RouteSummary(
+            plan: plan,
+            report: report,
+            scale: scale,
+            onRetryForecast: report.isUnavailable
+                ? () => ref.invalidate(routePlanProvider(_query))
+                : null,
+          ),
         ],
       ],
     );
@@ -647,7 +654,13 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       return _errorCard(context, scale, async.error!);
     }
     if (plan == null || report == null) return _loadingCard(context, scale);
-    return RouteSummary(plan: plan, report: report, scale: scale);
+    return RouteSummary(
+      plan: plan,
+      report: report,
+      scale: scale,
+      onRetryForecast:
+          report.isUnavailable ? () => ref.invalidate(routePlanProvider(_query)) : null,
+    );
   }
 
   /// Everything under the map: the progress chart, the legs, the safety

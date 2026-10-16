@@ -174,11 +174,17 @@ class RouteSummary extends StatelessWidget {
     required this.plan,
     required this.report,
     required this.scale,
+    this.onRetryForecast,
   });
 
   final RoutePlan plan;
   final RouteWeatherReport report;
   final double scale;
+
+  /// Reloads only the forecast for the plan already on screen, without
+  /// re-planning the route (long routes time out on Open-Meteo, so a
+  /// forecast-only retry is cheaper than rebuilding the whole query).
+  final VoidCallback? onRetryForecast;
 
   @override
   Widget build(BuildContext context) {
@@ -263,6 +269,14 @@ class RouteSummary extends StatelessWidget {
           for (final note in report.notes) ...[
             SizedBox(height: MemoirSpace.s3 * scale),
             RouteNote(icon: Icons.info_outline, message: note, scale: scale),
+          ],
+          if (report.isUnavailable && onRetryForecast != null) ...[
+            SizedBox(height: MemoirSpace.s3 * scale),
+            OutlinedButton.icon(
+              onPressed: onRetryForecast,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Tải lại dự báo'),
+            ),
           ],
         ],
       ),

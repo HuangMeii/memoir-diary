@@ -312,8 +312,8 @@ class _SelectedSampleDot extends StatelessWidget {
 /// What the colours of the route mean, written on the map itself.
 ///
 /// The line carries the meaning now, so the scale has to be readable where it
-/// is read. The grey bed underneath has no entry: it is only there to keep
-/// the line whole.
+/// is read. A stretch the forecast never reached shows only the grey bed, so
+/// it gets its own entry instead of looking like dry weather.
 class _RouteMapLegend extends StatelessWidget {
   const _RouteMapLegend({required this.scale});
 
@@ -322,6 +322,7 @@ class _RouteMapLegend extends StatelessWidget {
   static const List<(String, String)> _entries = [
     (RouteWeatherBucket.rain, 'Mưa'),
     (RouteWeatherBucket.sun, 'Nắng'),
+    (RouteWeatherBucket.unknown, 'Chưa có dự báo'),
   ];
 
   @override
