@@ -109,7 +109,7 @@ abstract class Journey
 
   String title;
 
-  /// car | bike | foot
+  /// car | motor | bike | foot
   String vehicle;
 
   DateTime departureAt;

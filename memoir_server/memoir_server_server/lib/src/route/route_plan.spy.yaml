@@ -13,5 +13,5 @@ fields:
   alternatives: List<RouteAlternative>
   ### Name of the routing backend, e.g. "osrm".
   source: String
-  ### car | bike | foot
+  ### car | motor | bike | foot
   vehicle: String

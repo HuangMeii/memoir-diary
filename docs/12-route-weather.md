@@ -35,18 +35,20 @@ Người dùng nhập một lộ trình (điểm xuất phát, các điểm dừ
 
 | Nhu cầu | Nhà cung cấp | Vì sao |
 |---|---|---|
-| Routing (tuyến + hình học + thời gian) | **OSRM** | Miễn phí, **không cần API key**, trả `distance` / `duration` **theo từng leg**, có `geometries=geojson` và `alternatives`. Cùng triết lý "không có bí mật nào phải giữ" như Open-Meteo ([11-weather-forecast.md §1](11-weather-forecast.md)) |
+| Routing (ô tô / xe đạp / đi bộ) | **OSRM** | Miễn phí, **không cần API key**, trả `distance` / `duration` **theo từng leg**, có `geometries=geojson` và `alternatives`. Cùng triết lý "không có bí mật nào phải giữ" như Open-Meteo ([11-weather-forecast.md §1](11-weather-forecast.md)) |
+| Routing (xe máy) | **Valhalla `motorcycle`** (`valhalla1.openstreetmap.de`) | OSRM không có profile xe máy (dùng chung `car` sẽ copy giờ ô tô + cho lên cao tốc). Valhalla miễn phí, **không key**, tốc độ + tránh đường cấm riêng cho hai bánh |
 | Tìm địa điểm theo tên | **Nominatim** | OSM giữ địa chỉ tới tầng **đường / phường** (GeoNames mà Open-Meteo dùng thì không), trả **tên tiếng Việt có dấu** qua `accept-language=vi`, miễn phí không key |
 | Dự báo dọc tuyến | **Open-Meteo Forecast** | Nhận **nhiều toạ độ trong một request** (`latitude=a,b,c&longitude=…`), có `precipitation_probability`, `precipitation`, `temperature_2m`, `wind_speed_10m`, `wind_gusts_10m`, `visibility`, `weather_code`; tối đa **16 ngày** |
 | Nền bản đồ | **OSM raster tiles** | Không key, hiển thị được bằng `flutter_map` trên cả web và mobile |
 
-**Ánh xạ phương tiện ↔ profile OSRM** (mục A — "phương tiện di chuyển phù hợp với routing API"):
+**Ánh xạ phương tiện ↔ profile** (mục A — "phương tiện di chuyển phù hợp với routing API"):
 
-| Lựa chọn UI | Profile OSRM | Ghi chú |
+| Lựa chọn UI | Engine + profile | Ghi chú |
 |---|---|---|
-| `car` — Ô tô / Xe máy | `driving` | Mặc định |
-| `bike` — Xe đạp | `bike` | Instance phải có profile bike |
-| `foot` — Đi bộ | `foot` | |
+| `car` — Ô tô | OSRM `driving` | Mặc định, có tuyến thay thế |
+| `motor` — Xe máy | Valhalla `motorcycle` | Tốc độ + tránh cao tốc riêng; trả 1 tuyến, không có alternatives; shape polyline6 decode thành GeoJSON |
+| `bike` — Xe đạp | OSRM `bike` | Instance phải có profile bike |
+| `foot` — Đi bộ | OSRM `foot` | |
 | `transit` — Công cộng | — | **Không hỗ trợ ở bản đầu**: OSRM không có profile transit. UI **ẩn** lựa chọn này thay vì trả kết quả sai |
 
 > ⚠️ Instance OSRM công khai là **server demo**: có giới hạn truy vấn và không cam kết SLA. Vì vậy đặc tả luôn dùng timeout cứng 5 s (§11), cache 30 phút, base URL ghi đè được bằng biến cấu hình (§12), và mọi chỗ hiển thị đều ghi rõ nguồn dữ liệu.

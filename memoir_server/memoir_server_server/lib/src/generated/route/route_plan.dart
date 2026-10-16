@@ -80,7 +80,7 @@ abstract class RoutePlan
   /// Name of the routing backend, e.g. "osrm".
   String source;
 
-  /// car | bike | foot
+  /// car | motor | bike | foot
   String vehicle;
 
   /// Returns a shallow copy of this [RoutePlan]

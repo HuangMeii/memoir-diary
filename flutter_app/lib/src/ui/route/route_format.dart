@@ -124,14 +124,16 @@ class RouteWeatherIcon extends StatelessWidget {
 }
 
 /// The vehicles the routing API can plan for, in the order the design lists
-/// them. `transit` is deliberately absent: OSRM has no transit profile.
+/// them. `transit` is deliberately absent: OSRM has no transit profile, and
+/// Valhalla motorcycle covers two-wheelers instead of sharing `car`.
 const List<({String code, String label})> routeVehicles = [
   (code: 'car', label: 'Ô tô'),
+  (code: 'motor', label: 'Xe máy'),
   (code: 'bike', label: 'Xe đạp'),
   (code: 'foot', label: 'Đi bộ'),
 ];
 
-/// "Ô tô" / "Xe đạp" / "Đi bộ", falling back to the car.
+/// "Ô tô" / "Xe máy" / "Xe đạp" / "Đi bộ", falling back to the car.
 String vehicleLabel(String code) => routeVehicles
     .firstWhere((v) => v.code == code, orElse: () => routeVehicles.first)
     .label;

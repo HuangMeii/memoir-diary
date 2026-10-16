@@ -31,11 +31,15 @@ class RouteFailure implements Exception {
 /// Routing backends, mirroring docs/12-route-weather.md §12. Public OSRM
 /// instances need no API key.
 ///
-/// The URLs resolve from `ROUTE_API_URL_CAR|BIKE|FOOT` (docs/12 §19):
+/// Cars, bikes and feet ride OSRM; motorbikes ride Valhalla `motorcycle`
+/// (OSRM has no two-wheeler profile, so sharing `car` would copy car times).
+/// Valhalla's FOSSGIS demo needs no key either, just fair use.
+///
+/// The URLs resolve from `ROUTE_API_URL_CAR|MOTOR|BIKE|FOOT` (docs/12 §19):
 /// a self-hosted instance on `vietnam-latest.osm.pbf` keeps every route
 /// inside Vietnam, because OSRM has no "avoid country" parameter. The public
 /// FOSSGIS instances stay as the fallback so a dev machine without a local
-/// OSRM still works.
+/// routing server still works.
 ///
 /// Pass an explicit [environment] in tests to avoid touching
 /// [Platform.environment]; production callers omit it.
@@ -50,6 +54,12 @@ Map<String, String> resolveRouteBackends([Map<String, String>? environment]) {
     'car': pick(
       'ROUTE_API_URL_CAR',
       'https://routing.openstreetmap.de/routed-car/route/v1/driving',
+    ),
+    // Valhalla route endpoint; the motorcycle costing travels in the POST
+    // body, not the URL (docs/12 §2).
+    'motor': pick(
+      'ROUTE_API_URL_MOTOR',
+      'https://valhalla1.openstreetmap.de/route',
     ),
     'bike': pick(
       'ROUTE_API_URL_BIKE',
@@ -74,15 +84,17 @@ Map<String, String> get routeBackends => resolveRouteBackends();
 bool usesPublicRouteBackends([Map<String, String>? backends]) {
   final resolved = backends ?? routeBackends;
   return resolved.values.any(
-    (url) => url.contains('routing.openstreetmap.de'),
+    (url) =>
+        url.contains('routing.openstreetmap.de') ||
+        url.contains('valhalla1.openstreetmap.de'),
   );
 }
 
 /// One-line warning for the server log when the public graph is in use.
 String get publicRouteBackendWarning =>
-    'Routing dùng OSRM công khai (đồ thị toàn cầu) — '
+    'Routing dùng OSRM/Valhalla công khai (đồ thị toàn cầu) — '
     'tuyến dài có thể đi qua Lào/Campuchia; '
-    'đặt ROUTE_API_URL_CAR|BIKE|FOOT trỏ instance extract Việt Nam (§19).';
+    'đặt ROUTE_API_URL_CAR|MOTOR|BIKE|FOOT trỏ instance extract Việt Nam (§19).';
 
 /// Nominatim geocodes OpenStreetMap data, which keeps addresses down to
 /// the street / ward level - the reason it replaced Open-Meteo Geocoding
@@ -539,6 +551,98 @@ Future<Map<String, dynamic>> _getJsonMap(Uri uri) async {
     throw RouteFailure('unavailable', 'Dữ liệu trả về không hợp lệ');
   }
   return decoded.cast<String, dynamic>();
+}
+
+/// JSON body of a Valhalla POST (`/route`), with the same failure mapping.
+///
+/// Valhalla answers 400 with `{status, error}` when no route exists, which
+/// maps to `noRoute` instead of a generic outage.
+Future<Map<String, dynamic>> _postJson(
+  Uri uri,
+  Map<String, dynamic> payload,
+) async {
+  final http.Response response;
+  try {
+    response = await http
+        .post(
+          uri,
+          headers: const {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Memoir-RoutePlanner/1.0',
+          },
+          body: jsonEncode(payload),
+        )
+        .timeout(routeTimeout);
+  } on TimeoutException {
+    throw RouteFailure('unavailable', 'Máy chủ dữ liệu không phản hồi kịp');
+  } catch (_) {
+    throw RouteFailure('unavailable', 'Không kết nối được tới máy chủ dữ liệu');
+  }
+
+  if (response.statusCode == 429) {
+    throw RouteFailure('rateLimited', 'Đã vượt giới hạn truy vấn');
+  }
+  Map<String, dynamic>? decoded;
+  try {
+    final raw = jsonDecode(utf8.decode(response.bodyBytes));
+    if (raw is Map) decoded = raw.cast<String, dynamic>();
+  } catch (_) {
+    decoded = null;
+  }
+  // Valhalla error shape: HTTP 400 + {"status": 400, "error": "..."} or a
+  // 200 with trip.status != 0. Surface the provider message so the probe
+  // and logs show why (e.g. "No route found"), instead of a generic outage.
+  if (response.statusCode == 400 ||
+      decoded?['status'] == 400 ||
+      decoded?['status_code'] == 400) {
+    final detail = decoded?['error'];
+    throw RouteFailure(
+      'noRoute',
+      detail is String && detail.isNotEmpty
+          ? 'Valhalla: $detail'
+          : 'Không tìm thấy tuyến đường cho xe máy',
+    );
+  }
+  if (response.statusCode != 200 || decoded == null) {
+    throw RouteFailure(
+      'unavailable',
+      'Máy chủ dữ liệu trả lỗi ${response.statusCode}',
+    );
+  }
+  return decoded;
+}
+
+/// Decodes a Valhalla polyline6 shape (precision 1e-6) into coordinates.
+///
+/// Same zigzag-varint scheme as OSRM polyline5, only the precision differs.
+List<RouteCoord> decodePolyline6(String shape) {
+  final coords = <RouteCoord>[];
+  var index = 0;
+  var lat = 0;
+  var lon = 0;
+  while (index < shape.length) {
+    var shift = 0;
+    var result = 0;
+    int byte;
+    do {
+      byte = shape.codeUnitAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    final dLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lat += dLat;
+    shift = 0;
+    result = 0;
+    do {
+      byte = shape.codeUnitAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    final dLon = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lon += dLon;
+    coords.add(RouteCoord(lat / 1e6, lon / 1e6));
+  }
+  return coords;
 }
 
 /// Nominatim's `/search` answers with a bare JSON array, unlike the other
@@ -1024,6 +1128,15 @@ Future<RoutePlan> _fetchOnce({
   required bool wantAlternatives,
   required Map<String, String> resolved,
 }) async {
+  // Motorbikes ride Valhalla: OSRM has no two-wheeler profile, so sending
+  // `motor` to the car URL would copy car times and allow motorways.
+  if (vehicle == 'motor') {
+    return _fetchValhalla(
+      ordered: ordered,
+      endpoint: resolved['motor'] ?? resolved['car']!,
+    );
+  }
+
   final base = resolved[vehicle] ?? resolved['car']!;
   final coordinates = ordered
       .map((stop) => '${stop.lon},${stop.lat}')
@@ -1057,6 +1170,114 @@ Future<RoutePlan> _fetchOnce({
     alternatives: _alternativesOf(routes.skip(1), ordered.length),
     source: routePlanSource,
     vehicle: resolved.containsKey(vehicle) ? vehicle : 'car',
+  );
+}
+
+/// Valhalla `motorcycle` route for two-wheelers (docs/12 §2).
+///
+/// Request: `POST {endpoint}` with
+/// `{locations: [{lat, lon, type}], costing: 'motorcycle'}` — origin is
+/// `break`, waypoints are `through`, destination is `break`.
+/// Response trip: `summary: {length (km), time (s)}`, `legs: [{summary:
+/// {length, time}, shape (polyline6)}]`, `status: 0` on success.
+Future<RoutePlan> _fetchValhalla({
+  required List<RouteStop> ordered,
+  required String endpoint,
+}) async {
+  final uri = Uri.parse(endpoint);
+  final body = await _postJson(uri, {
+    'locations': [
+      for (var i = 0; i < ordered.length; i++)
+        {
+          'lat': ordered[i].lat,
+          'lon': ordered[i].lon,
+          'type': (i == 0 || i == ordered.length - 1) ? 'break' : 'through',
+        },
+    ],
+    'costing': 'motorcycle',
+    'directions_options': {'units': 'kilometers'},
+  });
+
+  final trip = body['trip'];
+  // Success is HTTP 200 + a trip object; only failures carry a top-level
+  // `status` (400) or `error`, so success must NOT require status == 0.
+  if (trip is! Map) {
+    final detail = body['error'];
+    throw RouteFailure(
+      'noRoute',
+      detail is String && detail.isNotEmpty
+          ? 'Valhalla: $detail'
+          : 'Không tìm thấy tuyến đường cho xe máy',
+    );
+  }
+  final summary = trip['summary'];
+  if (summary is! Map) {
+    throw RouteFailure('noRoute', 'Không tìm thấy tuyến đường cho xe máy');
+  }
+  final legs = (trip['legs'] as List?) ?? const [];
+  if (legs.isEmpty) {
+    throw RouteFailure('noRoute', 'Không tìm thấy tuyến đường cho xe máy');
+  }
+
+  // Valhalla legs carry polyline6 shapes; the map decodes GeoJSON, so all
+  // leg shapes are decoded and re-joined into one LineString.
+  final coords = <List<double>>[];
+  var distanceMeters = 0;
+  var durationSeconds = 0;
+  final legRows = <RouteLeg>[];
+  for (var i = 0; i < legs.length; i++) {
+    final leg = legs[i];
+    if (leg is! Map) continue;
+    final legSummary = leg['summary'];
+    var legDistance = 0;
+    var legDuration = 0;
+    if (legSummary is Map) {
+      legDistance = (((legSummary['length'] as num?) ?? 0) * 1000).round();
+      legDuration = ((legSummary['time'] as num?) ?? 0).round();
+    }
+    distanceMeters += legDistance;
+    durationSeconds += legDuration;
+    // One entry per leg; legs arrive in travel order, so the index is the
+    // position in the merged geometry, not a stop index.
+    legRows.add(
+      RouteLeg(
+        distanceMeters: legDistance,
+        durationSeconds: legDuration,
+        toIndex: legRows.length + 1,
+      ),
+    );
+    final shape = leg['shape'];
+    if (shape is String && shape.isNotEmpty) {
+      final points = decodePolyline6(shape);
+      for (var j = 0; j < points.length; j++) {
+        // Legs share their boundary point; skip the duplicate.
+        if (coords.isNotEmpty && j == 0) continue;
+        coords.add([points[j].lon, points[j].lat]);
+      }
+    }
+  }
+  if (coords.length < 2) {
+    throw RouteFailure('noRoute', 'Không tìm thấy tuyến đường cho xe máy');
+  }
+
+  final legCount = ordered.length - 1;
+  return RoutePlan(
+    stops: ordered,
+    distanceMeters: distanceMeters,
+    durationSeconds: durationSeconds,
+    geometry: jsonEncode({
+      'type': 'LineString',
+      'coordinates': coords,
+    }),
+    legs: mergePinnedLegs(
+      rawLegs: legRows,
+      userLegCount: legCount,
+      pinCount: 0,
+    ),
+    // Valhalla returns one route, never alternatives.
+    alternatives: const [],
+    source: 'valhalla',
+    vehicle: 'motor',
   );
 }
 

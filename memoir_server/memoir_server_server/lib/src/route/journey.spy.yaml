@@ -7,7 +7,7 @@ fields:
   id: UuidValue?, defaultPersist=random_v7
   userId: UuidValue, relation(parent=users, onDelete=Cascade)
   title: String
-  ### car | bike | foot
+  ### car | motor | bike | foot
   vehicle: String
   departureAt: DateTime
   originName: String

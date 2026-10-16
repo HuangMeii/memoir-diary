@@ -111,7 +111,7 @@ abstract class Journey
 
   String title;
 
-  /// car | bike | foot
+  /// car | motor | bike | foot
   String vehicle;
 
   DateTime departureAt;
@@ -539,7 +539,7 @@ class JourneyTable extends _is.Table<_is.UuidValue?> {
 
   late final _is.ColumnString title;
 
-  /// car | bike | foot
+  /// car | motor | bike | foot
   late final _is.ColumnString vehicle;
 
   late final _is.ColumnDateTime departureAt;

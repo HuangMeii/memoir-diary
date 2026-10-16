@@ -76,6 +76,10 @@ void main() {
         'https://routing.openstreetmap.de/routed-car/route/v1/driving',
       );
       expect(
+        backends['motor'],
+        'https://valhalla1.openstreetmap.de/route',
+      );
+      expect(
         backends['bike'],
         'https://routing.openstreetmap.de/routed-bike/route/v1/driving',
       );
@@ -89,11 +93,13 @@ void main() {
     test('environment overrides win over the defaults', () {
       final backends = resolveRouteBackends(const {
         'ROUTE_API_URL_CAR': 'http://localhost:5000/route/v1/driving',
+        'ROUTE_API_URL_MOTOR': 'http://localhost:5009/route',
         'ROUTE_API_URL_BIKE': 'http://localhost:5001/route/v1/driving',
         'ROUTE_API_URL_FOOT': 'http://localhost:5002/route/v1/driving',
       });
 
       expect(backends['car'], 'http://localhost:5000/route/v1/driving');
+      expect(backends['motor'], 'http://localhost:5009/route');
       expect(backends['bike'], 'http://localhost:5001/route/v1/driving');
       expect(backends['foot'], 'http://localhost:5002/route/v1/driving');
       expect(usesPublicRouteBackends(backends), isFalse);
@@ -111,6 +117,19 @@ void main() {
       );
       expect(backends['bike'], 'http://localhost:5001/route/v1/driving');
       expect(usesPublicRouteBackends(backends), isTrue);
+    });
+
+    test('decodes a Valhalla polyline6 shape', () {
+      // Shape captured from valhalla1.openstreetmap.de (Hanoi hop,
+      // costing=motorcycle): it must decode to points near Hanoi.
+      const shape = 'ohnbg@oyx{hEARYbDa@E_Ik@i@E_BIaBMgCGeEKoJYoQY_'
+          'BE}@Aqn@cAmCEeBo@cHKmHIuAAiAES?e\\QwCCgBBeBJcg@bD}D\\yBDqo@'
+          't@in@j@EkDSgZE{EzCIxXo@';
+      final coords = decodePolyline6(shape);
+
+      expect(coords.length, greaterThan(2));
+      expect(coords.first.lat, closeTo(21.0285, 0.01));
+      expect(coords.first.lon, closeTo(105.8542, 0.01));
     });
   });
 
