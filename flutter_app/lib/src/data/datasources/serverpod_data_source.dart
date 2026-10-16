@@ -244,6 +244,12 @@ class ServerpodDataSource implements BackendDataSource {
               limit: body['limit'] as int?,
             ));
         return places.map(_placeMap).toList();
+      case '/route/reverse-place':
+        final place = await _request(() => _client.route.reversePlace(
+              lat: (body['lat'] as num).toDouble(),
+              lon: (body['lon'] as num).toDouble(),
+            ));
+        return place == null ? null : _placeMap(place);
       case '/route/plan':
         final plan = await _request(() => _client.route.plan(
               origin: _stopOf(body['origin']),

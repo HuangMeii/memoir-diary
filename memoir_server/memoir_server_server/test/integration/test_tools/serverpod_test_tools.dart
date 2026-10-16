@@ -2826,6 +2826,41 @@ class _RouteEndpoint {
     });
   }
 
+  _ida.Future<_ile7spz5.PlaceCandidate?> reversePlace(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required double lat,
+    required double lon,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'route',
+            method: 'reversePlace',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'route',
+          methodName: 'reversePlace',
+          parameters: _ist.testObjectToJson({
+            'lat': lat,
+            'lon': lon,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ile7spz5.PlaceCandidate?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<_izbe64dt.RoutePlan> plan(
     _ist.TestSessionBuilder sessionBuilder, {
     required _imxvpk9j.RouteStop origin,

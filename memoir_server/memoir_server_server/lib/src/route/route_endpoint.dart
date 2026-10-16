@@ -39,6 +39,20 @@ class RouteEndpoint extends Endpoint {
     }
   }
 
+  /// The address at [lat] / [lon], or null when the point has none — what a
+  /// tap on the map writes into the planner's stop field (docs/12 §11).
+  Future<PlaceCandidate?> reversePlace(
+    Session session, {
+    required double lat,
+    required double lon,
+  }) async {
+    try {
+      return await routing.reversePlace(lat, lon);
+    } on routing.RouteFailure catch (failure) {
+      throw _api(failure);
+    }
+  }
+
   /// The route through [origin], the optional [waypoints] and [destination].
   Future<RoutePlan> plan(
     Session session, {

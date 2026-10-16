@@ -167,6 +167,11 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
   }
 
   /// A tap on the map fills the stop the form has armed.
+  ///
+  /// The coordinates land at once — the marker should not wait for the
+  /// network — and the name follows when the reverse lookup answers, so the
+  /// field never keeps an address the pin has moved away from
+  /// (docs/12-route-weather.md §11).
   void _onPickPoint(double lat, double lon) {
     final target = _pickTarget;
     if (target == null || target >= _stops.length) {
@@ -180,7 +185,20 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       return;
     }
 
-    final stops = [
+    setState(() => _pickTarget = null);
+
+    // A field that had no name yet — empty, or still showing the coordinates
+    // of where the pin used to sit — takes the new label straight away, so
+    // the stop is never named after the wrong point in the route request; a
+    // field the user actually wrote in keeps its text until the lookup says
+    // what is actually there.
+    final current = _stops[target];
+    final previousName = current.name;
+    final unlabelled = previousName.trim().isEmpty ||
+        previousName == _pickedPlaceLabel(current.lat, current.lon);
+    final provisional =
+        unlabelled ? _pickedPlaceLabel(lat, lon) : previousName;
+    _setStops([
       for (var i = 0; i < _stops.length; i++)
         if (i != target)
           _stops[i]
@@ -188,14 +206,60 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
           _stops[i].copyWith(
             lat: lat,
             lon: lon,
-            name: _stops[i].name.trim().isEmpty
-                ? 'Điểm đã chọn (${lat.toStringAsFixed(4)}, '
-                    '${lon.toStringAsFixed(4)})'
-                : _stops[i].name,
+            name: provisional,
           ),
-    ];
-    setState(() => _pickTarget = null);
-    _setStops(stops);
+    ]);
+
+    unawaited(_resolvePickedName(target, lat, lon, provisional));
+  }
+
+  /// What the stop field says while the address at the tapped point is not
+  /// known yet: the coordinates themselves.
+  static String _pickedPlaceLabel(double lat, double lon) =>
+      'Điểm đã chọn (${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)})';
+
+  /// Names the stop a map tap moved, once the geocoder has answered.
+  ///
+  /// The answer is dropped if the stop has moved on — another tap, a
+  /// keystroke — so it can never overwrite something newer. A lookup that
+  /// finds nothing (or fails) falls back to the coordinates label: the field
+  /// must always describe the point the marker sits on.
+  Future<void> _resolvePickedName(
+    int target,
+    double lat,
+    double lon,
+    String nameAtPick,
+  ) async {
+    String? resolved;
+    try {
+      final place = await ref
+          .read(routeRepositoryProvider)
+          .reversePlace(lat: lat, lon: lon);
+      resolved = place?.name.trim();
+    } catch (_) {
+      resolved = null;
+    }
+    if (!mounted) return;
+    // Another edit owns the stop now; this answer belongs to the past.
+    if (target >= _stops.length) return;
+    final current = _stops[target];
+    if (current.lat != lat || current.lon != lon) return;
+    if (current.name != nameAtPick) return;
+
+    final name = (resolved == null || resolved.isEmpty)
+        ? _pickedPlaceLabel(lat, lon)
+        : resolved;
+    if (name == current.name) return;
+    // Only the name is new — the geometry was planned when the tap landed —
+    // so the follow-up request waits out the typing pause instead of firing
+    // a second OSRM call straight away.
+    _setStops(
+      [
+        for (var i = 0; i < _stops.length; i++)
+          if (i != target) _stops[i] else current.copyWith(name: name),
+      ],
+      immediate: false,
+    );
   }
 
   /// Re-reads the forecast for the route the user just picked.

@@ -1059,6 +1059,20 @@ class EndpointRoute extends _isc.EndpointRef {
     },
   );
 
+  /// The address at [lat] / [lon], or null when the point has none — what a
+  /// tap on the map writes into the planner's stop field (docs/12 §11).
+  _ida.Future<_i972nhj2.PlaceCandidate?> reversePlace({
+    required double lat,
+    required double lon,
+  }) => caller.callServerEndpoint<_i972nhj2.PlaceCandidate?>(
+    'route',
+    'reversePlace',
+    {
+      'lat': lat,
+      'lon': lon,
+    },
+  );
+
   /// The route through [origin], the optional [waypoints] and [destination].
   _ida.Future<_ivfcqbu8.RoutePlan> plan({
     required _isj44i7w.RouteStop origin,

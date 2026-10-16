@@ -90,6 +90,12 @@ String get publicRouteBackendWarning =>
 const String routeGeocodingUrl =
     'https://nominatim.openstreetmap.org/search';
 
+/// The other direction of the same geocoder: coordinates in, the address
+/// there out. The planner asks this after a tap on the map so the stop field
+/// shows an address instead of raw numbers (docs/12-route-weather.md §11).
+const String routeReverseGeocodingUrl =
+    'https://nominatim.openstreetmap.org/reverse';
+
 /// Nominatim ranks globally, so without this "Tây Thạnh" resolves to
 /// Tây Thạnh in Đà Nẵng (~600 km away) and "Le T" to places in France.
 const String routeGeocodingCountry = 'vn';
@@ -483,7 +489,12 @@ DateTime routeForecastHorizon() =>
     DateTime.now().toUtc().add(const Duration(days: routeForecastMaxDays));
 
 /// JSON body of a GET request, with the failures mapped onto [RouteFailure].
-Future<dynamic> _getJson(Uri uri) async {
+///
+/// A 404 is normally a failure, but with [notFoundIsNull] it becomes `null`
+/// instead: Nominatim's `/reverse` answers 404 for a point that has no
+/// address at all (open water, an unlabelled field), and "nothing here" is
+/// an answer the caller can show, not an outage.
+Future<dynamic> _getJson(Uri uri, {bool notFoundIsNull = false}) async {
   final http.Response response;
   try {
     response = await http.get(
@@ -498,6 +509,9 @@ Future<dynamic> _getJson(Uri uri) async {
 
   if (response.statusCode == 429) {
     throw RouteFailure('rateLimited', 'Đã vượt giới hạn truy vấn');
+  }
+  if (response.statusCode == 404 && notFoundIsNull) {
+    return null;
   }
   if (response.statusCode != 200) {
     throw RouteFailure(
@@ -596,6 +610,33 @@ const Duration routeGeocodeTtl = Duration(minutes: 30);
 /// Entries kept in [routeGeocodeCache]; the map is emptied once it is full.
 const int routeGeocodeCacheMax = 256;
 
+/// The geocoding budget this server keeps to: two requests per second to
+/// Nominatim, shared by `searchPlaces` and `reversePlace` (docs/12 §11).
+/// Its public instance asks for one per second per client; two leaves head
+/// room for several users while a burst of map taps stays under the line.
+const Duration geocodeSlotInterval = Duration(milliseconds: 500);
+
+/// When [claimGeocodeSlot] may let the next request through.
+///
+/// Public so tests can reset it; production code only moves it through
+/// [claimGeocodeSlot].
+DateTime geocodeNextSlot = DateTime.fromMillisecondsSinceEpoch(0);
+
+/// Waits until the geocoding budget has room, then spends it.
+///
+/// The wait re-checks after waking, so callers stack onto distinct slots
+/// instead of stepping on each other: the provider never sees two requests
+/// closer together than [geocodeSlotInterval].
+Future<void> claimGeocodeSlot() async {
+  while (true) {
+    final now = DateTime.now();
+    final next = geocodeNextSlot;
+    if (!now.isBefore(next)) break;
+    await Future<void>.delayed(next.difference(now));
+  }
+  geocodeNextSlot = DateTime.now().add(geocodeSlotInterval);
+}
+
 /// The cached answer for [key], or null when there is none or it is older
 /// than [routeGeocodeTtl].
 List<PlaceCandidate>? cachedGeocode(String key) {
@@ -623,6 +664,7 @@ Future<List<PlaceCandidate>> searchPlaces(String query, {int limit = 8}) async {
   final hit = cachedGeocode(key);
   if (hit != null) return hit;
 
+  await claimGeocodeSlot();
   final uri =
       Uri.parse(routeGeocodingUrl).replace(queryParameters: geocodingParams(
     trimmed,
@@ -639,6 +681,63 @@ Future<List<PlaceCandidate>> searchPlaces(String query, {int limit = 8}) async {
   routeGeocodeCache[key] = (DateTime.now().toUtc(), places);
   return places;
 }
+
+/// The parameters of one reverse lookup.
+///
+/// `countrycodes` is deliberately absent, unlike [geocodingParams]: there is
+/// no ranking to steer — the coordinates already say exactly where the point
+/// is — and a pick on a route that runs across the border (docs/12 §19) must
+/// still name the place it landed on.
+Map<String, String> reverseGeocodingParams(double lat, double lon) => {
+      'lat': lat.toStringAsFixed(6),
+      'lon': lon.toStringAsFixed(6),
+      'format': 'jsonv2',
+      // Vietnamese names, so results read "Bến Nghé, Quận 1, TP.HCM".
+      'accept-language': 'vi',
+      // Fills the `address` breakdown (ward, street, house number).
+      'addressdetails': '1',
+    };
+
+/// The address at [lat] / [lon], or null when the point has none.
+///
+/// What a tap on the map puts into the planner's stop field, so the form
+/// shows an address instead of raw coordinates (docs/12-route-weather.md
+/// §11). The row shape is Nominatim's, so [fromNominatim] reads it the same
+/// way it reads a search hit. Answers share [routeGeocodeCache] with the
+/// search, keyed by the coordinates rounded to four decimals (~11 m):
+/// tapping the same corner twice must not cost two requests. Errors are
+/// never stored, exactly as in [searchPlaces].
+Future<PlaceCandidate?> reversePlace(double lat, double lon) async {
+  final key = reverseGeocodeKey(lat, lon);
+  final hit = cachedGeocode(key);
+  if (hit != null) return hit.isEmpty ? null : hit.first;
+
+  await claimGeocodeSlot();
+  final uri = Uri.parse(routeReverseGeocodingUrl).replace(
+    queryParameters: reverseGeocodingParams(lat, lon),
+  );
+  // A 404 means "nothing is mapped here" — open water, an unnamed field —
+  // which the caller answers with the coordinates, not with an error.
+  final row = await _getJson(uri, notFoundIsNull: true);
+  if (row == null) return null;
+  if (row is! Map) {
+    throw RouteFailure('unavailable', 'Dữ liệu trả về không hợp lệ');
+  }
+
+  final place = fromNominatim(row);
+  if (place.name.isEmpty) return null;
+
+  if (routeGeocodeCache.length >= routeGeocodeCacheMax) {
+    routeGeocodeCache.clear();
+  }
+  routeGeocodeCache[key] = (DateTime.now().toUtc(), [place]);
+  return place;
+}
+
+/// The cache key of a reverse lookup: the coordinates rounded to four
+/// decimals (~11 m), which is finer than any address repeats at.
+String reverseGeocodeKey(double lat, double lon) =>
+    'rev|${lat.toStringAsFixed(4)},${lon.toStringAsFixed(4)}';
 
 /// Forces `kind` to match the position: first stop is the origin, last is the
 /// destination, everything in between is a waypoint.

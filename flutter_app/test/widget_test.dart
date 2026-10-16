@@ -1063,5 +1063,75 @@ void main() {
         reason: 'adding a stop should not wait for a typing pause',
       );
     });
+
+    // The name lives in a controller so typing does not fight the rebuild,
+    // but a name set from outside — a search result, or the address a map
+    // tap reverse-geocodes into the field — must still reach it. This is
+    // the contract that broke when a map pick updated the map but not the
+    // planner form.
+    testWidgets('a stop renamed from outside reaches the field',
+        (tester) async {
+      var stops = const [
+        RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
+        RouteStop(name: '', lat: 0, lon: 0, kind: 'destination'),
+      ];
+
+      late void Function(List<RouteStop>) renameStop;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            placeSearchProvider.overrideWith((ref, query) async {
+              return const <PlaceCandidate>[];
+            }),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setLocalState) {
+                  renameStop = (next) => setLocalState(() => stops = next);
+                  return SingleChildScrollView(
+                    child: RoutePlannerPanel(
+                      stops: stops,
+                      vehicle: 'car',
+                      departureAt: DateTime(2026, 10, 14, 18),
+                      plan: null,
+                      selectedAlternative: null,
+                      pickTarget: null,
+                      scale: 1,
+                      onStopsChanged: (next, {bool immediate = true}) {},
+                      onVehicleChanged: (_) {},
+                      onDepartureChanged: (_) {},
+                      onPickTarget: (_) {},
+                      onSelectAlternative: (_) {},
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // The stop the form armed and the map filled in.
+      renameStop(const [
+        RouteStop(name: 'Hà Nội', lat: 21.0285, lon: 105.8542, kind: 'origin'),
+        RouteStop(
+          name: 'Bến Nghé, Quận 1, Thành phố Hồ Chí Minh',
+          lat: 10.7769,
+          lon: 106.7009,
+          kind: 'destination',
+        ),
+      ]);
+      await tester.pump();
+
+      expect(
+        find.widgetWithText(
+          TextField,
+          'Bến Nghé, Quận 1, Thành phố Hồ Chí Minh',
+        ),
+        findsOneWidget,
+        reason: 'an address resolved outside must land in the stop field',
+      );
+    });
   });
 }

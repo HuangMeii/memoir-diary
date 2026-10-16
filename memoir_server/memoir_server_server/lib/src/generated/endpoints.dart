@@ -2142,6 +2142,31 @@ class Endpoints extends _is.EndpointDispatch {
                     limit: params['limit'],
                   ),
         ),
+        'reversePlace': _is.MethodConnector(
+          name: 'reversePlace',
+          params: {
+            'lat': _is.ParameterDescription(
+              name: 'lat',
+              type: _is.getType<double>(),
+              nullable: false,
+            ),
+            'lon': _is.ParameterDescription(
+              name: 'lon',
+              type: _is.getType<double>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['route'] as _i26vlbfa.RouteEndpoint).reversePlace(
+                    session,
+                    lat: params['lat'],
+                    lon: params['lon'],
+                  ),
+        ),
         'plan': _is.MethodConnector(
           name: 'plan',
           params: {

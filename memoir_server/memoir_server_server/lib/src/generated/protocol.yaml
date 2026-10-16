@@ -79,6 +79,7 @@ journeys:
   - delete:
 route:
   - searchPlaces:
+  - reversePlace:
   - plan:
   - forecast:
   - planWithWeather:

@@ -25,6 +25,20 @@ class RouteRepository {
         .toList();
   }
 
+  /// The address at [lat] / [lon], or null when the point has none — what a
+  /// tap on the map writes into the planner's stop field.
+  Future<PlaceCandidate?> reversePlace({
+    required double lat,
+    required double lon,
+  }) async {
+    final data = await _source.post(
+      '/route/reverse-place',
+      data: {'lat': lat, 'lon': lon},
+    );
+    if (data == null) return null;
+    return PlaceCandidate.fromJson((data as Map).cast<String, dynamic>());
+  }
+
   /// The route through [stops], in order, for [vehicle].
   Future<RoutePlan> plan({
     required List<RouteStop> stops,

@@ -411,6 +411,128 @@ void main() {
     });
   });
 
+  group('reverse geocode', () {
+    setUp(routeGeocodeCache.clear);
+    tearDown(routeGeocodeCache.clear);
+
+    test('asks for the point in Vietnamese, without a country filter', () {
+      final params = reverseGeocodingParams(10.8231, 106.6297);
+
+      // Coordinates already pin the point exactly, so — unlike the search —
+      // there is no ranking to steer and no reason to refuse a pick that
+      // lands across the border on a §19 route.
+      expect(params.containsKey('countrycodes'), isFalse);
+      expect(params['format'], 'jsonv2');
+      expect(params['accept-language'], 'vi');
+      expect(params['addressdetails'], '1');
+      // Six decimals is ~0.1 m: finer than any tap, never a rounded-away
+      // street across the block.
+      expect(params['lat'], '10.823100');
+      expect(params['lon'], '106.629700');
+    });
+
+    test('keys the cache by coordinates rounded to four decimals', () {
+      expect(
+        reverseGeocodeKey(10.82314, 106.62974),
+        reverseGeocodeKey(10.8231, 106.6297),
+      );
+      // A tap a block away is a different address, and its key says so.
+      expect(
+        reverseGeocodeKey(10.8231, 106.6297),
+        isNot(reverseGeocodeKey(10.8331, 106.6297)),
+      );
+    });
+
+    test('a fresh entry answers the lookup without a request', () async {
+      final hit = PlaceCandidate(
+        name: 'Phan Huy ích, Thành phố Hồ Chí Minh',
+        admin: 'Thành phố Hồ Chí Minh',
+        country: 'Việt Nam',
+        lat: 10.8231,
+        lon: 106.6297,
+      );
+      routeGeocodeCache[reverseGeocodeKey(10.8231, 106.6297)] =
+          (DateTime.now().toUtc(), [hit]);
+
+      expect(await reversePlace(10.8231, 106.6297), same(hit));
+    });
+
+    test('a cached "nothing here" answers null without a request', () async {
+      routeGeocodeCache[reverseGeocodeKey(10.9, 106.6)] =
+          (DateTime.now().toUtc(), const []);
+
+      expect(await reversePlace(10.9, 106.6), isNull);
+    });
+
+    test('an entry past the TTL is dropped', () {
+      final expired = DateTime.now()
+          .toUtc()
+          .subtract(routeGeocodeTtl + const Duration(minutes: 1));
+      routeGeocodeCache[reverseGeocodeKey(10.8231, 106.6297)] =
+          (expired, const <PlaceCandidate>[]);
+
+      expect(cachedGeocode(reverseGeocodeKey(10.8231, 106.6297)), isNull);
+    });
+
+    test('reads a Nominatim reverse row like a search hit', () {
+      // The live `/reverse` answer for 10.8231, 106.6297: lat/lon arrive as
+      // strings and the address lives in a nested object, exactly as in
+      // `/search`, so one reader serves both.
+      final place = fromNominatim({
+        'name': 'Phan Huy ích',
+        'display_name':
+            'Phan Huy ích, Khu phố 8, Phường Tân Sơn, Thành phố Hồ Chí Minh, 72126, Việt Nam',
+        'lat': '10.8230937',
+        'lon': '106.6297053',
+        'address': {
+          'road': 'Phan Huy ích',
+          'neighbourhood': 'Khu phố 8',
+          'suburb': 'Phường Tân Sơn',
+          'city': 'Thành phố Hồ Chí Minh',
+          'country': 'Việt Nam',
+        },
+      });
+
+      expect(place.name, 'Phan Huy ích');
+      expect(place.admin, 'Thành phố Hồ Chí Minh');
+      expect(place.lat, closeTo(10.8230937, 0.0001));
+    });
+  });
+
+  group('geocode rate slots', () {
+    tearDown(() => geocodeNextSlot = DateTime.fromMillisecondsSinceEpoch(0));
+
+    test('the second call waits out the slot interval', () async {
+      geocodeNextSlot = DateTime.fromMillisecondsSinceEpoch(0);
+      final stopwatch = Stopwatch()..start();
+      await claimGeocodeSlot();
+      await claimGeocodeSlot();
+      stopwatch.stop();
+
+      // The first call is free; the second must sit out the 500 ms gap.
+      expect(
+        stopwatch.elapsedMilliseconds,
+        greaterThanOrEqualTo(geocodeSlotInterval.inMilliseconds - 50),
+      );
+    });
+
+    test('a claim moves the next slot forward by one interval', () async {
+      geocodeNextSlot = DateTime.fromMillisecondsSinceEpoch(0);
+      final before = DateTime.now();
+      await claimGeocodeSlot();
+
+      final slack = const Duration(seconds: 1);
+      expect(
+        geocodeNextSlot.difference(before),
+        greaterThanOrEqualTo(geocodeSlotInterval - slack),
+      );
+      expect(
+        geocodeNextSlot.difference(before),
+        lessThanOrEqualTo(geocodeSlotInterval + slack),
+      );
+    });
+  });
+
   group('routing failures', () {
     test('a normal answer is not a failure', () {
       expect(
