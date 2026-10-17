@@ -182,10 +182,11 @@ class WeatherEndpoint extends Endpoint {
       final code = codes[i].toInt();
       final (label, icon) = _labels[_groupForCode(code)] ?? _labels['other']!;
       return WeatherDay(
-        date: DateTime.utc(
+        date: DateTime(
           int.parse(dates[i].substring(0, 4)),
           int.parse(dates[i].substring(5, 7)),
           int.parse(dates[i].substring(8, 10)),
+          7,
         ),
         weatherCode: code,
         condition: label,
@@ -240,7 +241,7 @@ class WeatherEndpoint extends Endpoint {
   }
 
   Future<List<WeatherDay>> _stored(Session session, UuidValue userId) async {
-    final today = dateOnly(DateTime.now());
+    final today = dateOnly(DateTime.now().add(const Duration(hours: 7)));
     final rows = await WeatherSnapshot.db.find(
       session,
       where: (t) => t.userId.equals(userId) & (t.forecastDate <= today),
