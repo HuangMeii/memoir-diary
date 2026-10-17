@@ -183,7 +183,13 @@ class EditorBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var i = 0; i < checklist.length; i++) _row(theme, i),
+            // Keyed so that adding or deleting a line never reuses the element
+            // of the row that moved up.
+            for (var i = 0; i < checklist.length; i++)
+              KeyedSubtree(
+                key: ValueKey('checklist-$i-${checklist[i].text}'),
+                child: _row(theme, i),
+              ),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(

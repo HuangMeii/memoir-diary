@@ -10,6 +10,7 @@ import '../notes/editor_links_panel.dart';
 import '../notes/editor_toolbar.dart';
 import '../notes/editor_top_bar.dart';
 import '../tokens.dart';
+import '../widgets/text_prompt_dialog.dart';
 
 /// How long the note editor waits after a pause before it saves itself.
 const Duration kNoteAutoSaveDelay = Duration(seconds: 2);
@@ -176,30 +177,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _addTag() async {
-    final field = TextEditingController();
     final tag = await showDialog<String>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Thêm thẻ'),
-        content: TextField(
-          controller: field,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'VD: du lịch'),
-          onSubmitted: (v) => Navigator.of(c).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(),
-            child: const Text('Huỷ'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(c).pop(field.text.trim()),
-            child: const Text('Thêm'),
-          ),
-        ],
+      builder: (_) => const TextPromptDialog(
+        title: 'Thêm thẻ',
+        hintText: 'VD: du lịch',
       ),
     );
-    field.dispose();
     if (tag == null || tag.isEmpty || _tags.contains(tag) || !mounted) return;
     setState(() => _tags = [..._tags, tag]);
     _touch();
@@ -233,30 +217,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _addChecklistItem() async {
-    final field = TextEditingController();
     final text = await showDialog<String>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Thêm dòng checklist'),
-        content: TextField(
-          controller: field,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Việc cần làm...'),
-          onSubmitted: (v) => Navigator.of(c).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(),
-            child: const Text('Huỷ'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(c).pop(field.text.trim()),
-            child: const Text('Thêm'),
-          ),
-        ],
+      builder: (_) => const TextPromptDialog(
+        title: 'Thêm dòng checklist',
+        hintText: 'Việc cần làm...',
       ),
     );
-    field.dispose();
     if (text == null || text.isEmpty || !mounted) return;
     setState(() => _checklist = [
           ..._checklist,
