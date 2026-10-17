@@ -3,6 +3,19 @@
 Batch 1 — cho 3 epic ưu tiên: **MD-9** (Tooling/CI), **MD-20** (Serverpod), **MD-22** (Quality).
 Bản CSV để import: **`04-stories-batch1.noparent.csv`**. Quy ước chi tiết: `00-conventions.md`.
 
+## Map key Jira (Batch 1)
+
+| Mã cục bộ | Jira Key | Loại | Epic cha |
+|---|---|---|---|
+| MD-9-S1 … MD-9-S5 | MD-24 … MD-28 | Story | MD-9 |
+| MD-20-S1 … MD-20-S8 | MD-29 … MD-36 | Story | MD-20 |
+| MD-22-S1 … MD-22-S5 | MD-37 … MD-41 | Story | MD-22 |
+| MD-22-S6 (i18n spike) | MD-42 | Spike | MD-22 |
+| MD-9-S1 subtasks | MD-53 … MD-56 | Subtask | MD-24 |
+
+Ngoài Batch 1: `MD-57` (Story *[Journal] Dựng trang Nhật ký theo Figma JOURNAL-02*, epic MD-11)
+và `MD-58` (Bug *[Quotes][Bug] Home hiển thị đủ 2 câu…*, epic MD-12).
+
 ## Quy ước chung
 
 - **Issue type:** Story (có Subtask). Điều tra → **Spike** (timebox 1–2 ngày, output = kết luận + quyết định).
@@ -183,4 +196,8 @@ Bản CSV để import: **`04-stories-batch1.noparent.csv`**. Quy ước chi ti�
 
 Thứ tự đề xuất: **MD-10 (Auth)** → **MD-11 (Journal)** → **MD-17 (Weather — đóng epic)** →
 **MD-23 (Ops)** → **MD-21 (Release)** → **MD-12…MD-19** (Quotes, Planner, Health, Stats, Admin, Calendar, Garden).
+
+Đã bổ sung sẵn trên Jira: **MD-57** (Story dựng trang Nhật ký theo Figma JOURNAL-02, epic MD-11)
+và **MD-58** (Bug Home hiển thị đủ 2 câu, epic MD-12); 10 Spike `MD-43 … MD-52` đã gắn vào
+các epic MD-11/17/18/19/20/21/23.
 

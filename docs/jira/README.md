@@ -5,16 +5,18 @@ Thư mục này chứa các artifact để theo dõi dự án Memoir trên Jira
 
 | File | Nội dung |
 |---|---|
-| `jira-full-backlog.csv` | ✅ **File tổng** — 50 issue toàn backlog (15 Epic + 19 Story + 11 Spike + 1 Bug + 4 Subtask), có cột `Parent (sau import)` để ghi chú epic/story cha; sinh lại bằng `build-full-csv.ps1` |
-| `build-full-csv.ps1` | Script gộp các file con thành `jira-full-backlog.csv` (lưu UTF-8 BOM cho PowerShell 5.1) |
-| `03-backlog-import.csv` | 15 Epic để import (không có cột `Project Key`) |
+| `jira-full-backlog.csv` | ✅ **File tổng** — 50 issue toàn backlog (15 Epic + 19 Story + 11 Spike + 1 Bug + 4 Subtask), có cột `Jira Key` (key thật trên Jira) và `Parent (sau import)`; sinh lại bằng `build-full-csv.ps1` |
+| `build-full-csv.ps1` | Script gộp các file con thành `jira-full-backlog.csv` (giữ cột `Jira Key`, lưu UTF-8 không BOM) |
+| `jira-push-fields.ps1` | Script REST **đẩy** Summary/Description/Labels/Priority/Story Points/Parent từ `jira-full-backlog.csv` lên Jira theo `Jira Key` (có `-DryRun`, **không** tạo issue) |
+| `_sync-from-jira.csv` | Snapshot **kéo từ** Jira về (key, type, parent, labels, priority, points, status) để đối chiếu |
+| `03-backlog-import.csv` | 15 Epic để import (không có `Project Key`; cột `Jira Key` chỉ để tham chiếu) |
 | `03-backlog-import.min.csv` | Bản tối giản 2 cột (`Summary`, `Issue Type`) để thử import khi bị lỗi |
 | `00-conventions.md` | Issue types, phân cấp, DoR/DoD, naming, labels, estimate, chính sách import |
-| `01-epics.md` | *(sẽ thêm)* epic + link thật sau khi tạo |
-| `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) |
-| `04-stories-batch1.noparent.csv` | ✅ **Mặc định** — 19 Story/Spike Batch 1 (không `Issue Id`/`Parent`) |
-| `05-spikes.noparent.csv` | ✅ **Mặc định** — 10 Spike cho epic sắp làm (MD-11/17/18/19/20/21/23) |
-| `06-subtasks-md-9-s1.csv` | 4 Subtask của `MD-9-S1` (tạo just-in-time bằng script bên dưới) |
+| `01-epics.md` | 15 Epic với **key thật** trên Jira (MD-9 → MD-23) + danh sách story/spike con |
+| `02-stories.md` | **Batch 1**: Story + Subtask + Acceptance Criteria (MD-9, MD-20, MD-22) + bảng map key Jira |
+| `04-stories-batch1.noparent.csv` | ✅ **Mặc định** — 19 Story/Spike Batch 1 (không `Issue Id`/`Parent`; cột `Jira Key`) |
+| `05-spikes.noparent.csv` | ✅ **Mặc định** — 10 Spike cho epic sắp làm (MD-11/17/18/19/20/21/23; cột `Jira Key`) |
+| `06-subtasks-md-9-s1.csv` | 4 Subtask của `MD-9-S1` (tạo just-in-time bằng script bên dưới; cột `Jira Key`) |
 | `jira-link-parent.ps1` | Script REST gắn `Parent` theo **key** (có `-DryRun`, **không** tạo issue) |
 | `jira-create-subtasks.ps1` | Script REST tạo Subtask dưới 1 Story (có `-DryRun`, chống trùng) |
 | `04-stories-batch1.csv` | ⚠️ Không khuyến nghị — có `Issue Id`/`Parent` để thử auto-link |
@@ -193,9 +195,12 @@ Lưu ý khi quản lý:
   `05-spikes.csv` thêm `Issue Id`, `Parent`. Hai file này **không khuyến nghị**:
   `Issue Id` chỉ là số tham chiếu nội bộ CSV, và `Parent` cần **Issue ID** (không
   phải key) — xem mục *"Vì sao `Issue Id`/`Parent` …"*.
-- Số issue thật do Jira sinh; nếu project `MD` đã có issue khác thì epic mới
-  **không** bắt đầu ở `MD-1`. Sau khi import, cập nhật lại link thật vào
-  `01-epics.md`.
+- Key thật trên Jira: epic `MD-9 … MD-23`, story `MD-24 … MD-41` + `MD-57`,
+  spike `MD-42 … MD-52`, subtask `MD-53 … MD-56`, bug `MD-58` (xem `01-epics.md`).
+- CSV có thêm cột `Jira Key` để map 1–1 với issue trên Jira; cột này **không**
+  cần map khi import (ở bước map field chọn *không map*).
+- Sau khi đổi backlog: chạy `build-full-csv.ps1` để sinh lại `jira-full-backlog.csv`,
+  rồi `jira-push-fields.ps1` để đẩy thay đổi lên Jira (không phải sửa tay).
 - CSV lưu **UTF-8 (không BOM)** để Jira đọc đúng tiếng Việt. Nếu mở bằng Excel
   trước, dùng *Data → From Text/CSV* và chọn encoding UTF-8, nếu không sẽ lỗi
   dấu.

@@ -1,5 +1,5 @@
 ﻿# Gộp toàn bộ backlog Jira thành 1 file CSV hoàn chỉnh: docs/jira/jira-full-backlog.csv
-# Cột: Summary, Issue Type, Description, Labels, Priority, Story Points, Parent (sau import)
+# Cột: Summary, Issue Type, Description, Labels, Priority, Story Points, Jira Key, Parent Key, Parent (sau import)
 # Lưu UTF-8 không BOM. Chạy: powershell -ExecutionPolicy Bypass -File docs\jira\build-full-csv.ps1
 $ErrorActionPreference = 'Stop'
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -18,6 +18,8 @@ $batch2 = @(
     Labels         = 'area:flutter,type:feature,journal-02'
     Priority       = 'Highest'
     'Story Points' = '5'
+    'Jira Key'     = 'MD-57'
+    'Parent Key'   = 'MD-11'
     'Parent (sau import)' = 'Epic [Journal] Nhật ký và ảnh'
   },
   [pscustomobject]@{
@@ -27,36 +29,55 @@ $batch2 = @(
     Labels         = 'area:flutter,type:bug,quotes'
     Priority       = 'High'
     'Story Points' = '2'
+    'Jira Key'     = 'MD-58'
+    'Parent Key'   = 'MD-12'
     'Parent (sau import)' = 'Epic [Quotes] Kho câu - cặp câu và phản tư'
   }
 )
+
+# Epic cha cua tung story/spike/subtask (theo key that tren Jira).
+$parentByKey = @{}
+24..28 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-9'  }   # story Tooling/CI
+29..36 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-20' }   # story Serverpod
+37..42 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-22' }   # story/spike Quality
+43..43 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-11' }   # spike Upload anh
+44..44 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-17' }   # spike Geocode
+45..46 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-20' }   # spike Serverpod
+47..48 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-18' }   # spike Calendar
+49..50 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-19' }   # spike Garden
+51..51 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-21' }   # spike Deploy
+52..52 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-23' }   # spike Error tracking
+53..56 | ForEach-Object { $parentByKey["MD-$_"] = 'MD-24' }   # subtask MD-9-S1
+$parentByKey['MD-57'] = 'MD-11'
+$parentByKey['MD-58'] = 'MD-12'
 
 $out = @()
 
 foreach ($e in $epics) {
   $out += [pscustomobject]@{
     Summary = $e.Summary; 'Issue Type' = $e.'Issue Type'; Description = $e.Description
-    Labels = $e.Labels; Priority = $e.Priority; 'Story Points' = ''; 'Parent (sau import)' = ''
+    Labels = $e.Labels; Priority = $e.Priority; 'Story Points' = ''; 'Jira Key' = $e.'Jira Key'; 'Parent Key' = ''; 'Parent (sau import)' = ''
   }
 }
 foreach ($s in $stories) {
   $out += [pscustomobject]@{
     Summary = $s.Summary; 'Issue Type' = $s.'Issue Type'; Description = $s.Description
-    Labels = $s.Labels; Priority = $s.Priority; 'Story Points' = $s.'Story Points'; 'Parent (sau import)' = ''
+    Labels = $s.Labels; Priority = $s.Priority; 'Story Points' = $s.'Story Points'; 'Jira Key' = $s.'Jira Key'; 'Parent Key' = $parentByKey[$s.'Jira Key']; 'Parent (sau import)' = $parentByKey[$s.'Jira Key']
   }
 }
 foreach ($s in $batch2) { $out += $s }
 foreach ($s in $spikes) {
   $out += [pscustomobject]@{
     Summary = $s.Summary; 'Issue Type' = $s.'Issue Type'; Description = $s.Description
-    Labels = $s.Labels; Priority = $s.Priority; 'Story Points' = ''; 'Parent (sau import)' = ''
+    Labels = $s.Labels; Priority = $s.Priority; 'Story Points' = ''; 'Jira Key' = $s.'Jira Key'; 'Parent Key' = $parentByKey[$s.'Jira Key']; 'Parent (sau import)' = $parentByKey[$s.'Jira Key']
   }
 }
 foreach ($t in $subtasks) {
   $out += [pscustomobject]@{
     Summary = $t.Summary; 'Issue Type' = $t.'Issue Type'; Description = $t.Description
-    Labels = $t.Labels; Priority = $t.Priority; 'Story Points' = ''
-    'Parent (sau import)' = 'MD-9-S1 (Story: [CI] Lint + test cho backend (FastAPI))'
+    Labels = $t.Labels; Priority = $t.Priority; 'Story Points' = ''; 'Jira Key' = $t.'Jira Key'
+    'Parent Key' = $parentByKey[$t.'Jira Key']
+    'Parent (sau import)' = 'MD-24 (Story: [CI] Lint + test cho backend (FastAPI))'
   }
 }
 
