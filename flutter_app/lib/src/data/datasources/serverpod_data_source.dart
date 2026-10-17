@@ -74,7 +74,12 @@ class ServerpodDataSource implements BackendDataSource {
         );
         return events.map(_eventMap).toList();
       case '/schedule-items':
-        return (await _client.schedules.list()).map(_scheduleMap).toList();
+        return (await _client.schedules.list(
+          from: _parseDate(query?['from']),
+          to: _parseDate(query?['to']),
+        ))
+            .map(_scheduleMap)
+            .toList();
       case '/health-logs':
         final logs = await _client.health.list(
           from: _parseDate(query!['from'])!,

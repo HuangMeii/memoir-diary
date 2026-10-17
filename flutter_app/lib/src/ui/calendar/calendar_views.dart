@@ -26,6 +26,20 @@ enum CalendarView {
   final String label;
 }
 
+/// One of the calendars listed under `Lịch của tôi`.
+///
+/// Events and schedule items carry a time, so they paint on the timeline;
+/// diary pages only know their day and ride in the all-day lane.
+enum CalendarSource {
+  events('Sự kiện'),
+  schedules('Lịch biểu'),
+  diary('Nhật ký');
+
+  const CalendarSource(this.label);
+
+  final String label;
+}
+
 /// Height of one hour row of the canvas (design: 48).
 const double kCalendarHourHeight = 48;
 
@@ -43,6 +57,10 @@ const double kCalendarGutterWidth = 52;
 /// its title and its time line.
 const double kCalendarMinEventHeight = 32;
 
+/// Height of a block in the `Cả ngày` lane; also the height of the lane's
+/// placeholder, so the lane keeps one rhythm whether or not it has entries.
+const double kCalendarAllDayBlockHeight = 34;
+
 /// One event as the calendar views need it.
 class CalendarEntry {
   const CalendarEntry({
@@ -50,6 +68,8 @@ class CalendarEntry {
     required this.title,
     required this.start,
     required this.end,
+    this.source = CalendarSource.events,
+    this.isAllDay = false,
   });
 
   final String id;
@@ -59,6 +79,13 @@ class CalendarEntry {
   /// Never before [start]; the screen falls back to one hour when the stored
   /// row has no end.
   final DateTime end;
+
+  /// Which calendar produced this entry. The tint and the `Lịch của tôi`
+  /// toggles key off it.
+  final CalendarSource source;
+
+  /// True for entries without a time of day (diary pages).
+  final bool isAllDay;
 
   /// `07:00`.
   String get startLabel =>
@@ -106,6 +133,13 @@ List<CalendarEntry> entriesBetween(
   return list;
 }
 
+/// The entries of the calendars ticked in `Lịch của tôi`.
+List<CalendarEntry> visibleEntries(
+  List<CalendarEntry> entries,
+  Set<CalendarSource> visible,
+) =>
+    entries.where((entry) => visible.contains(entry.source)).toList();
+
 /// Where [entry] sits inside the 06:00–23:00 canvas, or null when it falls
 /// completely outside that window.
 ({double top, double height})? timelineSlot(
@@ -136,9 +170,9 @@ String calendarHourLabel(int hour) => '${hour.toString().padLeft(2, '0')}:00';
 
 /// The tint the frames give the calendars in `Lịch của tôi`.
 ///
-/// The backend has no colour column, so an entry is mapped onto one of the
-/// design's three washes from a stable hash — the same event keeps the same
-/// colour between builds.
+/// Each of the three calendars owns one tone — brand for events, amber for the
+/// timetable, teal for the diary — so a block read against the sidebar tells
+/// you which calendar it came from.
 class CalendarEventTint {
   const CalendarEventTint({required this.background, required this.accent});
 
@@ -149,24 +183,37 @@ class CalendarEventTint {
 CalendarEventTint calendarEventTint(BuildContext context, CalendarEntry entry) {
   final palette = MemoirPalette.of(context);
   final theme = Theme.of(context);
-  switch (entry.id.hashCode.abs() % 3) {
-    case 0:
+  switch (entry.source) {
+    case CalendarSource.events:
       return CalendarEventTint(
         background: palette.surfaceBrandSubtle,
         accent: theme.colorScheme.primary,
       );
-    case 1:
+    case CalendarSource.schedules:
       return CalendarEventTint(
         background: palette.warningSurface,
         accent: palette.warningText,
       );
-    default:
+    case CalendarSource.diary:
       return CalendarEventTint(
-        background: palette.rainChart.withValues(alpha: 0.22),
+        background: palette.rainChart.withValues(alpha: 0.18),
         accent: palette.rainChart,
       );
   }
 }
+
+/// The colour the sidebar uses for a calendar's checkbox and dots.
+Color calendarSourceAccent(BuildContext context, CalendarSource source) =>
+    calendarEventTint(
+      context,
+      CalendarEntry(
+        id: source.name,
+        title: source.label,
+        start: DateTime(2000),
+        end: DateTime(2000),
+        source: source,
+      ),
+    ).accent;
 
 /// One event block: a tinted rectangle with a coloured left edge, its title and
 /// its time range.
@@ -381,7 +428,7 @@ class CalendarAllDayLane extends StatelessWidget {
       // The day view names the empty state; the week columns use the dash the
       // frame draws.
       return SizedBox(
-        height: 34 * scale,
+        height: kCalendarAllDayBlockHeight * scale,
         child: Center(
           child: Text(
             columns == 1 ? 'Không có sự kiện cả ngày' : '—',
@@ -398,10 +445,15 @@ class CalendarAllDayLane extends StatelessWidget {
         for (final entry in day)
           Padding(
             padding: EdgeInsets.only(bottom: 2 * scale),
-            child: CalendarEventBlock(
-              entry: entry,
-              scale: scale,
-              showTime: false,
+            // The lane is as tall as its content, so the block's stretched row
+            // needs a height of its own here.
+            child: SizedBox(
+              height: kCalendarAllDayBlockHeight * scale,
+              child: CalendarEventBlock(
+                entry: entry,
+                scale: scale,
+                showTime: false,
+              ),
             ),
           ),
       ],
@@ -516,12 +568,17 @@ class CalendarDaySchedule extends StatelessWidget {
     required this.date,
     required this.entries,
     required this.scale,
+    this.allDayEntries = const <CalendarEntry>[],
     this.onTapEntry,
   });
 
   final DateTime date;
   final List<CalendarEntry> entries;
   final double scale;
+
+  /// Entries without a time of day (diary pages), drawn in the `Cả ngày` lane.
+  final List<CalendarEntry> allDayEntries;
+
   final ValueChanged<CalendarEntry>? onTapEntry;
 
   @override
@@ -534,7 +591,11 @@ class CalendarDaySchedule extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _header(context, isToday),
-        CalendarAllDayLane(scale: scale, columns: 1),
+        CalendarAllDayLane(
+          scale: scale,
+          columns: 1,
+          entries: [entriesOn(allDayEntries, date)],
+        ),
         SizedBox(
           height: canvasHeight,
           child: LayoutBuilder(
@@ -664,12 +725,17 @@ class CalendarWeekGrid extends StatelessWidget {
     required this.anchor,
     required this.entries,
     required this.scale,
+    this.allDayEntries = const <CalendarEntry>[],
     this.onTapEntry,
   });
 
   final DateTime anchor;
   final List<CalendarEntry> entries;
   final double scale;
+
+  /// Entries without a time of day (diary pages), one list per column.
+  final List<CalendarEntry> allDayEntries;
+
   final ValueChanged<CalendarEntry>? onTapEntry;
 
   @override
@@ -721,6 +787,7 @@ class CalendarWeekGrid extends StatelessWidget {
             CalendarAllDayLane(
               scale: scale,
               columns: 7,
+              entries: [for (final day in days) entriesOn(allDayEntries, day)],
               tintedColumns: selected >= 0 ? {selected} : const <int>{},
             ),
             SizedBox(

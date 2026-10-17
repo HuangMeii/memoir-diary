@@ -151,6 +151,11 @@ Tài liệu map từng yêu cầu nghiệp vụ → hành vi → màn hình/widg
 - **Tuần**: 7 cột, tuần bắt đầu **thứ Hai**.
 - **Tháng**: lưới ngày, sự kiện hiện chấm nhỏ trong ô.
 
+> Màn đang chạy (`27-event-calendar.md`, CAL-01) đã có đủ ba chế độ cùng ba
+> lịch: sự kiện, lịch biểu (`schedule_items`) và nhật ký (lane `Cả ngày`). Các
+> mục dưới đây là phần còn lại của Phase 14–18: sự kiện lặp bung ra lưới, nhắc
+> nhở, trạng thái và liên kết Study.
+
 ### 16.2. Quản lý sự kiện
 - **Tạo / sửa / xoá** — tiêu đề, giờ bắt đầu–kết thúc, mô tả, địa điểm, màu, cả ngày hay không.
 - **Lặp lại**: hằng ngày / tuần / tháng, có `recurrence_until`.

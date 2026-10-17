@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth_provider.dart';
+import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../calendar/calendar_views.dart';
 import '../home/home_scale.dart';
@@ -11,6 +12,7 @@ import '../theme.dart';
 import '../tokens.dart';
 import '../widgets/app_header.dart';
 import '../widgets/segmented_tabs.dart';
+import 'entry_editor.dart';
 import 'month_grids_screen.dart';
 
 /// One event as `/events` returns it.
@@ -56,6 +58,54 @@ class PlannerEvent {
 List<PlannerEvent> eventsFromRows(List<Map<String, dynamic>> rows) =>
     [for (final row in rows) PlannerEvent.fromJson(row)];
 
+/// One timetable row as `/schedule-items` returns it.
+class PlannerSchedule {
+  const PlannerSchedule({
+    required this.id,
+    required this.title,
+    required this.startAt,
+    this.endAt,
+    this.recurrenceRule,
+    this.reminderMinutes,
+  });
+
+  final String id;
+  final String title;
+  final DateTime startAt;
+  final DateTime? endAt;
+  final String? recurrenceRule;
+  final int? reminderMinutes;
+
+  factory PlannerSchedule.fromJson(Map<String, dynamic> json) =>
+      PlannerSchedule(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        startAt: DateTime.tryParse(json['start_at'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+        endAt: json['end_at'] == null
+            ? null
+            : DateTime.tryParse(json['end_at'] as String),
+        recurrenceRule: json['recurrence_rule'] as String?,
+        reminderMinutes: json['reminder_minutes'] as int?,
+      );
+
+  /// `Hằng ngày` / `Hằng tuần` for the rules the planner writes, or the raw
+  /// rule when it is something else — nothing is silently dropped.
+  String? get recurrenceLabel {
+    final rule = recurrenceRule;
+    if (rule == null || rule.trim().isEmpty) return null;
+    final upper = rule.toUpperCase();
+    if (upper.contains('FREQ=DAILY')) return 'Hằng ngày';
+    if (upper.contains('FREQ=WEEKLY')) return 'Hằng tuần';
+    if (upper.contains('FREQ=MONTHLY')) return 'Hằng tháng';
+    return rule;
+  }
+}
+
+/// Rows from the backend's `/schedule-items` list into the calendar's model.
+List<PlannerSchedule> schedulesFromRows(List<Map<String, dynamic>> rows) =>
+    [for (final row in rows) PlannerSchedule.fromJson(row)];
+
 /// The 42 cells (6 weeks × 7, Monday first) that frame [month]; null marks a
 /// day of the neighbouring month.
 List<DateTime?> calendarCells(DateTime month) {
@@ -97,8 +147,23 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   List<PlannerEvent> _events = [];
+  List<PlannerSchedule> _schedules = [];
+
+  /// Diary pages of the loaded window, keyed by `YYYY-MM-DD`.
+  ///
+  /// A page only counts once it has something in it; the server creates the row
+  /// as soon as the editor opens, so `filledFields == 0` is an empty page and
+  /// must not paint a block.
+  Map<String, DiaryEntry> _diaryByDay = {};
+
+  /// The calendars ticked in `Lịch của tôi`.
+  final Set<CalendarSource> _visibleSources = {CalendarSource.events};
+
+  /// Why a calendar's last load failed, per source. One broken endpoint keeps
+  /// the other calendars on screen instead of blanking the page.
+  final Map<CalendarSource, String> _sourceErrors = {};
+
   bool _loading = true;
-  String? _errorMessage;
 
   /// Which of the design's three views is on.
   CalendarView _view = CalendarView.month;
@@ -123,34 +188,66 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   DateTime get _month => ref.read(selectedMonthProvider);
 
-  /// Fetches the events of the window the current view shows plus a month of
-  /// future events, so the grid's dots and the "sắp tới" list never go out of
-  /// sync.
+  /// Fetches the three calendars for the window the current view shows plus a
+  /// month of future entries, so the grid's dots and the "sắp tới" list never
+  /// go out of sync.
+  ///
+  /// Each calendar is fetched on its own: one failing endpoint keeps the other
+  /// two on screen and records a per-calendar error instead of blanking the
+  /// whole page.
   Future<void> _load() async {
     final (visibleFrom, visibleTo) = _visibleRange;
     // A week of lead-in keeps the neighbouring weeks painted, and a month of
-    // future events keeps the upcoming list whole.
+    // future entries keeps the upcoming list whole.
     final from = visibleFrom.subtract(const Duration(days: 7));
     final horizon = _today().add(const Duration(days: 30));
     final to = visibleTo.isAfter(horizon) ? visibleTo : horizon;
 
-    setState(() => _loading = true);
-    try {
-      final rows =
-          await ref.read(plannerRepositoryProvider).eventsBetween(from, to);
-      if (!mounted) return;
-      setState(() {
-        _events = eventsFromRows(rows);
-        _loading = false;
-        _errorMessage = null;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _errorMessage = '$e';
-      });
+    final planner = ref.read(plannerRepositoryProvider);
+    final entries = ref.read(entryRepositoryProvider);
+    final errors = <CalendarSource, String>{};
+
+    Future<T?> attempt<T>(
+      CalendarSource source,
+      Future<T> Function() request,
+    ) async {
+      try {
+        return await request();
+      } catch (e) {
+        errors[source] = '$e';
+        return null;
+      }
     }
+
+    setState(() => _loading = true);
+    final results = await Future.wait<Object?>([
+      attempt(CalendarSource.events, () => planner.eventsBetween(from, to)),
+      attempt(
+        CalendarSource.schedules,
+        () => planner.schedulesBetween(from, to),
+      ),
+      attempt(CalendarSource.diary, () => entries.listBetween(from, to)),
+    ]);
+    if (!mounted) return;
+
+    final eventRows = results[0] as List<Map<String, dynamic>>?;
+    final scheduleRows = results[1] as List<Map<String, dynamic>>?;
+    final diaryEntries = results[2] as List<DiaryEntry>?;
+
+    setState(() {
+      if (eventRows != null) _events = eventsFromRows(eventRows);
+      if (scheduleRows != null) _schedules = schedulesFromRows(scheduleRows);
+      if (diaryEntries != null) {
+        _diaryByDay = {
+          for (final entry in diaryEntries)
+            if (entry.filledFields > 0) dayKey(entry.entryDate): entry,
+        };
+      }
+      _sourceErrors
+        ..clear()
+        ..addAll(errors);
+      _loading = false;
+    });
   }
 
   void _goToMonth(DateTime month) {
@@ -176,16 +273,90 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
   }
 
-  /// The loaded events in the shape the `Ngày`/`Tuần` views want.
+  /// The timed entries of the calendars ticked in `Lịch của tôi`, in the shape
+  /// the `Ngày`/`Tuần` views want.
   List<CalendarEntry> get _entries => [
-        for (final event in _events)
-          CalendarEntry(
-            id: event.id,
-            title: event.title,
-            start: event.startAt,
-            end: event.endAt ?? event.startAt.add(const Duration(hours: 1)),
-          ),
+        if (_visibleSources.contains(CalendarSource.events))
+          for (final event in _events)
+            CalendarEntry(
+              id: event.id,
+              title: event.title,
+              start: event.startAt,
+              end: event.endAt ?? event.startAt.add(const Duration(hours: 1)),
+            ),
+        if (_visibleSources.contains(CalendarSource.schedules))
+          for (final item in _schedules)
+            CalendarEntry(
+              id: item.id,
+              title: item.title,
+              start: item.startAt,
+              end: item.endAt ?? item.startAt.add(const Duration(hours: 1)),
+              source: CalendarSource.schedules,
+            ),
       ];
+
+  /// Diary pages of the calendars ticked in `Lịch của tôi`, one block per day
+  /// for the `Cả ngày` lane.
+  List<CalendarEntry> get _diaryEntries => [
+        if (_visibleSources.contains(CalendarSource.diary))
+          for (final entry in _diaryByDay.values)
+            CalendarEntry(
+              id: entry.id,
+              title: 'Nhật ký',
+              start: _dayOf(entry.entryDate),
+              end: _dayOf(entry.entryDate),
+              source: CalendarSource.diary,
+              isAllDay: true,
+            ),
+      ];
+
+  /// The timetable rows of one local day, oldest first.
+  List<PlannerSchedule> _schedulesOn(DateTime day) =>
+      _schedules.where((item) => sameDay(item.startAt, day)).toList()
+        ..sort((a, b) => a.startAt.compareTo(b.startAt));
+
+  /// The blocks the month cell shows: the timed calendars in start order, then
+  /// a single `Nhật ký` line when the day has a page.
+  List<CalendarEntry> _dayEntries(DateTime day) {
+    final entries = entriesOn(_entries, day);
+    if (_visibleSources.contains(CalendarSource.diary) &&
+        _diaryByDay.containsKey(dayKey(day))) {
+      entries.addAll(entriesOn(_diaryEntries, day));
+    }
+    return entries;
+  }
+
+  /// Whether any ticked calendar has something on [day].
+  bool _hasVisibleEntry(DateTime day) {
+    if (_visibleSources.contains(CalendarSource.events) &&
+        eventsOn(_events, day).isNotEmpty) {
+      return true;
+    }
+    if (_visibleSources.contains(CalendarSource.schedules) &&
+        _schedulesOn(day).isNotEmpty) {
+      return true;
+    }
+    return _visibleSources.contains(CalendarSource.diary) &&
+        _diaryByDay.containsKey(dayKey(day));
+  }
+
+  /// Midnight of [value]'s calendar date, which is what the grid compares.
+  static DateTime _dayOf(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  /// Toggles one calendar in `Lịch của tôi`. Turning a calendar back on after a
+  /// failed load retries it.
+  void _toggleSource(CalendarSource source) {
+    final turningOn = !_visibleSources.contains(source);
+    setState(() {
+      if (turningOn) {
+        _visibleSources.add(source);
+      } else {
+        _visibleSources.remove(source);
+      }
+    });
+    if (turningOn && _sourceErrors.containsKey(source)) _load();
+  }
 
   /// Points the calendar at [day] and reloads the window behind it.
   void _setAnchor(DateTime day) {
@@ -524,11 +695,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final body = switch (_view) {
       CalendarView.day => _canvasCard(
           context,
-          CalendarDaySchedule(date: _anchor, entries: _entries, scale: scale),
+          CalendarDaySchedule(
+            date: _anchor,
+            entries: _entries,
+            allDayEntries: _diaryEntries,
+            scale: scale,
+          ),
         ),
       CalendarView.week => _canvasCard(
           context,
-          CalendarWeekGrid(anchor: _anchor, entries: _entries, scale: scale),
+          CalendarWeekGrid(
+            anchor: _anchor,
+            entries: _entries,
+            allDayEntries: _diaryEntries,
+            scale: scale,
+          ),
         ),
       CalendarView.month => _calendarCard(context, scale),
     };
@@ -685,7 +866,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (day == null) return const SizedBox(height: 24);
     final isToday = day == today;
     final isSelected = day == _selectedDay();
-    final hasEvent = eventsOn(_events, day).isNotEmpty;
+    final hasEntry = _hasVisibleEntry(day);
     return SizedBox(
       height: 24,
       child: InkWell(
@@ -711,7 +892,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ? theme.colorScheme.onPrimary
                     : isToday
                         ? theme.colorScheme.primary
-                        : hasEvent
+                        : hasEntry
                             ? theme.colorScheme.onSurface
                             : theme.colorScheme.onSurfaceVariant,
                 fontWeight:
@@ -739,25 +920,37 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  /// "Lịch của tôi" — which calendars feed the grid. Only "Sự kiện" is wired
-  /// up; the other entries stay dimmed until their data lands.
+  /// "Lịch của tôi" — which calendars feed the grid.
+  ///
+  /// Every row is a real checkbox: events, the timetable and the diary each
+  /// paint their own blocks, and unticking one removes it from the grid, the
+  /// canvases and the lists below without a reload.
   Widget _visibilityCard(BuildContext context, double scale) {
     final theme = Theme.of(context);
-    Widget row(String label, {required bool active}) => Padding(
-          padding: EdgeInsets.symmetric(vertical: MemoirSpace.s1 * scale),
+    Widget row(CalendarSource source) {
+      final active = _visibleSources.contains(source);
+      final error = _sourceErrors[source];
+      return InkWell(
+        onTap: () => _toggleSource(source),
+        borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: MemoirSpace.s1 * scale,
+            horizontal: 2 * scale,
+          ),
           child: Row(
             children: [
               Icon(
                 active ? Icons.check_box : Icons.check_box_outline_blank,
                 size: 18 * scale,
                 color: active
-                    ? theme.colorScheme.primary
+                    ? calendarSourceAccent(context, source)
                     : theme.colorScheme.outlineVariant,
               ),
               SizedBox(width: MemoirSpace.s2 * scale),
               Expanded(
                 child: Text(
-                  label,
+                  source.label,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: active
                         ? theme.colorScheme.onSurface
@@ -767,9 +960,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
               ),
+              if (error != null)
+                Tooltip(
+                  message: error,
+                  child: Icon(
+                    Icons.error_outline,
+                    size: 14 * scale,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
             ],
           ),
-        );
+        ),
+      );
+    }
 
     return _sidebarCard(
       context,
@@ -785,9 +989,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
           const SizedBox(height: MemoirSpace.s1),
-          row('Sự kiện', active: true),
-          row('Lịch biểu', active: false),
-          row('Nhật ký', active: false),
+          for (final source in CalendarSource.values) row(source),
           Text(
             'Các lịch đang hiển thị',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -922,7 +1124,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final isToday = day == today;
     final isSelected = day == _selectedDay();
     final outside = !_sameMonth(day, _month);
-    final dayEvents = eventsOn(_events, day);
+    final dayEntries = _dayEntries(day);
 
     return Container(
       height: 124 * scale,
@@ -971,11 +1173,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
             ),
             SizedBox(height: 4 * scale),
-            for (final event in dayEvents.take(2))
-              _eventLine(context, scale, event),
-            if (dayEvents.length > 2)
+            for (final entry in dayEntries.take(2))
+              _eventLine(context, scale, entry),
+            if (dayEntries.length > 2)
               Text(
-                '+${dayEvents.length - 2}',
+                '+${dayEntries.length - 2}',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontSize: MemoirType.caption,
@@ -987,10 +1189,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _eventLine(BuildContext context, double scale, PlannerEvent event) {
+  /// One line of the month cell: a coloured dot in the calendar's tone and the
+  /// time plus title — or just `Nhật ký` for a page without a time.
+  Widget _eventLine(BuildContext context, double scale, CalendarEntry entry) {
     final theme = Theme.of(context);
     String two(int n) => n.toString().padLeft(2, '0');
-    final start = event.startAt;
+    final accent = calendarEventTint(context, entry).accent;
+    final label = entry.isAllDay
+        ? entry.title
+        : '${two(entry.start.hour)}:${two(entry.start.minute)} ${entry.title}';
     return Padding(
       padding: EdgeInsets.only(bottom: 2 * scale),
       child: Row(
@@ -999,14 +1206,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             width: 6 * scale,
             height: 6 * scale,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
+              color: accent,
               shape: BoxShape.circle,
             ),
           ),
           SizedBox(width: 4 * scale),
           Expanded(
             child: Text(
-              '${two(start.hour)}:${two(start.minute)} ${event.title}',
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -1020,51 +1227,96 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  /// The events of the day being looked at, then the ones coming up.
+  /// The calendars of the day being looked at, then the events coming up.
+  ///
+  /// A block only appears when its calendar is ticked in `Lịch của tôi`, so the
+  /// list mirrors the grid above it.
   Widget _eventsSections(BuildContext context, double scale) {
-    final theme = Theme.of(context);
-    if (_errorMessage != null) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(MemoirSpace.s4),
-          child: Text(
-            'Không tải được sự kiện: $_errorMessage',
-            style: TextStyle(color: theme.colorScheme.error),
-          ),
-        ),
-      );
-    }
-
     final selected = _selectedDay();
-    final onDay = eventsOn(_events, selected)
-      ..sort((a, b) => a.startAt.compareTo(b.startAt));
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final sections = <Widget>[];
 
+    if (_visibleSources.contains(CalendarSource.events)) {
+      final error = _sourceErrors[CalendarSource.events];
+      final onDay = eventsOn(_events, selected)
+        ..sort((a, b) => a.startAt.compareTo(b.startAt));
+      sections
+        ..add(_sectionTitle(
+          context,
+          'Sự kiện ${selected.day}.${selected.month}',
+        ))
+        ..add(const SizedBox(height: MemoirSpace.s2));
+      if (error != null) {
+        sections.add(_errorCard(context, 'Không tải được sự kiện: $error'));
+      } else if (onDay.isEmpty) {
+        sections.add(_emptyLine(context, 'Không có sự kiện trong ngày này.'));
+      } else {
+        sections.addAll(
+          [for (final event in onDay) _eventTile(context, scale, event)],
+        );
+      }
+      sections.add(SizedBox(height: MemoirSpace.s5 * scale));
+    }
+
+    if (_visibleSources.contains(CalendarSource.schedules)) {
+      final error = _sourceErrors[CalendarSource.schedules];
+      final onDay = _schedulesOn(selected);
+      sections
+        ..add(_sectionTitle(
+          context,
+          'Lịch biểu ${selected.day}.${selected.month}',
+        ))
+        ..add(const SizedBox(height: MemoirSpace.s2));
+      if (error != null) {
+        sections.add(_errorCard(context, 'Không tải được lịch biểu: $error'));
+      } else if (onDay.isEmpty) {
+        sections.add(_emptyLine(context, 'Không có lịch biểu trong ngày này.'));
+      } else {
+        sections.addAll(
+          [for (final item in onDay) _scheduleTile(context, scale, item)],
+        );
+      }
+      sections.add(SizedBox(height: MemoirSpace.s5 * scale));
+    }
+
+    if (_visibleSources.contains(CalendarSource.diary)) {
+      final error = _sourceErrors[CalendarSource.diary];
+      sections
+        ..add(_sectionTitle(
+          context,
+          'Nhật ký ${selected.day}.${selected.month}',
+        ))
+        ..add(const SizedBox(height: MemoirSpace.s2));
+      if (error != null) {
+        sections.add(_errorCard(context, 'Không tải được nhật ký: $error'));
+      } else {
+        sections.add(_diaryTile(context, scale, selected));
+      }
+      sections.add(SizedBox(height: MemoirSpace.s5 * scale));
+    }
+
+    if (_visibleSources.contains(CalendarSource.events)) {
+      final upcoming = upcomingAfter(_events, today).take(5).toList();
+      sections
+        ..add(_sectionTitle(context, 'Sắp tới'))
+        ..add(const SizedBox(height: MemoirSpace.s2));
+      if (upcoming.isEmpty) {
+        sections.add(_emptyLine(context, 'Chưa có sự kiện sắp tới.'));
+      } else {
+        sections.addAll([
+          for (final event in upcoming)
+            _eventTile(context, scale, event, withDate: true),
+        ]);
+      }
+    }
+
+    if (sections.isEmpty) {
+      return _emptyLine(context, 'Chưa bật lịch nào trong "Lịch của tôi".');
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle(context, 'Sự kiện ${selected.day}.${selected.month}'),
-        const SizedBox(height: MemoirSpace.s2),
-        if (onDay.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: MemoirSpace.s3),
-            child: Text(
-              'Không có sự kiện trong ngày này.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: MemoirType.body,
-              ),
-            ),
-          )
-        else
-          for (final event in onDay) _eventTile(context, scale, event),
-        SizedBox(height: MemoirSpace.s5 * scale),
-        _sectionTitle(context, 'Sắp tới'),
-        const SizedBox(height: MemoirSpace.s2),
-        for (final event in upcomingAfter(_events, today).take(5))
-          _eventTile(context, scale, event, withDate: true),
-      ],
+      children: sections,
     );
   }
 
@@ -1113,6 +1365,176 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             icon: const Icon(Icons.delete_outline, size: 20),
             onPressed: () => _deleteEvent(event),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// One timetable row, with its time, repeat rule and reminder.
+  Widget _scheduleTile(
+    BuildContext context,
+    double scale,
+    PlannerSchedule item, {
+    bool withDate = false,
+  }) {
+    final theme = Theme.of(context);
+    String two(int n) => n.toString().padLeft(2, '0');
+    final start = item.startAt;
+    final startLabel = withDate
+        ? 'Ngày ${two(start.day)}.${two(start.month)} · '
+            '${two(start.hour)}:${two(start.minute)}'
+        : '${two(start.hour)}:${two(start.minute)}';
+    final end = item.endAt;
+    final timePart = [
+      startLabel,
+      if (end != null) '– ${two(end.hour)}:${two(end.minute)}',
+    ].join(' ');
+    final reminder = item.reminderMinutes;
+    final subtitle = [
+      timePart,
+      if (item.recurrenceLabel != null) '· ${item.recurrenceLabel}',
+      if (reminder != null) '· Nhắc $reminder phút trước',
+    ].join(' ');
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MemoirSpace.s2 * scale),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: ListTile(
+          leading: Icon(
+            Icons.event_repeat,
+            size: 20 * scale,
+            color: calendarSourceAccent(context, CalendarSource.schedules),
+          ),
+          title: Text(
+            item.title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontSize: MemoirType.label,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: MemoirType.caption,
+            ),
+          ),
+          trailing: IconButton(
+            tooltip: 'Xoá',
+            icon: const Icon(Icons.delete_outline, size: 20),
+            onPressed: () => _deleteSchedule(item),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The day's diary page, opening the editor when tapped.
+  Widget _diaryTile(BuildContext context, double scale, DateTime day) {
+    final theme = Theme.of(context);
+    final entry = _diaryByDay[dayKey(day)];
+    if (entry == null) {
+      return _emptyLine(context, 'Chưa viết nhật ký cho ngày này.');
+    }
+    final preview = (entry.diaryText ?? '').trim();
+    return Padding(
+      padding: EdgeInsets.only(bottom: MemoirSpace.s2 * scale),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: ListTile(
+          leading: Icon(
+            Icons.menu_book_outlined,
+            size: 20 * scale,
+            color: calendarSourceAccent(context, CalendarSource.diary),
+          ),
+          title: Text(
+            preview.isEmpty ? 'Nhật ký' : preview,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontSize: MemoirType.label,
+            ),
+          ),
+          subtitle: Text(
+            '${entry.filledFields}/${DiaryEntry.contentFieldCount} mục · '
+            'Mở để sửa',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: MemoirType.caption,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right, size: 20),
+          onTap: () => _openDiary(day),
+        ),
+      ),
+    );
+  }
+
+  /// Opens the day's page and refreshes the calendar once the editor closes.
+  Future<void> _openDiary(DateTime day) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => EntryEditorScreen(date: day)),
+    );
+    if (mounted) await _load();
+  }
+
+  /// Deletes a timetable row after a quick confirmation.
+  Future<void> _deleteSchedule(PlannerSchedule item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xoá lịch biểu?'),
+        content: Text('“${item.title}” sẽ bị xoá vĩnh viễn.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Không'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref
+          .read(plannerRepositoryProvider)
+          .delete('/schedule-items/${item.id}');
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Widget _emptyLine(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: MemoirSpace.s3),
+      child: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: MemoirType.body,
+        ),
+      ),
+    );
+  }
+
+  Widget _errorCard(BuildContext context, String message) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(MemoirSpace.s4),
+        child: Text(
+          message,
+          style: TextStyle(color: theme.colorScheme.error),
         ),
       ),
     );

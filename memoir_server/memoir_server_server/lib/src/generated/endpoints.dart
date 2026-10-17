@@ -1324,13 +1324,28 @@ class Endpoints extends _is.EndpointDispatch {
       methodConnectors: {
         'list': _is.MethodConnector(
           name: 'list',
-          params: {},
+          params: {
+            'from': _is.ParameterDescription(
+              name: 'from',
+              type: _is.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'to': _is.ParameterDescription(
+              name: 'to',
+              type: _is.getType<DateTime?>(),
+              nullable: true,
+            ),
+          },
           call:
               (
                 _is.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['schedules'] as _izarqe10.SchedulesEndpoint)
-                  .list(session),
+              ) async =>
+                  (endpoints['schedules'] as _izarqe10.SchedulesEndpoint).list(
+                    session,
+                    from: params['from'],
+                    to: params['to'],
+                  ),
         ),
         'create': _is.MethodConnector(
           name: 'create',

@@ -19,6 +19,19 @@ class PlannerRepository {
         'to': to.toIso8601String(),
       });
 
+  /// Schedule items starting within [from]..[to] (inclusive).
+  ///
+  /// The calendar paints one window at a time, so it asks the server for that
+  /// window instead of pulling every timetable row the user ever created.
+  Future<List<Map<String, dynamic>>> schedulesBetween(
+    DateTime from,
+    DateTime to,
+  ) =>
+      _list('/schedule-items', query: {
+        'from': from.toIso8601String(),
+        'to': to.toIso8601String(),
+      });
+
   Future<void> create(String path, Map<String, dynamic> body) =>
       _source.post(path, data: body);
   Future<void> update(String path, Map<String, dynamic> body) =>

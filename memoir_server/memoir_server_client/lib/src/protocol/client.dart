@@ -650,12 +650,21 @@ class EndpointSchedules extends _isc.EndpointRef {
   @override
   String get name => 'schedules';
 
-  _ida.Future<List<_ijhdkgyn.ScheduleItem>> list() =>
-      caller.callServerEndpoint<List<_ijhdkgyn.ScheduleItem>>(
-        'schedules',
-        'list',
-        {},
-      );
+  /// Schedule items starting inside `[from, to]`, oldest first.
+  ///
+  /// Both bounds are optional, so the planner's "load everything" call keeps
+  /// working, while the calendar can ask for just the window it paints.
+  _ida.Future<List<_ijhdkgyn.ScheduleItem>> list({
+    DateTime? from,
+    DateTime? to,
+  }) => caller.callServerEndpoint<List<_ijhdkgyn.ScheduleItem>>(
+    'schedules',
+    'list',
+    {
+      'from': from,
+      'to': to,
+    },
+  );
 
   _ida.Future<_ijhdkgyn.ScheduleItem> create({
     required String title,

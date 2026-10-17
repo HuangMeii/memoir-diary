@@ -59,6 +59,20 @@ class EntryRepository {
         .toList();
   }
 
+  /// Entries whose day falls inside `[from]..[to]`, newest first.
+  ///
+  /// The calendar paints a window that can straddle two months, so it asks for
+  /// a date range instead of one `YYYY-MM` bucket per month.
+  Future<List<DiaryEntry>> listBetween(DateTime from, DateTime to) async {
+    final data = await _source.get('/entries', query: {
+      'from': from.toIso8601String(),
+      'to': to.toIso8601String(),
+    });
+    return (data as List)
+        .map((item) => DiaryEntry.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<GridCell>> moodGrid(String month) =>
       _grid('/stats/mood-grid', month);
 

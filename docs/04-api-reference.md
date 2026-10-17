@@ -245,6 +245,10 @@ Cặp câu được **lưu theo ngày**, nên mở app nhiều lần trong ngày
 | PUT | `/schedule-items/{id}` | Sửa |
 | DELETE | `/schedule-items/{id}` | Xóa |
 
+`from`/`to` là tuỳ chọn và **bao gồm hai đầu**, lọc theo `start_at` — cùng quy
+ước với `/events`; bỏ qua tham số thì trả toàn bộ lịch biểu của tài khoản
+(planner dùng cách này).
+
 ## 15. Health logs — `/health-logs`
 
 | Method | Path | Mô tả |

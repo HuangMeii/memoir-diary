@@ -8,11 +8,24 @@ class SchedulesEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
-  Future<List<ScheduleItem>> list(Session session) {
+  /// Schedule items starting inside `[from, to]`, oldest first.
+  ///
+  /// Both bounds are optional, so the planner's "load everything" call keeps
+  /// working, while the calendar can ask for just the window it paints.
+  Future<List<ScheduleItem>> list(
+    Session session, {
+    DateTime? from,
+    DateTime? to,
+  }) {
     final userId = currentUserId(session);
     return ScheduleItem.db.find(
       session,
-      where: (t) => t.userId.equals(userId),
+      where: (t) {
+        final conditions = <Expression>[t.userId.equals(userId)];
+        if (from != null) conditions.add(t.startAt >= from);
+        if (to != null) conditions.add(t.startAt <= to);
+        return conditions.reduce((a, b) => a & b);
+      },
       orderBy: (t) => t.startAt,
     );
   }

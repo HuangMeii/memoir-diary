@@ -1770,8 +1770,10 @@ class _SchedulesEndpoint {
   final _is.SerializationManager _serializationManager;
 
   _ida.Future<List<_i24him69.ScheduleItem>> list(
-    _ist.TestSessionBuilder sessionBuilder,
-  ) async {
+    _ist.TestSessionBuilder sessionBuilder, {
+    DateTime? from,
+    DateTime? to,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1783,7 +1785,10 @@ class _SchedulesEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'schedules',
           methodName: 'list',
-          parameters: _ist.testObjectToJson({}),
+          parameters: _ist.testObjectToJson({
+            'from': from,
+            'to': to,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
