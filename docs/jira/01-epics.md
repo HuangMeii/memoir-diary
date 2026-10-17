@@ -24,7 +24,7 @@ Key thật đã được gán trên Jira sau khi import.
 ## Lưu ý
 
 - Key thật trên Jira: epic `MD-9 … MD-23` (sinh tự động khi import).
-- Các issue `Done`: MD-10 (Auth), MD-12 (Quotes), MD-31, MD-32, MD-33 (Serverpod cut over); còn lại `To Do`.
+- Các issue `Done`: MD-10 (Auth), MD-12 (Quotes), MD-31, MD-32, MD-33, MD-36 (Serverpod cut over); còn lại `To Do`.
 - Story / Spike con đã gắn `parent` trên Jira:
   - **MD-9** → MD-24 … MD-28
   - **MD-11** → MD-43 (spike), MD-57 (story)
