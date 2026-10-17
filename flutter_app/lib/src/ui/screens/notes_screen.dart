@@ -13,7 +13,6 @@ import '../notes/notes_header.dart';
 import '../notes/notes_query.dart';
 import '../notes/notes_search_field.dart';
 import '../notes/notes_states.dart';
-import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import 'note_editor_screen.dart';
 
@@ -59,7 +58,6 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                 onLogout: () => ref.read(authProvider.notifier).logout(),
               ),
               Expanded(child: _body()),
-              const AppFooterBar(),
             ]),
           ),
         );
@@ -112,8 +110,6 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                 ),
                 const SizedBox(height: 24),
                 const NotesCallout(),
-                const SizedBox(height: 24),
-                const PrivacyNote(),
               ],
             ],
           ),

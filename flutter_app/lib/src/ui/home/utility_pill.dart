@@ -4,15 +4,14 @@ import '../icons.dart';
 import '../theme.dart';
 import '../tokens.dart';
 import '../utilities.dart';
-import '../widgets/app_footer.dart' show openUtility;
 import 'home_scale.dart';
 
 /// One utility affordance, e.g. the "Xem thời tiết" pill.
 ///
-/// It lives in the home header next to the account actions, so it grows with
+/// It lives in the app header next to the account actions, so it grows with
 /// [HomeScale.textOf] (the calmed-down text factor) rather than the layout
-/// factor, and it is hidden on phones — there the same utilities stay at the
-/// end of the page through `UtilitiesSection`.
+/// factor, and the header is the only place the utilities live: no screen
+/// repeats them at the end of the page.
 class UtilityPill extends StatelessWidget {
   const UtilityPill({super.key, required this.item});
 

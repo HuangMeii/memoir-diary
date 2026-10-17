@@ -11,7 +11,6 @@ import '../month/day_details.dart';
 import '../month/month_card.dart';
 import '../month/month_heatmaps.dart';
 import '../tokens.dart';
-import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import '../widgets/period_control.dart';
 import 'calendar_screen.dart';
@@ -122,7 +121,6 @@ class _MonthGridsScreenState extends ConsumerState<MonthGridsScreen> {
                           );
                         }
                       },
-                      showUtilities: sideBySide,
                       gutter: gutter,
                       onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
@@ -166,8 +164,6 @@ class _MonthGridsScreenState extends ConsumerState<MonthGridsScreen> {
                             entry: day,
                             onWrite: () => _openEditor(selected),
                           ),
-                          SizedBox(height: MemoirSpace.s8 * scale),
-                          const PrivacyNote(),
                         ],
                       ),
                     ),

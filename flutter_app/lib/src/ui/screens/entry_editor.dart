@@ -13,7 +13,6 @@ import '../home/home_scale.dart';
 import '../home/picker_card.dart';
 import '../icons.dart';
 import '../tokens.dart';
-import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import '../widgets/entry_images_section.dart';
 import 'calendar_screen.dart';
@@ -411,7 +410,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                   );
                 }
               },
-              showUtilities: sideBySide,
               gutter: gutter,
               onLogout: () => ref.read(authProvider.notifier).logout(),
             ),
@@ -450,8 +448,6 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                           SizedBox(height: MemoirSpace.s6 * scale),
                           _mainFields(todayQuote),
                         ],
-                        SizedBox(height: MemoirSpace.s8 * scale),
-                        const PrivacyNote(),
                       ],
                     ),
             ),

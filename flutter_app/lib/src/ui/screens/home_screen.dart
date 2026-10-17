@@ -16,7 +16,6 @@ import '../home/picker_card.dart';
 import '../home/shortcut_cards.dart';
 import '../icons.dart';
 import '../tokens.dart';
-import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
 import 'calendar_screen.dart';
 import 'entry_editor.dart';
@@ -74,8 +73,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             16.0,
             (constraints.maxWidth - kHomeContentWidth * scale) / 2,
           );
-          final contentWidth = constraints.maxWidth - 2 * horizontal;
-          final wide = contentWidth >= kDashboardBreakpoint * scale;
           final media = MediaQuery.of(context);
 
           return MediaQuery(
@@ -111,7 +108,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           );
                         }
                       },
-                      showUtilities: wide,
                       gutter: horizontal,
                       onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
@@ -142,14 +138,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               side: _sideColumn(context, today, entry),
                             ),
-                            if (!wide) ...[
-                              SizedBox(height: MemoirSpace.s8 * scale),
-                              // The header only carries the utilities on a wide
-                              // screen; the narrow layout keeps them here.
-                              const UtilitiesSection(),
-                            ],
-                            SizedBox(height: MemoirSpace.s6 * scale),
-                            const PrivacyNote(),
                           ],
                         ),
                       ),

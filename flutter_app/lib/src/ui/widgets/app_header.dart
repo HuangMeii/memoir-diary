@@ -101,8 +101,9 @@ class AppHeader extends StatelessWidget {
 
   /// Whether the utility pills belong in the header.
   ///
-  /// The screen decides this from its own layout, so the header never shows an
-  /// entry that `UtilitiesSection` also shows at the end of the page.
+  /// The header is the only place the utilities live, so every screen leaves
+  /// this on; the pills still drop out on their own when the bar is narrower
+  /// than the utilities threshold.
   final bool showUtilities;
 
   /// Horizontal padding, normally the content gutter so the wordmark lines up
@@ -194,12 +195,11 @@ class AppHeader extends StatelessWidget {
                                   )
                                 : const SizedBox.shrink(),
                           ),
-                          // Utilities: the same entries the phone layout keeps
-                          // at the end of the page, folded into the header on
-                          // wider screens. Right-aligned so they stay next to
-                          // the account actions, and reversed so the last pill
-                          // is the one that stays visible when the band is
-                          // tight.
+                          // Utilities, folded into the header: the pages no
+                          // longer repeat them further down, so this is the only
+                          // way in. Right-aligned so they stay next to the
+                          // account actions, and reversed so the last pill is
+                          // the one that stays visible when the band is tight.
                           if (showPills)
                             Flexible(
                               child: Align(
