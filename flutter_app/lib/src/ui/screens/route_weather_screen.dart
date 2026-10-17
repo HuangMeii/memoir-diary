@@ -53,6 +53,12 @@ const double kRouteMapHeight = 360;
 /// Gap between the two columns of the band: the frame's 28 px `gap-7`.
 const double kRouteColumnGap = MemoirSpace.s7;
 
+/// Narrowest the legs + safety-alerts row may get before it stacks instead.
+///
+/// Below this the two panels fall back to a column (legs on top, alerts
+/// below) so neither card gets squeezed.
+const double kRouteLegAlertsMinWidth = 720;
+
 /// How long a stop name has to stay unchanged before it becomes part of the
 /// route query (docs/12-route-weather.md §11).
 ///
@@ -196,8 +202,7 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
     final previousName = current.name;
     final unlabelled = previousName.trim().isEmpty ||
         previousName == _pickedPlaceLabel(current.lat, current.lon);
-    final provisional =
-        unlabelled ? _pickedPlaceLabel(lat, lon) : previousName;
+    final provisional = unlabelled ? _pickedPlaceLabel(lat, lon) : previousName;
     _setStops([
       for (var i = 0; i < _stops.length; i++)
         if (i != target)
@@ -658,8 +663,9 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
       plan: plan,
       report: report,
       scale: scale,
-      onRetryForecast:
-          report.isUnavailable ? () => ref.invalidate(routePlanProvider(_query)) : null,
+      onRetryForecast: report.isUnavailable
+          ? () => ref.invalidate(routePlanProvider(_query))
+          : null,
     );
   }
 
@@ -690,25 +696,7 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
         ),
       ),
       SizedBox(height: MemoirSpace.s4 * scale),
-      RouteSection(
-        overline: 'Chi tiết chặng',
-        title: '${math.max(0, report.stopSamples.length - 1)} chặng di chuyển',
-        subtitle: 'Chọn một chặng để làm nổi vị trí trên bản đồ.',
-        scale: scale,
-        child: RouteTimeline(
-          plan: plan,
-          report: report,
-          selectedSeq: _selectedSeq,
-          scale: scale,
-          onSelect: (sample) => setState(() => _selectedSeq = sample.seq),
-        ),
-      ),
-      SizedBox(height: MemoirSpace.s4 * scale),
-      RouteAlertsPanel(
-        report: report,
-        scale: scale,
-        onSelect: (seq) => setState(() => _selectedSeq = seq),
-      ),
+      _legsAlertsRow(scale, plan, report),
       if (_showDepartures) ...[
         SizedBox(height: MemoirSpace.s4 * scale),
         RouteDepartureCompare(
@@ -728,6 +716,74 @@ class _RouteWeatherScreenState extends ConsumerState<RouteWeatherScreen> {
             'thông thực tế khi lái xe.',
       ),
     ];
+  }
+
+  /// Legs + safety alerts on one row: legs left, alerts right, half each.
+  ///
+  /// Wide enough for [kRouteLegAlertsMinWidth] the two cards sit side by side;
+  /// narrower they stack (legs on top) so neither is squeezed.
+  ///
+  /// No `IntrinsicHeight` here on purpose: `RouteTimeline` sizes itself with a
+  /// `LayoutBuilder`, which refuses intrinsic queries, so asking the row for
+  /// equal heights freezes the page as soon as this section scrolls into view.
+  /// Each card keeps its natural height instead.
+  Widget _legsAlertsRow(
+    double scale,
+    RoutePlan plan,
+    RouteWeatherReport report,
+  ) {
+    final legs = RouteSection(
+      overline: 'Chi tiết chặng',
+      title: '${math.max(0, report.stopSamples.length - 1)} chặng di chuyển',
+      subtitle: 'Chọn một chặng để làm nổi vị trí trên bản đồ.',
+      scale: scale,
+      child: RouteTimeline(
+        plan: plan,
+        report: report,
+        selectedSeq: _selectedSeq,
+        scale: scale,
+        onSelect: (sample) => setState(() => _selectedSeq = sample.seq),
+      ),
+    );
+    final alerts = RouteAlertsPanel(
+      report: report,
+      scale: scale,
+      onSelect: (seq) => setState(() => _selectedSeq = seq),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < kRouteLegAlertsMinWidth * scale) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              legs,
+              SizedBox(height: MemoirSpace.s4 * scale),
+              alerts,
+            ],
+          );
+        }
+        final fixedHeight = 720 * scale;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: fixedHeight,
+                child: SingleChildScrollView(child: legs),
+              ),
+            ),
+            SizedBox(width: MemoirSpace.s4 * scale),
+            Expanded(
+              child: SizedBox(
+                height: fixedHeight,
+                child: SingleChildScrollView(child: alerts),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// The map of the route.

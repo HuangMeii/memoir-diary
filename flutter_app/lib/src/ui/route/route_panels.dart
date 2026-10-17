@@ -56,13 +56,14 @@ class RouteAlertsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final alert in alerts)
+          for (var i = 0; i < alerts.length; i++) ...[
+            if (i > 0) SizedBox(height: MemoirSpace.s2 * scale),
             InkWell(
-              onTap: () => onSelect(alert.fromSeq),
+              onTap: () => onSelect(alerts[i].fromSeq),
               borderRadius:
                   BorderRadius.circular(MemoirRadius.control * scale),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: MemoirSpace.s2 * scale),
+                padding: EdgeInsets.symmetric(vertical: MemoirSpace.s3 * scale),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -71,14 +72,14 @@ class RouteAlertsPanel extends StatelessWidget {
                         Icon(
                           Icons.warning_amber_rounded,
                           size: 16 * scale,
-                          color: routeSeverityColor(context, alert.severity),
+                          color: routeSeverityColor(context, alerts[i].severity),
                         ),
                         SizedBox(width: MemoirSpace.s2 * scale),
                         Expanded(
                           child: Text(
-                            '${alert.title} '
-                            '(dự kiến ${formatClock(alert.startAt)} – '
-                            '${formatClock(alert.endAt)})',
+                            '${alerts[i].title} '
+                            '(dự kiến ${formatClock(alerts[i].startAt)} – '
+                            '${formatClock(alerts[i].endAt)})',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface,
                               fontSize: MemoirType.body,
@@ -87,14 +88,14 @@ class RouteAlertsPanel extends StatelessWidget {
                           ),
                         ),
                         RouteSeverityChip(
-                          severity: alert.severity,
+                          severity: alerts[i].severity,
                           scale: scale,
                         ),
                       ],
                     ),
                     SizedBox(height: MemoirSpace.s1 * scale),
                     Text(
-                      alert.summary,
+                      alerts[i].summary,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: MemoirType.body,
@@ -104,6 +105,7 @@ class RouteAlertsPanel extends StatelessWidget {
                 ),
               ),
             ),
+          ],
           Divider(height: MemoirSpace.s5 * scale, color: palette.borderDefault),
           RouteNote(
             icon: Icons.info_outline,

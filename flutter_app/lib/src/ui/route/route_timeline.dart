@@ -38,13 +38,9 @@ class RouteTimeline extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 900
-            ? 4
-            : constraints.maxWidth >= 620
-                ? 3
-                : constraints.maxWidth >= 420
-                    ? 2
-                    : 1;
+        final columns = constraints.maxWidth >= 650
+            ? 2
+            : 1;
         final spacing = MemoirSpace.s3 * scale;
         final width =
             (constraints.maxWidth - spacing * (columns - 1)) / columns;
@@ -121,7 +117,7 @@ class _LegCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(MemoirRadius.control * scale),
       child: Container(
-        padding: EdgeInsets.all(MemoirSpace.s3 * scale),
+        padding: EdgeInsets.all(MemoirSpace.s2 * scale),
         decoration: BoxDecoration(
           color: selected ? palette.surfaceBrandSubtle : palette.surfaceCard,
           border: Border.all(
@@ -147,7 +143,7 @@ class _LegCard extends StatelessWidget {
                 RouteSeverityChip(severity: severity, scale: scale),
               ],
             ),
-            SizedBox(height: MemoirSpace.s2 * scale),
+            SizedBox(height: MemoirSpace.s1 * scale),
             Text(
               to.label,
               maxLines: 1,
@@ -164,7 +160,7 @@ class _LegCard extends StatelessWidget {
               'đến ${formatClock(to.arrivalAt)}',
               style: meta,
             ),
-            SizedBox(height: MemoirSpace.s2 * scale),
+            SizedBox(height: MemoirSpace.s1 * scale),
             Row(
               children: [
                 RouteWeatherIcon(group: to.weatherGroup, size: 16 * scale),
