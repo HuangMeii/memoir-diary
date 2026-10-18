@@ -16,8 +16,16 @@ import 'dart:io' as _idi;
 import 'package:memoir_server_server/src/generated/auth/auth_result.dart'
     as _i1kyq2cu;
 import 'package:memoir_server_server/src/generated/auth/user.dart' as _ijdnq3k2;
+import 'package:memoir_server_server/src/generated/health/health_activity.dart'
+    as _i09tdfxb;
+import 'package:memoir_server_server/src/generated/health/health_day_overview.dart'
+    as _i6h63o7x;
 import 'package:memoir_server_server/src/generated/health/health_log.dart'
     as _izb6cxrd;
+import 'package:memoir_server_server/src/generated/health/health_profile.dart'
+    as _ir2h54vh;
+import 'package:memoir_server_server/src/generated/health/health_trend_point.dart'
+    as _iycockxs;
 import 'package:memoir_server_server/src/generated/journal/diary_entry.dart'
     as _irepgc45;
 import 'package:memoir_server_server/src/generated/journal/entry_image.dart'
@@ -785,6 +793,13 @@ class _HealthEndpoint {
     double? sleepHours,
     double? weightKg,
     String? note,
+    String? workoutType,
+    String? workoutIntensity,
+    String? sleepBedtime,
+    String? sleepWake,
+    int? sleepDeepMinutes,
+    String? sleepQuality,
+    String? sleepNote,
   }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -805,6 +820,13 @@ class _HealthEndpoint {
             'sleepHours': sleepHours,
             'weightKg': weightKg,
             'note': note,
+            'workoutType': workoutType,
+            'workoutIntensity': workoutIntensity,
+            'sleepBedtime': sleepBedtime,
+            'sleepWake': sleepWake,
+            'sleepDeepMinutes': sleepDeepMinutes,
+            'sleepQuality': sleepQuality,
+            'sleepNote': sleepNote,
           }),
           serializationManager: _serializationManager,
         );
@@ -814,6 +836,289 @@ class _HealthEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_izb6cxrd.HealthLog>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i6h63o7x.HealthDayOverview> dayOverview(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required DateTime date,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'dayOverview',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'dayOverview',
+          parameters: _ist.testObjectToJson({'date': date}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i6h63o7x.HealthDayOverview>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<_iycockxs.HealthTrendPoint>> trends(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required DateTime from,
+    required DateTime to,
+    required String metric,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'trends',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'trends',
+          parameters: _ist.testObjectToJson({
+            'from': from,
+            'to': to,
+            'metric': metric,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_iycockxs.HealthTrendPoint>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i6h63o7x.HealthDayOverview> waterAdd(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required DateTime logDate,
+    required int amountMl,
+    DateTime? recordedAt,
+    String? note,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'waterAdd',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'waterAdd',
+          parameters: _ist.testObjectToJson({
+            'logDate': logDate,
+            'amountMl': amountMl,
+            'recordedAt': recordedAt,
+            'note': note,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i6h63o7x.HealthDayOverview>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> waterRemove(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _is.UuidValue id,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'waterRemove',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'waterRemove',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i09tdfxb.HealthActivity> activityAdd(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required DateTime logDate,
+    required String atTime,
+    required String title,
+    String? detail,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'activityAdd',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'activityAdd',
+          parameters: _ist.testObjectToJson({
+            'logDate': logDate,
+            'atTime': atTime,
+            'title': title,
+            'detail': detail,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i09tdfxb.HealthActivity>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> activityRemove(
+    _ist.TestSessionBuilder sessionBuilder, {
+    required _is.UuidValue id,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'activityRemove',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'activityRemove',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ir2h54vh.HealthProfile?> profileGet(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'profileGet',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'profileGet',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ir2h54vh.HealthProfile?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ir2h54vh.HealthProfile> profileSave(
+    _ist.TestSessionBuilder sessionBuilder, {
+    int? heightCm,
+    double? weightGoalKg,
+    double? weightStartKg,
+    int? stepsGoal,
+    int? workoutGoalMinutes,
+    int? waterGoalMl,
+    double? sleepGoalHours,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'health',
+            method: 'profileSave',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'health',
+          methodName: 'profileSave',
+          parameters: _ist.testObjectToJson({
+            'heightCm': heightCm,
+            'weightGoalKg': weightGoalKg,
+            'weightStartKg': weightStartKg,
+            'stepsGoal': stepsGoal,
+            'workoutGoalMinutes': workoutGoalMinutes,
+            'waterGoalMl': waterGoalMl,
+            'sleepGoalHours': sleepGoalHours,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ir2h54vh.HealthProfile>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

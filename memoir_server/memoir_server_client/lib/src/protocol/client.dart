@@ -15,8 +15,16 @@ import 'package:http/http.dart' as _i85jenna;
 import 'package:memoir_server_client/src/protocol/auth/auth_result.dart'
     as _irsh1fu5;
 import 'package:memoir_server_client/src/protocol/auth/user.dart' as _i0oax80e;
+import 'package:memoir_server_client/src/protocol/health/health_activity.dart'
+    as _ig7yjv4d;
+import 'package:memoir_server_client/src/protocol/health/health_day_overview.dart'
+    as _i71ke30q;
 import 'package:memoir_server_client/src/protocol/health/health_log.dart'
     as _ikfsn92p;
+import 'package:memoir_server_client/src/protocol/health/health_profile.dart'
+    as _ifg4opad;
+import 'package:memoir_server_client/src/protocol/health/health_trend_point.dart'
+    as _ib0pvvcm;
 import 'package:memoir_server_client/src/protocol/journal/diary_entry.dart'
     as _i7ztga34;
 import 'package:memoir_server_client/src/protocol/journal/entry_image.dart'
@@ -254,6 +262,13 @@ class EndpointHealth extends _isc.EndpointRef {
     double? sleepHours,
     double? weightKg,
     String? note,
+    String? workoutType,
+    String? workoutIntensity,
+    String? sleepBedtime,
+    String? sleepWake,
+    int? sleepDeepMinutes,
+    String? sleepQuality,
+    String? sleepNote,
   }) => caller.callServerEndpoint<_ikfsn92p.HealthLog>(
     'health',
     'save',
@@ -265,6 +280,118 @@ class EndpointHealth extends _isc.EndpointRef {
       'sleepHours': sleepHours,
       'weightKg': weightKg,
       'note': note,
+      'workoutType': workoutType,
+      'workoutIntensity': workoutIntensity,
+      'sleepBedtime': sleepBedtime,
+      'sleepWake': sleepWake,
+      'sleepDeepMinutes': sleepDeepMinutes,
+      'sleepQuality': sleepQuality,
+      'sleepNote': sleepNote,
+    },
+  );
+
+  /// Everything the dashboard needs for one day, in a single round trip.
+  _ida.Future<_i71ke30q.HealthDayOverview> dayOverview({
+    required DateTime date,
+  }) => caller.callServerEndpoint<_i71ke30q.HealthDayOverview>(
+    'health',
+    'dayOverview',
+    {'date': date},
+  );
+
+  /// Chuỗi xu hướng theo metric, luôn đủ số ngày của kỳ (ngày trống ⇒ `value == null`).
+  _ida.Future<List<_ib0pvvcm.HealthTrendPoint>> trends({
+    required DateTime from,
+    required DateTime to,
+    required String metric,
+  }) => caller.callServerEndpoint<List<_ib0pvvcm.HealthTrendPoint>>(
+    'health',
+    'trends',
+    {
+      'from': from,
+      'to': to,
+      'metric': metric,
+    },
+  );
+
+  /// Thêm một lần uống nước, rồi tính lại tổng nước của ngày vào `health_logs.waterMl`.
+  _ida.Future<_i71ke30q.HealthDayOverview> waterAdd({
+    required DateTime logDate,
+    required int amountMl,
+    DateTime? recordedAt,
+    String? note,
+  }) => caller.callServerEndpoint<_i71ke30q.HealthDayOverview>(
+    'health',
+    'waterAdd',
+    {
+      'logDate': logDate,
+      'amountMl': amountMl,
+      'recordedAt': recordedAt,
+      'note': note,
+    },
+  );
+
+  /// Xoá một lần uống nước (chủ sở hữu chỉ), rồi tính lại tổng nước.
+  _ida.Future<void> waterRemove({required _isc.UuidValue id}) =>
+      caller.callServerEndpoint<void>(
+        'health',
+        'waterRemove',
+        {'id': id},
+      );
+
+  /// Thêm một mốc hoạt động (chủ sở hữu chỉ).
+  _ida.Future<_ig7yjv4d.HealthActivity> activityAdd({
+    required DateTime logDate,
+    required String atTime,
+    required String title,
+    String? detail,
+  }) => caller.callServerEndpoint<_ig7yjv4d.HealthActivity>(
+    'health',
+    'activityAdd',
+    {
+      'logDate': logDate,
+      'atTime': atTime,
+      'title': title,
+      'detail': detail,
+    },
+  );
+
+  /// Xoá một mốc hoạt động (chủ sở hữu chỉ).
+  _ida.Future<void> activityRemove({required _isc.UuidValue id}) =>
+      caller.callServerEndpoint<void>(
+        'health',
+        'activityRemove',
+        {'id': id},
+      );
+
+  /// Lấy thông số cơ thể & mục tiêu của user hiện tại.
+  _ida.Future<_ifg4opad.HealthProfile?> profileGet() =>
+      caller.callServerEndpoint<_ifg4opad.HealthProfile?>(
+        'health',
+        'profileGet',
+        {},
+      );
+
+  /// Lưu/cập nhật thông số cơ thể & mục tiêu (1 hàng / user).
+  _ida.Future<_ifg4opad.HealthProfile> profileSave({
+    int? heightCm,
+    double? weightGoalKg,
+    double? weightStartKg,
+    int? stepsGoal,
+    int? workoutGoalMinutes,
+    int? waterGoalMl,
+    double? sleepGoalHours,
+  }) => caller.callServerEndpoint<_ifg4opad.HealthProfile>(
+    'health',
+    'profileSave',
+    {
+      'heightCm': heightCm,
+      'weightGoalKg': weightGoalKg,
+      'weightStartKg': weightStartKg,
+      'stepsGoal': stepsGoal,
+      'workoutGoalMinutes': workoutGoalMinutes,
+      'waterGoalMl': waterGoalMl,
+      'sleepGoalHours': sleepGoalHours,
     },
   );
 }

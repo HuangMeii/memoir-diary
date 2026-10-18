@@ -86,6 +86,26 @@ class ServerpodDataSource implements BackendDataSource {
           to: _parseDate(query['to'])!,
         );
         return logs.map(_healthMap).toList();
+      case '/health/day':
+        return _dayOverviewMap(
+          await _request(
+            () => _client.health.dayOverview(
+              date: _parseDate(query!['date'])!,
+            ),
+          ),
+        );
+      case '/health/trends':
+        final points = await _request(
+          () => _client.health.trends(
+            from: _parseDate(query!['from'])!,
+            to: _parseDate(query['to'])!,
+            metric: query['metric'] as String,
+          ),
+        );
+        return points.map(_trendPointMap).toList();
+      case '/health/profile':
+        final profile = await _request(() => _client.health.profileGet());
+        return profile == null ? null : _profileMap(profile);
       case '/weather/current':
         return _weatherForecastMap(await _client.weather.current());
       case '/weather/history':
@@ -296,7 +316,8 @@ class ServerpodDataSource implements BackendDataSource {
               title: body['title'] as String? ?? '',
               vehicle: body['vehicle'] as String? ?? 'car',
               departureAt: _parseDate(body['departure_at'])!,
-              stops: ((body['stops'] as List?) ?? const []).map(_stopOf).toList(),
+              stops:
+                  ((body['stops'] as List?) ?? const []).map(_stopOf).toList(),
               distanceMeters: body['distance_meters'] as int? ?? 0,
               durationSeconds: body['duration_seconds'] as int? ?? 0,
               geometry: body['geometry'] as String? ?? '',
@@ -734,6 +755,54 @@ Map<String, dynamic> _healthMap(sp.HealthLog h) => {
       'sleep_hours': h.sleepHours,
       'weight_kg': h.weightKg,
       'note': h.note,
+      'workout_type': h.workoutType,
+      'workout_intensity': h.workoutIntensity,
+      'sleep_bedtime': h.sleepBedtime,
+      'sleep_wake': h.sleepWake,
+      'sleep_deep_minutes': h.sleepDeepMinutes,
+      'sleep_quality': h.sleepQuality,
+      'sleep_note': h.sleepNote,
+    };
+
+Map<String, dynamic> _waterEntryMap(sp.HealthWaterEntry e) => {
+      'id': e.id?.toString(),
+      'log_date': _dateOnly(e.logDate),
+      'amount_ml': e.amountMl,
+      'recorded_at': e.recordedAt.toIso8601String(),
+      'note': e.note,
+    };
+
+Map<String, dynamic> _activityMap(sp.HealthActivity a) => {
+      'id': a.id?.toString(),
+      'log_date': _dateOnly(a.logDate),
+      'at_time': a.atTime,
+      'title': a.title,
+      'detail': a.detail,
+      'kind': a.kind,
+    };
+
+Map<String, dynamic> _profileMap(sp.HealthProfile p) => {
+      'height_cm': p.heightCm,
+      'weight_goal_kg': p.weightGoalKg,
+      'weight_start_kg': p.weightStartKg,
+      'steps_goal': p.stepsGoal,
+      'workout_goal_minutes': p.workoutGoalMinutes,
+      'water_goal_ml': p.waterGoalMl,
+      'sleep_goal_hours': p.sleepGoalHours,
+    };
+
+Map<String, dynamic> _dayOverviewMap(sp.HealthDayOverview o) => {
+      'date': _dateOnly(o.date),
+      'log': o.log == null ? null : _healthMap(o.log!),
+      'water': o.water.map(_waterEntryMap).toList(),
+      'activities': o.activities.map(_activityMap).toList(),
+      'profile': o.profile == null ? null : _profileMap(o.profile!),
+    };
+
+Map<String, dynamic> _trendPointMap(sp.HealthTrendPoint t) => {
+      'date': _dateOnly(t.date),
+      'value': t.value,
+      'goal': t.goal,
     };
 
 Map<String, dynamic> _imageMap(sp.EntryImage i) => {
@@ -994,6 +1063,3 @@ Map<String, dynamic> _journeyDetailMap(sp.JourneyDetail d) => {
       'stops': d.stops.map(_journeyStopMap).toList(),
       'weather_points': d.weatherPoints.map(_journeyWeatherMap).toList(),
     };
-
-
-

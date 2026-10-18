@@ -14,6 +14,8 @@
 import 'package:memoir_server_client/src/protocol/auth/user.dart' as _i0oax80e;
 import 'package:memoir_server_client/src/protocol/health/health_log.dart'
     as _ikfsn92p;
+import 'package:memoir_server_client/src/protocol/health/health_trend_point.dart'
+    as _ib0pvvcm;
 import 'package:memoir_server_client/src/protocol/journal/diary_entry.dart'
     as _i7ztga34;
 import 'package:memoir_server_client/src/protocol/journal/entry_image_view.dart'
@@ -590,6 +592,12 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<_ikfsn92p.HealthLog>) {
       return (data as List)
               .map((e) => deserialize<_ikfsn92p.HealthLog>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ib0pvvcm.HealthTrendPoint>) {
+      return (data as List)
+              .map((e) => deserialize<_ib0pvvcm.HealthTrendPoint>(e))
               .toList()
           as T;
     }

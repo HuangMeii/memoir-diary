@@ -14,6 +14,14 @@ auth:
 health:
   - list:
   - save:
+  - dayOverview:
+  - trends:
+  - waterAdd:
+  - waterRemove:
+  - activityAdd:
+  - activityRemove:
+  - profileGet:
+  - profileSave:
 entries:
   - list:
   - get:

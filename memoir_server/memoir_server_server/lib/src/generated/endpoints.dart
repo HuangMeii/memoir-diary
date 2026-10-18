@@ -491,6 +491,41 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<String?>(),
               nullable: true,
             ),
+            'workoutType': _is.ParameterDescription(
+              name: 'workoutType',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'workoutIntensity': _is.ParameterDescription(
+              name: 'workoutIntensity',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'sleepBedtime': _is.ParameterDescription(
+              name: 'sleepBedtime',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'sleepWake': _is.ParameterDescription(
+              name: 'sleepWake',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'sleepDeepMinutes': _is.ParameterDescription(
+              name: 'sleepDeepMinutes',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'sleepQuality': _is.ParameterDescription(
+              name: 'sleepQuality',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+            'sleepNote': _is.ParameterDescription(
+              name: 'sleepNote',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -505,7 +540,241 @@ class Endpoints extends _is.EndpointDispatch {
                 sleepHours: params['sleepHours'],
                 weightKg: params['weightKg'],
                 note: params['note'],
+                workoutType: params['workoutType'],
+                workoutIntensity: params['workoutIntensity'],
+                sleepBedtime: params['sleepBedtime'],
+                sleepWake: params['sleepWake'],
+                sleepDeepMinutes: params['sleepDeepMinutes'],
+                sleepQuality: params['sleepQuality'],
+                sleepNote: params['sleepNote'],
               ),
+        ),
+        'dayOverview': _is.MethodConnector(
+          name: 'dayOverview',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).dayOverview(
+                    session,
+                    date: params['date'],
+                  ),
+        ),
+        'trends': _is.MethodConnector(
+          name: 'trends',
+          params: {
+            'from': _is.ParameterDescription(
+              name: 'from',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'to': _is.ParameterDescription(
+              name: 'to',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'metric': _is.ParameterDescription(
+              name: 'metric',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).trends(
+                    session,
+                    from: params['from'],
+                    to: params['to'],
+                    metric: params['metric'],
+                  ),
+        ),
+        'waterAdd': _is.MethodConnector(
+          name: 'waterAdd',
+          params: {
+            'logDate': _is.ParameterDescription(
+              name: 'logDate',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'amountMl': _is.ParameterDescription(
+              name: 'amountMl',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'recordedAt': _is.ParameterDescription(
+              name: 'recordedAt',
+              type: _is.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'note': _is.ParameterDescription(
+              name: 'note',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).waterAdd(
+                    session,
+                    logDate: params['logDate'],
+                    amountMl: params['amountMl'],
+                    recordedAt: params['recordedAt'],
+                    note: params['note'],
+                  ),
+        ),
+        'waterRemove': _is.MethodConnector(
+          name: 'waterRemove',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).waterRemove(
+                    session,
+                    id: params['id'],
+                  ),
+        ),
+        'activityAdd': _is.MethodConnector(
+          name: 'activityAdd',
+          params: {
+            'logDate': _is.ParameterDescription(
+              name: 'logDate',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'atTime': _is.ParameterDescription(
+              name: 'atTime',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'title': _is.ParameterDescription(
+              name: 'title',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'detail': _is.ParameterDescription(
+              name: 'detail',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).activityAdd(
+                    session,
+                    logDate: params['logDate'],
+                    atTime: params['atTime'],
+                    title: params['title'],
+                    detail: params['detail'],
+                  ),
+        ),
+        'activityRemove': _is.MethodConnector(
+          name: 'activityRemove',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['health'] as _id9paj9q.HealthEndpoint)
+                  .activityRemove(
+                    session,
+                    id: params['id'],
+                  ),
+        ),
+        'profileGet': _is.MethodConnector(
+          name: 'profileGet',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['health'] as _id9paj9q.HealthEndpoint)
+                  .profileGet(session),
+        ),
+        'profileSave': _is.MethodConnector(
+          name: 'profileSave',
+          params: {
+            'heightCm': _is.ParameterDescription(
+              name: 'heightCm',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'weightGoalKg': _is.ParameterDescription(
+              name: 'weightGoalKg',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+            'weightStartKg': _is.ParameterDescription(
+              name: 'weightStartKg',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+            'stepsGoal': _is.ParameterDescription(
+              name: 'stepsGoal',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'workoutGoalMinutes': _is.ParameterDescription(
+              name: 'workoutGoalMinutes',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'waterGoalMl': _is.ParameterDescription(
+              name: 'waterGoalMl',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'sleepGoalHours': _is.ParameterDescription(
+              name: 'sleepGoalHours',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['health'] as _id9paj9q.HealthEndpoint).profileSave(
+                    session,
+                    heightCm: params['heightCm'],
+                    weightGoalKg: params['weightGoalKg'],
+                    weightStartKg: params['weightStartKg'],
+                    stepsGoal: params['stepsGoal'],
+                    workoutGoalMinutes: params['workoutGoalMinutes'],
+                    waterGoalMl: params['waterGoalMl'],
+                    sleepGoalHours: params['sleepGoalHours'],
+                  ),
         ),
       },
     );

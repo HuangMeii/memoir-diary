@@ -14,6 +14,8 @@
 import 'package:memoir_server_server/src/generated/auth/user.dart' as _ijdnq3k2;
 import 'package:memoir_server_server/src/generated/health/health_log.dart'
     as _izb6cxrd;
+import 'package:memoir_server_server/src/generated/health/health_trend_point.dart'
+    as _iycockxs;
 import 'package:memoir_server_server/src/generated/journal/diary_entry.dart'
     as _irepgc45;
 import 'package:memoir_server_server/src/generated/journal/entry_image_view.dart'
@@ -2770,6 +2772,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<_izb6cxrd.HealthLog>) {
       return (data as List)
               .map((e) => deserialize<_izb6cxrd.HealthLog>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iycockxs.HealthTrendPoint>) {
+      return (data as List)
+              .map((e) => deserialize<_iycockxs.HealthTrendPoint>(e))
               .toList()
           as T;
     }
