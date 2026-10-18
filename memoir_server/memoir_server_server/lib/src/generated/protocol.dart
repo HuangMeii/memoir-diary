@@ -60,8 +60,10 @@ import 'auth/auth_result.dart' as _i2iwynut;
 import 'auth/auth_token.dart' as _i3olc4tp;
 import 'auth/user.dart' as _ihzw26wp;
 import 'health/health_activity.dart' as _ig3owv0r;
+import 'health/health_day_overview.dart' as _if2dee0k;
 import 'health/health_log.dart' as _ipi876o6;
 import 'health/health_profile.dart' as _ik3vhv8i;
+import 'health/health_trend_point.dart' as _ip5lfgde;
 import 'health/health_water_entry.dart' as _imk6mzsq;
 import 'journal/diary_entry.dart' as _isn947xq;
 import 'journal/entry_image.dart' as _i22rqx9f;
@@ -105,8 +107,10 @@ export 'auth/auth_result.dart';
 export 'auth/auth_token.dart';
 export 'auth/user.dart';
 export 'health/health_activity.dart';
+export 'health/health_day_overview.dart';
 export 'health/health_log.dart';
 export 'health/health_profile.dart';
+export 'health/health_trend_point.dart';
 export 'health/health_water_entry.dart';
 export 'journal/diary_entry.dart';
 export 'journal/entry_image.dart';
@@ -2372,11 +2376,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ig3owv0r.HealthActivity) {
       return _ig3owv0r.HealthActivity.fromJson(data) as T;
     }
+    if (t == _if2dee0k.HealthDayOverview) {
+      return _if2dee0k.HealthDayOverview.fromJson(data) as T;
+    }
     if (t == _ipi876o6.HealthLog) {
       return _ipi876o6.HealthLog.fromJson(data) as T;
     }
     if (t == _ik3vhv8i.HealthProfile) {
       return _ik3vhv8i.HealthProfile.fromJson(data) as T;
+    }
+    if (t == _ip5lfgde.HealthTrendPoint) {
+      return _ip5lfgde.HealthTrendPoint.fromJson(data) as T;
     }
     if (t == _imk6mzsq.HealthWaterEntry) {
       return _imk6mzsq.HealthWaterEntry.fromJson(data) as T;
@@ -2508,11 +2518,19 @@ class Protocol extends _is.DatabaseSerializationManager {
       return (data != null ? _ig3owv0r.HealthActivity.fromJson(data) : null)
           as T;
     }
+    if (t == _is.getType<_if2dee0k.HealthDayOverview?>()) {
+      return (data != null ? _if2dee0k.HealthDayOverview.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ipi876o6.HealthLog?>()) {
       return (data != null ? _ipi876o6.HealthLog.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ik3vhv8i.HealthProfile?>()) {
       return (data != null ? _ik3vhv8i.HealthProfile.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ip5lfgde.HealthTrendPoint?>()) {
+      return (data != null ? _ip5lfgde.HealthTrendPoint.fromJson(data) : null)
           as T;
     }
     if (t == _is.getType<_imk6mzsq.HealthWaterEntry?>()) {
@@ -2652,6 +2670,18 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_i7z01835.WeatherSnapshot?>()) {
       return (data != null ? _i7z01835.WeatherSnapshot.fromJson(data) : null)
+          as T;
+    }
+    if (t == List<_imk6mzsq.HealthWaterEntry>) {
+      return (data as List)
+              .map((e) => deserialize<_imk6mzsq.HealthWaterEntry>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ig3owv0r.HealthActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_ig3owv0r.HealthActivity>(e))
+              .toList()
           as T;
     }
     if (t == List<String>) {
@@ -2915,8 +2945,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i3olc4tp.AuthToken => 'AuthToken',
       _ihzw26wp.User => 'User',
       _ig3owv0r.HealthActivity => 'HealthActivity',
+      _if2dee0k.HealthDayOverview => 'HealthDayOverview',
       _ipi876o6.HealthLog => 'HealthLog',
       _ik3vhv8i.HealthProfile => 'HealthProfile',
+      _ip5lfgde.HealthTrendPoint => 'HealthTrendPoint',
       _imk6mzsq.HealthWaterEntry => 'HealthWaterEntry',
       _isn947xq.DiaryEntry => 'DiaryEntry',
       _i22rqx9f.EntryImage => 'EntryImage',
@@ -2981,10 +3013,14 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'User';
       case _ig3owv0r.HealthActivity():
         return 'HealthActivity';
+      case _if2dee0k.HealthDayOverview():
+        return 'HealthDayOverview';
       case _ipi876o6.HealthLog():
         return 'HealthLog';
       case _ik3vhv8i.HealthProfile():
         return 'HealthProfile';
+      case _ip5lfgde.HealthTrendPoint():
+        return 'HealthTrendPoint';
       case _imk6mzsq.HealthWaterEntry():
         return 'HealthWaterEntry';
       case _isn947xq.DiaryEntry():
@@ -3089,11 +3125,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'HealthActivity') {
       return deserialize<_ig3owv0r.HealthActivity>(data['data']);
     }
+    if (dataClassName == 'HealthDayOverview') {
+      return deserialize<_if2dee0k.HealthDayOverview>(data['data']);
+    }
     if (dataClassName == 'HealthLog') {
       return deserialize<_ipi876o6.HealthLog>(data['data']);
     }
     if (dataClassName == 'HealthProfile') {
       return deserialize<_ik3vhv8i.HealthProfile>(data['data']);
+    }
+    if (dataClassName == 'HealthTrendPoint') {
+      return deserialize<_ip5lfgde.HealthTrendPoint>(data['data']);
     }
     if (dataClassName == 'HealthWaterEntry') {
       return deserialize<_imk6mzsq.HealthWaterEntry>(data['data']);

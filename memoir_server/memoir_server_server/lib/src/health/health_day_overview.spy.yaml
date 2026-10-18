@@ -1,0 +1,10 @@
+### Everything the dashboard needs for one day, in a single round trip.
+class: HealthDayOverview
+fields:
+  date: DateTime
+  ### Null when nothing has been logged for the day yet.
+  log: HealthLog?
+  water: List<HealthWaterEntry>
+  activities: List<HealthActivity>
+  ### Null until the user saves body metrics or goals.
+  profile: HealthProfile?

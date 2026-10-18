@@ -1,0 +1,8 @@
+### One day of a trend series for the selected metric.
+class: HealthTrendPoint
+fields:
+  date: DateTime
+  ### Null when the day has no data for the metric (keeps the axis honest).
+  value: double?
+  ### Goal in force for that day, so the chart can draw the target line.
+  goal: double?
