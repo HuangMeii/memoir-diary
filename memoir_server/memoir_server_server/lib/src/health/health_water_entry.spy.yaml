@@ -1,0 +1,11 @@
+### One logged drink. `health_logs.water_ml` is the derived daily total.
+class: HealthWaterEntry
+table: health_water_entries
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  logDate: DateTime
+  amountMl: int
+  recordedAt: DateTime, default=now
+  note: String?
+  createdAt: DateTime, default=now

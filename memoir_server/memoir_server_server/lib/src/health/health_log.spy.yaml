@@ -11,4 +11,13 @@ fields:
   sleepHours: double?
   weightKg: double?
   note: String?
+  ### Workout (ghi nhận nhanh tập luyện)
+  workoutType: String?
+  workoutIntensity: String?
+  ### Sleep (ghi nhận nhanh giấc ngủ)
+  sleepBedtime: String?
+  sleepWake: String?
+  sleepDeepMinutes: int?
+  sleepQuality: String?
+  sleepNote: String?
   createdAt: DateTime, default=now

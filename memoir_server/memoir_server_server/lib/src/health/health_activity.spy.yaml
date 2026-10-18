@@ -1,0 +1,13 @@
+### A milestone the user adds to the day's activity timeline.
+class: HealthActivity
+table: health_activities
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, relation(parent=users, onDelete=Cascade)
+  logDate: DateTime
+  atTime: String
+  title: String
+  detail: String?
+  ### `note` (tự thêm) — chỗ để mở rộng loại mốc khác sau này.
+  kind: String, default='note'
+  createdAt: DateTime, default=now

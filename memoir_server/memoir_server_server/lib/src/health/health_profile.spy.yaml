@@ -1,0 +1,16 @@
+### Health body measurements and daily goals. One row per user.
+class: HealthProfile
+table: health_profiles
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  userId: UuidValue, unique, relation(parent=users, onDelete=Cascade)
+  ### Body metrics; height feeds BMI/BMR, so it is stored once.
+  heightCm: int?
+  weightGoalKg: double?
+  weightStartKg: double?
+  ### Daily goals shown on the dashboard hero cards.
+  stepsGoal: int, default=8000
+  workoutGoalMinutes: int, default=60
+  waterGoalMl: int, default=2000
+  sleepGoalHours: double, default=8
+  updatedAt: DateTime, default=now

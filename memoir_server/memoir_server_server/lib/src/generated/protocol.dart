@@ -59,7 +59,10 @@ import 'package:serverpod/serverpod.dart' as _is;
 import 'auth/auth_result.dart' as _i2iwynut;
 import 'auth/auth_token.dart' as _i3olc4tp;
 import 'auth/user.dart' as _ihzw26wp;
+import 'health/health_activity.dart' as _ig3owv0r;
 import 'health/health_log.dart' as _ipi876o6;
+import 'health/health_profile.dart' as _ik3vhv8i;
+import 'health/health_water_entry.dart' as _imk6mzsq;
 import 'journal/diary_entry.dart' as _isn947xq;
 import 'journal/entry_image.dart' as _i22rqx9f;
 import 'journal/entry_image_view.dart' as _iop7kemj;
@@ -101,7 +104,10 @@ import 'weather/weather_snapshot.dart' as _i7z01835;
 export 'auth/auth_result.dart';
 export 'auth/auth_token.dart';
 export 'auth/user.dart';
+export 'health/health_activity.dart';
 export 'health/health_log.dart';
+export 'health/health_profile.dart';
+export 'health/health_water_entry.dart';
 export 'journal/diary_entry.dart';
 export 'journal/entry_image.dart';
 export 'journal/entry_image_view.dart';
@@ -588,6 +594,79 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'health_activities',
+      dartName: 'HealthActivity',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'logDate',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'atTime',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'title',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'detail',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'kind',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+          columnDefault: '\'note\'',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'health_activities_fk_0',
+          columns: ['userId'],
+          referenceTable: 'users',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'health_logs',
       dartName: 'HealthLog',
       schema: 'public',
@@ -649,6 +728,48 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'String?',
         ),
         _isp.ColumnDefinition(
+          name: 'workoutType',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'workoutIntensity',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepBedtime',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepWake',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepDeepMinutes',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepQuality',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepNote',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
           name: 'createdAt',
           columnType: _isp.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
@@ -687,6 +808,175 @@ class Protocol extends _is.DatabaseSerializationManager {
           isPrimary: false,
         ),
       ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'health_profiles',
+      dartName: 'HealthProfile',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'heightCm',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weightGoalKg',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weightStartKg',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'stepsGoal',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '8000',
+        ),
+        _isp.ColumnDefinition(
+          name: 'workoutGoalMinutes',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '60',
+        ),
+        _isp.ColumnDefinition(
+          name: 'waterGoalMl',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '2000',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepGoalHours',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+          columnDefault: '8',
+        ),
+        _isp.ColumnDefinition(
+          name: 'updatedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'health_profiles_fk_0',
+          columns: ['userId'],
+          referenceTable: 'users',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'health_profiles__userId__unique_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'health_water_entries',
+      dartName: 'HealthWaterEntry',
+      schema: 'public',
+      module: 'memoir_server',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'logDate',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'amountMl',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'recordedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+        _isp.ColumnDefinition(
+          name: 'note',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'health_water_entries_fk_0',
+          columns: ['userId'],
+          referenceTable: 'users',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -2079,8 +2369,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ihzw26wp.User) {
       return _ihzw26wp.User.fromJson(data) as T;
     }
+    if (t == _ig3owv0r.HealthActivity) {
+      return _ig3owv0r.HealthActivity.fromJson(data) as T;
+    }
     if (t == _ipi876o6.HealthLog) {
       return _ipi876o6.HealthLog.fromJson(data) as T;
+    }
+    if (t == _ik3vhv8i.HealthProfile) {
+      return _ik3vhv8i.HealthProfile.fromJson(data) as T;
+    }
+    if (t == _imk6mzsq.HealthWaterEntry) {
+      return _imk6mzsq.HealthWaterEntry.fromJson(data) as T;
     }
     if (t == _isn947xq.DiaryEntry) {
       return _isn947xq.DiaryEntry.fromJson(data) as T;
@@ -2205,8 +2504,20 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_ihzw26wp.User?>()) {
       return (data != null ? _ihzw26wp.User.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_ig3owv0r.HealthActivity?>()) {
+      return (data != null ? _ig3owv0r.HealthActivity.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ipi876o6.HealthLog?>()) {
       return (data != null ? _ipi876o6.HealthLog.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ik3vhv8i.HealthProfile?>()) {
+      return (data != null ? _ik3vhv8i.HealthProfile.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_imk6mzsq.HealthWaterEntry?>()) {
+      return (data != null ? _imk6mzsq.HealthWaterEntry.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_isn947xq.DiaryEntry?>()) {
       return (data != null ? _isn947xq.DiaryEntry.fromJson(data) : null) as T;
@@ -2603,7 +2914,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i2iwynut.AuthResult => 'AuthResult',
       _i3olc4tp.AuthToken => 'AuthToken',
       _ihzw26wp.User => 'User',
+      _ig3owv0r.HealthActivity => 'HealthActivity',
       _ipi876o6.HealthLog => 'HealthLog',
+      _ik3vhv8i.HealthProfile => 'HealthProfile',
+      _imk6mzsq.HealthWaterEntry => 'HealthWaterEntry',
       _isn947xq.DiaryEntry => 'DiaryEntry',
       _i22rqx9f.EntryImage => 'EntryImage',
       _iop7kemj.EntryImageView => 'EntryImageView',
@@ -2665,8 +2979,14 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'AuthToken';
       case _ihzw26wp.User():
         return 'User';
+      case _ig3owv0r.HealthActivity():
+        return 'HealthActivity';
       case _ipi876o6.HealthLog():
         return 'HealthLog';
+      case _ik3vhv8i.HealthProfile():
+        return 'HealthProfile';
+      case _imk6mzsq.HealthWaterEntry():
+        return 'HealthWaterEntry';
       case _isn947xq.DiaryEntry():
         return 'DiaryEntry';
       case _i22rqx9f.EntryImage():
@@ -2766,8 +3086,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'User') {
       return deserialize<_ihzw26wp.User>(data['data']);
     }
+    if (dataClassName == 'HealthActivity') {
+      return deserialize<_ig3owv0r.HealthActivity>(data['data']);
+    }
     if (dataClassName == 'HealthLog') {
       return deserialize<_ipi876o6.HealthLog>(data['data']);
+    }
+    if (dataClassName == 'HealthProfile') {
+      return deserialize<_ik3vhv8i.HealthProfile>(data['data']);
+    }
+    if (dataClassName == 'HealthWaterEntry') {
+      return deserialize<_imk6mzsq.HealthWaterEntry>(data['data']);
     }
     if (dataClassName == 'DiaryEntry') {
       return deserialize<_isn947xq.DiaryEntry>(data['data']);
@@ -2903,8 +3232,14 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _i3olc4tp.AuthToken.t;
       case _ihzw26wp.User:
         return _ihzw26wp.User.t;
+      case _ig3owv0r.HealthActivity:
+        return _ig3owv0r.HealthActivity.t;
       case _ipi876o6.HealthLog:
         return _ipi876o6.HealthLog.t;
+      case _ik3vhv8i.HealthProfile:
+        return _ik3vhv8i.HealthProfile.t;
+      case _imk6mzsq.HealthWaterEntry:
+        return _imk6mzsq.HealthWaterEntry.t;
       case _isn947xq.DiaryEntry:
         return _isn947xq.DiaryEntry.t;
       case _i22rqx9f.EntryImage:

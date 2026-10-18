@@ -25,6 +25,13 @@ abstract class HealthLog
     this.sleepHours,
     this.weightKg,
     this.note,
+    this.workoutType,
+    this.workoutIntensity,
+    this.sleepBedtime,
+    this.sleepWake,
+    this.sleepDeepMinutes,
+    this.sleepQuality,
+    this.sleepNote,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -38,6 +45,13 @@ abstract class HealthLog
     double? sleepHours,
     double? weightKg,
     String? note,
+    String? workoutType,
+    String? workoutIntensity,
+    String? sleepBedtime,
+    String? sleepWake,
+    int? sleepDeepMinutes,
+    String? sleepQuality,
+    String? sleepNote,
     DateTime? createdAt,
   }) = _HealthLogImpl;
 
@@ -54,6 +68,13 @@ abstract class HealthLog
       sleepHours: (jsonSerialization['sleepHours'] as num?)?.toDouble(),
       weightKg: (jsonSerialization['weightKg'] as num?)?.toDouble(),
       note: jsonSerialization['note'] as String?,
+      workoutType: jsonSerialization['workoutType'] as String?,
+      workoutIntensity: jsonSerialization['workoutIntensity'] as String?,
+      sleepBedtime: jsonSerialization['sleepBedtime'] as String?,
+      sleepWake: jsonSerialization['sleepWake'] as String?,
+      sleepDeepMinutes: jsonSerialization['sleepDeepMinutes'] as int?,
+      sleepQuality: jsonSerialization['sleepQuality'] as String?,
+      sleepNote: jsonSerialization['sleepNote'] as String?,
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -83,6 +104,22 @@ abstract class HealthLog
 
   String? note;
 
+  /// Workout (ghi nhận nhanh tập luyện)
+  String? workoutType;
+
+  String? workoutIntensity;
+
+  /// Sleep (ghi nhận nhanh giấc ngủ)
+  String? sleepBedtime;
+
+  String? sleepWake;
+
+  int? sleepDeepMinutes;
+
+  String? sleepQuality;
+
+  String? sleepNote;
+
   DateTime createdAt;
 
   @override
@@ -101,6 +138,13 @@ abstract class HealthLog
     double? sleepHours,
     double? weightKg,
     String? note,
+    String? workoutType,
+    String? workoutIntensity,
+    String? sleepBedtime,
+    String? sleepWake,
+    int? sleepDeepMinutes,
+    String? sleepQuality,
+    String? sleepNote,
     DateTime? createdAt,
   });
   @override
@@ -116,6 +160,13 @@ abstract class HealthLog
       if (sleepHours != null) 'sleepHours': sleepHours,
       if (weightKg != null) 'weightKg': weightKg,
       if (note != null) 'note': note,
+      if (workoutType != null) 'workoutType': workoutType,
+      if (workoutIntensity != null) 'workoutIntensity': workoutIntensity,
+      if (sleepBedtime != null) 'sleepBedtime': sleepBedtime,
+      if (sleepWake != null) 'sleepWake': sleepWake,
+      if (sleepDeepMinutes != null) 'sleepDeepMinutes': sleepDeepMinutes,
+      if (sleepQuality != null) 'sleepQuality': sleepQuality,
+      if (sleepNote != null) 'sleepNote': sleepNote,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -133,6 +184,13 @@ abstract class HealthLog
       if (sleepHours != null) 'sleepHours': sleepHours,
       if (weightKg != null) 'weightKg': weightKg,
       if (note != null) 'note': note,
+      if (workoutType != null) 'workoutType': workoutType,
+      if (workoutIntensity != null) 'workoutIntensity': workoutIntensity,
+      if (sleepBedtime != null) 'sleepBedtime': sleepBedtime,
+      if (sleepWake != null) 'sleepWake': sleepWake,
+      if (sleepDeepMinutes != null) 'sleepDeepMinutes': sleepDeepMinutes,
+      if (sleepQuality != null) 'sleepQuality': sleepQuality,
+      if (sleepNote != null) 'sleepNote': sleepNote,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -178,6 +236,13 @@ class _HealthLogImpl extends HealthLog {
     double? sleepHours,
     double? weightKg,
     String? note,
+    String? workoutType,
+    String? workoutIntensity,
+    String? sleepBedtime,
+    String? sleepWake,
+    int? sleepDeepMinutes,
+    String? sleepQuality,
+    String? sleepNote,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -189,6 +254,13 @@ class _HealthLogImpl extends HealthLog {
          sleepHours: sleepHours,
          weightKg: weightKg,
          note: note,
+         workoutType: workoutType,
+         workoutIntensity: workoutIntensity,
+         sleepBedtime: sleepBedtime,
+         sleepWake: sleepWake,
+         sleepDeepMinutes: sleepDeepMinutes,
+         sleepQuality: sleepQuality,
+         sleepNote: sleepNote,
          createdAt: createdAt,
        );
 
@@ -206,6 +278,13 @@ class _HealthLogImpl extends HealthLog {
     Object? sleepHours = _Undefined,
     Object? weightKg = _Undefined,
     Object? note = _Undefined,
+    Object? workoutType = _Undefined,
+    Object? workoutIntensity = _Undefined,
+    Object? sleepBedtime = _Undefined,
+    Object? sleepWake = _Undefined,
+    Object? sleepDeepMinutes = _Undefined,
+    Object? sleepQuality = _Undefined,
+    Object? sleepNote = _Undefined,
     DateTime? createdAt,
   }) {
     return HealthLog(
@@ -220,6 +299,17 @@ class _HealthLogImpl extends HealthLog {
       sleepHours: sleepHours is double? ? sleepHours : this.sleepHours,
       weightKg: weightKg is double? ? weightKg : this.weightKg,
       note: note is String? ? note : this.note,
+      workoutType: workoutType is String? ? workoutType : this.workoutType,
+      workoutIntensity: workoutIntensity is String?
+          ? workoutIntensity
+          : this.workoutIntensity,
+      sleepBedtime: sleepBedtime is String? ? sleepBedtime : this.sleepBedtime,
+      sleepWake: sleepWake is String? ? sleepWake : this.sleepWake,
+      sleepDeepMinutes: sleepDeepMinutes is int?
+          ? sleepDeepMinutes
+          : this.sleepDeepMinutes,
+      sleepQuality: sleepQuality is String? ? sleepQuality : this.sleepQuality,
+      sleepNote: sleepNote is String? ? sleepNote : this.sleepNote,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -270,6 +360,44 @@ class HealthLogUpdateTable extends _is.UpdateTable<HealthLogTable> {
     value,
   );
 
+  _is.ColumnValue<String, String> workoutType(String? value) => _is.ColumnValue(
+    table.workoutType,
+    value,
+  );
+
+  _is.ColumnValue<String, String> workoutIntensity(String? value) =>
+      _is.ColumnValue(
+        table.workoutIntensity,
+        value,
+      );
+
+  _is.ColumnValue<String, String> sleepBedtime(String? value) =>
+      _is.ColumnValue(
+        table.sleepBedtime,
+        value,
+      );
+
+  _is.ColumnValue<String, String> sleepWake(String? value) => _is.ColumnValue(
+    table.sleepWake,
+    value,
+  );
+
+  _is.ColumnValue<int, int> sleepDeepMinutes(int? value) => _is.ColumnValue(
+    table.sleepDeepMinutes,
+    value,
+  );
+
+  _is.ColumnValue<String, String> sleepQuality(String? value) =>
+      _is.ColumnValue(
+        table.sleepQuality,
+        value,
+      );
+
+  _is.ColumnValue<String, String> sleepNote(String? value) => _is.ColumnValue(
+    table.sleepNote,
+    value,
+  );
+
   _is.ColumnValue<DateTime, DateTime> createdAt(DateTime value) =>
       _is.ColumnValue(
         table.createdAt,
@@ -312,6 +440,34 @@ class HealthLogTable extends _is.Table<_is.UuidValue?> {
       'note',
       this,
     );
+    workoutType = _is.ColumnString(
+      'workoutType',
+      this,
+    );
+    workoutIntensity = _is.ColumnString(
+      'workoutIntensity',
+      this,
+    );
+    sleepBedtime = _is.ColumnString(
+      'sleepBedtime',
+      this,
+    );
+    sleepWake = _is.ColumnString(
+      'sleepWake',
+      this,
+    );
+    sleepDeepMinutes = _is.ColumnInt(
+      'sleepDeepMinutes',
+      this,
+    );
+    sleepQuality = _is.ColumnString(
+      'sleepQuality',
+      this,
+    );
+    sleepNote = _is.ColumnString(
+      'sleepNote',
+      this,
+    );
     createdAt = _is.ColumnDateTime(
       'createdAt',
       this,
@@ -337,6 +493,22 @@ class HealthLogTable extends _is.Table<_is.UuidValue?> {
 
   late final _is.ColumnString note;
 
+  /// Workout (ghi nhận nhanh tập luyện)
+  late final _is.ColumnString workoutType;
+
+  late final _is.ColumnString workoutIntensity;
+
+  /// Sleep (ghi nhận nhanh giấc ngủ)
+  late final _is.ColumnString sleepBedtime;
+
+  late final _is.ColumnString sleepWake;
+
+  late final _is.ColumnInt sleepDeepMinutes;
+
+  late final _is.ColumnString sleepQuality;
+
+  late final _is.ColumnString sleepNote;
+
   late final _is.ColumnDateTime createdAt;
 
   @override
@@ -350,6 +522,13 @@ class HealthLogTable extends _is.Table<_is.UuidValue?> {
     sleepHours,
     weightKg,
     note,
+    workoutType,
+    workoutIntensity,
+    sleepBedtime,
+    sleepWake,
+    sleepDeepMinutes,
+    sleepQuality,
+    sleepNote,
     createdAt,
   ];
 }
