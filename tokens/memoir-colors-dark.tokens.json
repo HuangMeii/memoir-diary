@@ -526,6 +526,174 @@
           "$description": "Route line where the forecast has no rain."
         }
       }
+    },
+    "health": {
+      "water": {
+        "accent": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.309804,
+              0.764706,
+              0.968627
+            ],
+            "hex": "#4FC3F7"
+          }
+        },
+        "text": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.564706,
+              0.792157,
+              0.976471
+            ],
+            "hex": "#90CAF9"
+          }
+        },
+        "surface": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.062745,
+              0.164706,
+              0.235294
+            ],
+            "hex": "#102A3C"
+          }
+        },
+        "deep": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.160784,
+              0.713725,
+              0.964706
+            ],
+            "hex": "#29B6F6"
+          }
+        }
+      },
+      "sleep": {
+        "accent": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.701961,
+              0.615686,
+              0.858824
+            ],
+            "hex": "#B39DDB"
+          }
+        },
+        "text": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.811765,
+              0.737255,
+              1
+            ],
+            "hex": "#CFBCFF"
+          }
+        },
+        "surface": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.164706,
+              0.137255,
+              0.219608
+            ],
+            "hex": "#2A2338"
+          }
+        },
+        "deep": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.494118,
+              0.341176,
+              0.760784
+            ],
+            "hex": "#7E57C2"
+          }
+        }
+      },
+      "trend": {
+        "up": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.505882,
+              0.780392,
+              0.517647
+            ],
+            "hex": "#81C784"
+          }
+        }
+      },
+      "metric": {
+        "peak": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              1,
+              0.717647,
+              0.301961
+            ],
+            "hex": "#FFB74D"
+          }
+        }
+      },
+      "bmi": {
+        "under": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.309804,
+              0.764706,
+              0.968627
+            ],
+            "hex": "#4FC3F7"
+          }
+        },
+        "normal": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.647059,
+              0.819608,
+              0.698039
+            ],
+            "hex": "#A5D1B2"
+          }
+        },
+        "over": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              1,
+              0.717647,
+              0.301961
+            ],
+            "hex": "#FFB74D"
+          }
+        }
+      }
     }
   }
 }
