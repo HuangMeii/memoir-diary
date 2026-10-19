@@ -105,7 +105,7 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | ID | Task | Ước lượng | Phụ thuộc | File | Trạng thái |
 |---|---|---|---|---|---|
 | H2-S1 | Map đọc trong `ServerpodDataSource` | 3 | H1-S6 | [09-client-datasource-read.md](09-client-datasource-read.md) | TODO |
-| H2-S2 | Map ghi (nước / hoạt động / thông số / save) | 3 | H2-S1 | [10-client-datasource-writes.md](10-client-datasource-writes.md) | TODO |
+| H2-S2 | Map ghi (nước / hoạt động / thông số / save) | 3 | H2-S1 | [10-client-datasource-writes.md](10-client-datasource-writes.md) | DONE |
 | H2-S3 | Model Dart mới | 2 | H2-S1 | [11-flutter-models.md](11-flutter-models.md) | DONE |
 | H2-S4 | `health_repository.dart` mở rộng | 2 | H2-S3 | [12-flutter-health-repository.md](12-flutter-health-repository.md) | DONE |
 | H2-S5 | Provider + `refreshHealth` | 2 | H2-S4 | [13-flutter-providers.md](13-flutter-providers.md) | DONE |

@@ -15,8 +15,6 @@ import 'package:http/http.dart' as _i85jenna;
 import 'package:memoir_server_client/src/protocol/auth/auth_result.dart'
     as _irsh1fu5;
 import 'package:memoir_server_client/src/protocol/auth/user.dart' as _i0oax80e;
-import 'package:memoir_server_client/src/protocol/health/health_activity.dart'
-    as _ig7yjv4d;
 import 'package:memoir_server_client/src/protocol/health/health_day_overview.dart'
     as _i71ke30q;
 import 'package:memoir_server_client/src/protocol/health/health_log.dart'
@@ -331,21 +329,22 @@ class EndpointHealth extends _isc.EndpointRef {
     },
   );
 
-  /// Xoá một lần uống nước (chủ sở hữu chỉ), rồi tính lại tổng nước.
-  _ida.Future<void> waterRemove({required _isc.UuidValue id}) =>
-      caller.callServerEndpoint<void>(
-        'health',
-        'waterRemove',
-        {'id': id},
-      );
+  /// Xoá một lần uống nước (chủ sở hữu chỉ), tính lại tổng và trả nội dung ngày.
+  _ida.Future<_i71ke30q.HealthDayOverview> waterRemove({
+    required _isc.UuidValue id,
+  }) => caller.callServerEndpoint<_i71ke30q.HealthDayOverview>(
+    'health',
+    'waterRemove',
+    {'id': id},
+  );
 
-  /// Thêm một mốc hoạt động (chủ sở hữu chỉ).
-  _ida.Future<_ig7yjv4d.HealthActivity> activityAdd({
+  /// Thêm một mốc hoạt động (chủ sở hữu chỉ), rồi trả lại nội dung ngày.
+  _ida.Future<_i71ke30q.HealthDayOverview> activityAdd({
     required DateTime logDate,
     required String atTime,
     required String title,
     String? detail,
-  }) => caller.callServerEndpoint<_ig7yjv4d.HealthActivity>(
+  }) => caller.callServerEndpoint<_i71ke30q.HealthDayOverview>(
     'health',
     'activityAdd',
     {
@@ -356,13 +355,14 @@ class EndpointHealth extends _isc.EndpointRef {
     },
   );
 
-  /// Xoá một mốc hoạt động (chủ sở hữu chỉ).
-  _ida.Future<void> activityRemove({required _isc.UuidValue id}) =>
-      caller.callServerEndpoint<void>(
-        'health',
-        'activityRemove',
-        {'id': id},
-      );
+  /// Xoá một mốc hoạt động (chủ sở hữu chỉ), rồi trả lại nội dung ngày.
+  _ida.Future<_i71ke30q.HealthDayOverview> activityRemove({
+    required _isc.UuidValue id,
+  }) => caller.callServerEndpoint<_i71ke30q.HealthDayOverview>(
+    'health',
+    'activityRemove',
+    {'id': id},
+  );
 
   /// Lấy thông số cơ thể & mục tiêu của user hiện tại.
   _ida.Future<_ifg4opad.HealthProfile?> profileGet() =>

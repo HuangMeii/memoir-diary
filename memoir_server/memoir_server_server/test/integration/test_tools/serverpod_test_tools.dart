@@ -16,8 +16,6 @@ import 'dart:io' as _idi;
 import 'package:memoir_server_server/src/generated/auth/auth_result.dart'
     as _i1kyq2cu;
 import 'package:memoir_server_server/src/generated/auth/user.dart' as _ijdnq3k2;
-import 'package:memoir_server_server/src/generated/health/health_activity.dart'
-    as _i09tdfxb;
 import 'package:memoir_server_server/src/generated/health/health_day_overview.dart'
     as _i6h63o7x;
 import 'package:memoir_server_server/src/generated/health/health_log.dart'
@@ -950,7 +948,7 @@ class _HealthEndpoint {
     });
   }
 
-  _ida.Future<void> waterRemove(
+  _ida.Future<_i6h63o7x.HealthDayOverview> waterRemove(
     _ist.TestSessionBuilder sessionBuilder, {
     required _is.UuidValue id,
   }) async {
@@ -973,7 +971,7 @@ class _HealthEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<void>);
+                as _ida.Future<_i6h63o7x.HealthDayOverview>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -981,7 +979,7 @@ class _HealthEndpoint {
     });
   }
 
-  _ida.Future<_i09tdfxb.HealthActivity> activityAdd(
+  _ida.Future<_i6h63o7x.HealthDayOverview> activityAdd(
     _ist.TestSessionBuilder sessionBuilder, {
     required DateTime logDate,
     required String atTime,
@@ -1012,7 +1010,7 @@ class _HealthEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<_i09tdfxb.HealthActivity>);
+                as _ida.Future<_i6h63o7x.HealthDayOverview>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1020,7 +1018,7 @@ class _HealthEndpoint {
     });
   }
 
-  _ida.Future<void> activityRemove(
+  _ida.Future<_i6h63o7x.HealthDayOverview> activityRemove(
     _ist.TestSessionBuilder sessionBuilder, {
     required _is.UuidValue id,
   }) async {
@@ -1043,7 +1041,7 @@ class _HealthEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<void>);
+                as _ida.Future<_i6h63o7x.HealthDayOverview>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

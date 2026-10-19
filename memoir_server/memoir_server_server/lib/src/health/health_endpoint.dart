@@ -253,8 +253,11 @@ class HealthEndpoint extends Endpoint {
     return _recalcWaterAndOverview(session, userId, day);
   }
 
-  /// Xoá một lần uống nước (chủ sở hữu chỉ), rồi tính lại tổng nước.
-  Future<void> waterRemove(Session session, {required UuidValue id}) async {
+  /// Xoá một lần uống nước (chủ sở hữu chỉ), tính lại tổng và trả nội dung ngày.
+  Future<HealthDayOverview> waterRemove(
+    Session session, {
+    required UuidValue id,
+  }) async {
     final userId = currentUserId(session);
     final entry = await HealthWaterEntry.db.findFirstRow(
       session,
@@ -265,11 +268,11 @@ class HealthEndpoint extends Endpoint {
     }
     final day = dateOnly(entry.logDate);
     await HealthWaterEntry.db.deleteRow(session, entry);
-    await _recalcWaterOnly(session, userId, day);
+    return _recalcWaterAndOverview(session, userId, day);
   }
 
-  /// Thêm một mốc hoạt động (chủ sở hữu chỉ).
-  Future<HealthActivity> activityAdd(
+  /// Thêm một mốc hoạt động (chủ sở hữu chỉ), rồi trả lại nội dung ngày.
+  Future<HealthDayOverview> activityAdd(
     Session session, {
     required DateTime logDate,
     required String atTime,
@@ -278,7 +281,7 @@ class HealthEndpoint extends Endpoint {
   }) async {
     final userId = currentUserId(session);
     final day = dateOnly(logDate);
-    return HealthActivity.db.insertRow(
+    await HealthActivity.db.insertRow(
       session,
       HealthActivity(
         userId: userId,
@@ -289,10 +292,14 @@ class HealthEndpoint extends Endpoint {
         kind: 'note',
       ),
     );
+    return dayOverview(session, date: day);
   }
 
-  /// Xoá một mốc hoạt động (chủ sở hữu chỉ).
-  Future<void> activityRemove(Session session, {required UuidValue id}) async {
+  /// Xoá một mốc hoạt động (chủ sở hữu chỉ), rồi trả lại nội dung ngày.
+  Future<HealthDayOverview> activityRemove(
+    Session session, {
+    required UuidValue id,
+  }) async {
     final userId = currentUserId(session);
     final entry = await HealthActivity.db.findFirstRow(
       session,
@@ -301,7 +308,9 @@ class HealthEndpoint extends Endpoint {
     if (entry == null) {
       throw ApiException(message: 'Not found', code: 'notFound');
     }
+    final day = dateOnly(entry.logDate);
     await HealthActivity.db.deleteRow(session, entry);
+    return dayOverview(session, date: day);
   }
 
   /// Lấy thông số cơ thể & mục tiêu của user hiện tại.
@@ -385,38 +394,6 @@ class HealthEndpoint extends Endpoint {
       await HealthLog.db.updateRow(session, existing);
     }
     return dayOverview(session, date: day);
-  }
-
-  Future<void> _recalcWaterOnly(
-    Session session,
-    UuidValue userId,
-    DateTime day,
-  ) async {
-    final entries = await HealthWaterEntry.db.find(
-      session,
-      where: (t) => t.userId.equals(userId) & t.logDate.equals(day),
-    );
-    final total = entries.fold<int>(0, (sum, e) => sum + e.amountMl);
-
-    final existing = await HealthLog.db.findFirstRow(
-      session,
-      where: (t) => t.userId.equals(userId) & t.logDate.equals(day),
-    );
-    if (existing == null) {
-      if (total > 0) {
-        await HealthLog.db.insertRow(
-          session,
-          HealthLog(
-            userId: userId,
-            logDate: day,
-            waterMl: total,
-          ),
-        );
-      }
-    } else {
-      existing.waterMl = total;
-      await HealthLog.db.updateRow(session, existing);
-    }
   }
 }
 

@@ -254,15 +254,38 @@ class ServerpodDataSource implements BackendDataSource {
           reminderMinutes: body['reminder_minutes'] as int?,
         ));
       case '/health-logs':
-        return _healthMap(await _client.health.save(
-          logDate: _parseDate(body['log_date'])!,
-          steps: body['steps'] as int?,
-          workoutMinutes: body['workout_minutes'] as int?,
-          waterMl: body['water_ml'] as int?,
-          sleepHours: (body['sleep_hours'] as num?)?.toDouble(),
-          weightKg: (body['weight_kg'] as num?)?.toDouble(),
-          note: body['note'] as String?,
-        ));
+        return _healthMap(await _request(() => _client.health.save(
+              logDate: _parseDate(body['log_date'])!,
+              steps: body['steps'] as int?,
+              workoutMinutes: body['workout_minutes'] as int?,
+              waterMl: body['water_ml'] as int?,
+              sleepHours: (body['sleep_hours'] as num?)?.toDouble(),
+              weightKg: (body['weight_kg'] as num?)?.toDouble(),
+              note: body['note'] as String?,
+              workoutType: body['workout_type'] as String?,
+              workoutIntensity: body['workout_intensity'] as String?,
+              sleepBedtime: body['sleep_bedtime'] as String?,
+              sleepWake: body['sleep_wake'] as String?,
+              sleepDeepMinutes: body['sleep_deep_minutes'] as int?,
+              sleepQuality: body['sleep_quality'] as String?,
+              sleepNote: body['sleep_note'] as String?,
+            )));
+      case '/health/water':
+        return _dayOverviewMap(await _request(() => _client.health.waterAdd(
+              logDate: _parseDate(body['log_date'])!,
+              amountMl: body['amount_ml'] as int,
+              // Omitted -> the server stamps `now()`; never send a fake
+              // midnight, it would land in the wrong period.
+              recordedAt: _parseDate(body['recorded_at']),
+              note: body['note'] as String?,
+            )));
+      case '/health/activity':
+        return _dayOverviewMap(await _request(() => _client.health.activityAdd(
+              logDate: _parseDate(body['log_date'])!,
+              atTime: body['at_time'] as String,
+              title: body['title'] as String,
+              detail: body['detail'] as String?,
+            )));
       case '/route/search-places':
         final places = await _request(() => _client.route.searchPlaces(
               body['query'] as String? ?? '',
@@ -436,6 +459,17 @@ class ServerpodDataSource implements BackendDataSource {
         ),
       ));
     }
+    if (path == '/health/profile') {
+      return _profileMap(await _request(() => _client.health.profileSave(
+            heightCm: body['height_cm'] as int?,
+            weightGoalKg: (body['weight_goal_kg'] as num?)?.toDouble(),
+            weightStartKg: (body['weight_start_kg'] as num?)?.toDouble(),
+            stepsGoal: body['steps_goal'] as int?,
+            workoutGoalMinutes: body['workout_goal_minutes'] as int?,
+            waterGoalMl: body['water_goal_ml'] as int?,
+            sleepGoalHours: (body['sleep_goal_hours'] as num?)?.toDouble(),
+          )));
+    }
     if (path == '/weather/location') {
       await _client.weather.setLocation(
         lat: (body['lat'] as num).toDouble(),
@@ -481,6 +515,16 @@ class ServerpodDataSource implements BackendDataSource {
   @override
   Future<dynamic> delete(String path) async {
     final id = _uuid(_idOf(path));
+    if (path.startsWith('/health/water/')) {
+      return _dayOverviewMap(
+        await _request(() => _client.health.waterRemove(id: id)),
+      );
+    }
+    if (path.startsWith('/health/activity/')) {
+      return _dayOverviewMap(
+        await _request(() => _client.health.activityRemove(id: id)),
+      );
+    }
     if (path.startsWith('/entries/')) return _client.entries.delete(id);
     if (path.startsWith('/images/')) return _client.images.delete(id);
     if (path.startsWith('/notes/') && path.endsWith('/purge')) {
