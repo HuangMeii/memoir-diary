@@ -116,7 +116,7 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | ID | Task | Ước lượng | Phụ thuộc | File | Trạng thái |
 |---|---|---|---|---|---|
 | H3-S1 | Chrome trang + date navigator + banner | 2 | H2-S5 | [15-ui-health-chrome.md](15-ui-health-chrome.md) | DONE |
-| H3-S2 | 3 thẻ tóm tắt hero | 3 | H3-S1 | [16-ui-health-summary-cards.md](16-ui-health-summary-cards.md) | TODO |
+| H3-S2 | 3 thẻ tóm tắt hero | 3 | H3-S1 | [16-ui-health-summary-cards.md](16-ui-health-summary-cards.md) | DONE |
 | H3-S3 | Form “Nhập nhanh chỉ số hôm nay” | 5 | H2-S6 | [17-ui-health-quick-form.md](17-ui-health-quick-form.md) | TODO |
 | H3-S4 | Khối “Xu hướng 30 ngày gần nhất” | 5 | H2-S6 | [18-ui-health-trends.md](18-ui-health-trends.md) | TODO |
 | H3-S5 | Card “Dòng thời gian hoạt động” | 3 | H2-S5 | [19-ui-health-timeline.md](19-ui-health-timeline.md) | TODO |
