@@ -252,13 +252,61 @@ final entryImagesProvider =
 /// [dateFrom] and [dateTo] are inclusive `YYYY-MM-DD` strings.
 final healthLogsProvider =
     FutureProvider.family<List<HealthLog>, ({String from, String to})>(
-          (ref, range) async {
-    await ref.watch(authReadyProvider.future);
-    return ref.read(healthRepositoryProvider).logs(
-          from: range.from,
-          to: range.to,
-        );
+        (ref, range) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(healthRepositoryProvider).logs(
+        from: range.from,
+        to: range.to,
+      );
 });
+
+/// The full health picture for one day: log, water entries, activity
+/// milestones and the body profile — one round trip.
+///
+/// The [date] argument is normalised to local midnight, so every caller that
+/// asks for the same calendar day shares one provider (and one request)
+/// instead of spawning a new fetch per slightly-different DateTime.
+final healthDayProvider =
+    FutureProvider.family<HealthDayOverview, DateTime>((ref, date) async {
+  await ref.watch(authReadyProvider.future);
+  final day = DateTime(date.year, date.month, date.day);
+  return ref.read(healthRepositoryProvider).day(day);
+});
+
+/// A trend series for one metric over an inclusive `[from, to]` range.
+///
+/// Days without data come back with `value == null` (never 0), so the chart
+/// keeps the axis honest.
+final healthTrendsProvider = FutureProvider.family<List<HealthTrendPoint>,
+    ({String from, String to, HealthMetric metric})>((ref, range) async {
+  await ref.watch(authReadyProvider.future);
+  return ref
+      .read(healthRepositoryProvider)
+      .trends(from: range.from, to: range.to, metric: range.metric);
+});
+
+/// The saved body profile & goals, or `null` before the user ever saved one.
+final healthProfileProvider = FutureProvider<HealthProfile?>((ref) async {
+  await ref.watch(authReadyProvider.future);
+  return ref.read(healthRepositoryProvider).profile();
+});
+
+/// Reloads every health-derived provider after a write.
+///
+/// **Every write** — saving the day's numbers, adding/removing a water entry,
+/// adding/removing an activity milestone, saving the body profile — must call
+/// this instead of scattering `ref.invalidate` calls through widgets. It also
+/// refreshes the month summary because that aggregate reads health data too.
+void refreshHealth(WidgetRef ref, {DateTime? day}) {
+  DateTime midnight(DateTime d) => DateTime(d.year, d.month, d.day);
+  if (day != null) ref.invalidate(healthDayProvider(midnight(day)));
+  final now = DateTime.now();
+  ref.invalidate(healthDayProvider(midnight(now)));
+  ref.invalidate(healthTrendsProvider); // Every range key, on purpose.
+  ref.invalidate(healthProfileProvider);
+  ref.invalidate(healthLogsProvider); // Every range key.
+  ref.invalidate(monthSummaryProvider); // Health feeds the monthly total.
+}
 
 /// Invalidates everything that depends on entries so screens refresh.
 void refreshEntryData(WidgetRef ref) {
