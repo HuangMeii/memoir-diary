@@ -479,6 +479,22 @@ class HealthTrendPoint {
       );
 }
 
+/// A metric the health dashboard can chart over time.
+///
+/// Declared in the data layer (not `ui/health/health_metrics.dart`) so the
+/// repository and providers can depend on it without pulling in UI code. The
+/// [name] is exactly the string the `health.trends` endpoint expects.
+enum HealthMetric {
+  steps,
+  workout,
+  water,
+  sleep,
+  weight;
+
+  /// The wire string the backend `trends` endpoint validates against.
+  String get wire => name;
+}
+
 /// A diary entry for one day.
 class DiaryEntry {
   const DiaryEntry({

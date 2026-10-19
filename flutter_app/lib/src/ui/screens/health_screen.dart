@@ -81,8 +81,13 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     setState(() => _saving = true);
     try {
       await ref.read(healthRepositoryProvider).save(
-            log.logDate.toIso8601String().substring(0, 10),
-            payload,
+            logDate: log.logDate,
+            steps: log.steps,
+            workoutMinutes: log.workoutMinutes,
+            waterMl: log.waterMl,
+            sleepHours: log.sleepHours,
+            weightKg: log.weightKg,
+            note: (log.note == null || log.note!.isEmpty) ? null : log.note,
           );
       ref.invalidate(healthLogsProvider(_range));
       // The month summary aggregates health data too, so refresh it as well.
@@ -99,7 +104,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 
   void _toast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -373,6 +379,7 @@ class _Stat extends StatelessWidget {
     );
   }
 }
+
 /// Line chart over the fixed 30-day window.
 ///
 /// The x axis spans the whole window so unlogged days still advance it,
