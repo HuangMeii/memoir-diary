@@ -84,7 +84,7 @@ class HealthRepository {
   }) async {
     final data = await _source.get(
       '/health/trends',
-      query: {'from': from, 'to': to, 'metric': metric.wire},
+      query: {'from': from, 'to': to, 'metric': metric.wireName},
     );
     return (data as List)
         .map((item) => HealthTrendPoint.fromJson(item as Map<String, dynamic>))

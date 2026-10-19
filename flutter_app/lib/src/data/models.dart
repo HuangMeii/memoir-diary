@@ -481,9 +481,10 @@ class HealthTrendPoint {
 
 /// A metric the health dashboard can chart over time.
 ///
-/// Declared in the data layer (not `ui/health/health_metrics.dart`) so the
-/// repository and providers can depend on it without pulling in UI code. The
-/// [name] is exactly the string the `health.trends` endpoint expects.
+/// Lives in the data layer (not `ui/health/health_metrics.dart`) so the
+/// repository and providers can depend on it without pulling in UI code — the
+/// single place chosen in H2-S4. Display strings (`label`, `unit`) are added
+/// by an extension in `ui/health/health_metrics.dart`.
 enum HealthMetric {
   steps,
   workout,
@@ -492,7 +493,7 @@ enum HealthMetric {
   weight;
 
   /// The wire string the backend `trends` endpoint validates against.
-  String get wire => name;
+  String get wireName => name;
 }
 
 /// A diary entry for one day.
