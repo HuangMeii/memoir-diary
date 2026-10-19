@@ -67,7 +67,8 @@ class MonthSummary {
         month: json['month'] as String,
         daysLogged: json['days_logged'] as int? ?? 0,
         moodCounts: Map<String, int>.from(json['mood_counts'] as Map? ?? {}),
-        weatherCounts: Map<String, int>.from(json['weather_counts'] as Map? ?? {}),
+        weatherCounts:
+            Map<String, int>.from(json['weather_counts'] as Map? ?? {}),
         totalSteps: json['total_steps'] as int? ?? 0,
         totalWorkoutMinutes: json['total_workout_minutes'] as int? ?? 0,
       );
@@ -212,6 +213,7 @@ class Reflection {
 ///
 /// Mirrors `quote_service.MIN_SELF_MESSAGES_TO_PAIR` on the server.
 const int minSelfMessagesToPair = 10;
+
 /// An image attached to a diary entry.
 ///
 /// The API returns `url: null` on purpose: the bucket is private, so reads go
@@ -272,6 +274,13 @@ class HealthLog {
     this.sleepHours,
     this.weightKg,
     this.note,
+    this.workoutType,
+    this.workoutIntensity,
+    this.sleepBedtime,
+    this.sleepWake,
+    this.sleepDeepMinutes,
+    this.sleepQuality,
+    this.sleepNote,
   });
 
   final String id;
@@ -282,6 +291,13 @@ class HealthLog {
   final double? sleepHours;
   final double? weightKg;
   final String? note;
+  final String? workoutType;
+  final String? workoutIntensity;
+  final String? sleepBedtime;
+  final String? sleepWake;
+  final int? sleepDeepMinutes;
+  final String? sleepQuality;
+  final String? sleepNote;
 
   factory HealthLog.fromJson(Map<String, dynamic> json) => HealthLog(
         id: json['id'] as String,
@@ -292,6 +308,13 @@ class HealthLog {
         sleepHours: (json['sleep_hours'] as num?)?.toDouble(),
         weightKg: (json['weight_kg'] as num?)?.toDouble(),
         note: json['note'] as String?,
+        workoutType: json['workout_type'] as String?,
+        workoutIntensity: json['workout_intensity'] as String?,
+        sleepBedtime: json['sleep_bedtime'] as String?,
+        sleepWake: json['sleep_wake'] as String?,
+        sleepDeepMinutes: json['sleep_deep_minutes'] as int?,
+        sleepQuality: json['sleep_quality'] as String?,
+        sleepNote: json['sleep_note'] as String?,
       );
 
   /// Only send fields the user actually filled in, so a blank field in the
@@ -303,7 +326,157 @@ class HealthLog {
         if (sleepHours != null) 'sleep_hours': sleepHours,
         if (weightKg != null) 'weight_kg': weightKg,
         if (note != null && note!.isNotEmpty) 'note': note,
+        if (workoutType != null && workoutType!.isNotEmpty)
+          'workout_type': workoutType,
+        if (workoutIntensity != null && workoutIntensity!.isNotEmpty)
+          'workout_intensity': workoutIntensity,
+        if (sleepBedtime != null && sleepBedtime!.isNotEmpty)
+          'sleep_bedtime': sleepBedtime,
+        if (sleepWake != null && sleepWake!.isNotEmpty) 'sleep_wake': sleepWake,
+        if (sleepDeepMinutes != null) 'sleep_deep_minutes': sleepDeepMinutes,
+        if (sleepQuality != null && sleepQuality!.isNotEmpty)
+          'sleep_quality': sleepQuality,
+        if (sleepNote != null && sleepNote!.isNotEmpty) 'sleep_note': sleepNote,
       };
+}
+
+/// One logged drink; `HealthLog.waterMl` holds the derived daily total.
+class HealthWaterEntry {
+  const HealthWaterEntry({
+    required this.id,
+    required this.logDate,
+    required this.amountMl,
+    required this.recordedAt,
+    this.note,
+  });
+
+  final String id;
+  final DateTime logDate;
+  final int amountMl;
+  final DateTime recordedAt;
+  final String? note;
+
+  factory HealthWaterEntry.fromJson(Map<String, dynamic> json) =>
+      HealthWaterEntry(
+        id: json['id'] as String,
+        logDate: DateTime.parse(json['log_date'] as String),
+        amountMl: json['amount_ml'] as int,
+        recordedAt: DateTime.parse(json['recorded_at'] as String),
+        note: json['note'] as String?,
+      );
+}
+
+/// A milestone the user drops onto the day's activity timeline.
+class HealthActivity {
+  const HealthActivity({
+    required this.id,
+    required this.logDate,
+    required this.atTime,
+    required this.title,
+    this.detail,
+    this.kind,
+  });
+
+  final String id;
+  final DateTime logDate;
+  final String atTime;
+  final String title;
+  final String? detail;
+  final String? kind;
+
+  factory HealthActivity.fromJson(Map<String, dynamic> json) => HealthActivity(
+        id: json['id'] as String,
+        logDate: DateTime.parse(json['log_date'] as String),
+        atTime: json['at_time'] as String,
+        title: json['title'] as String,
+        detail: json['detail'] as String?,
+        kind: json['kind'] as String?,
+      );
+}
+
+/// Body measurements and daily goals; one row per user.
+///
+/// Goal fields fall back to the design defaults when the server sends null,
+/// so widgets never have to null-check each goal individually.
+class HealthProfile {
+  const HealthProfile({
+    this.heightCm,
+    this.weightGoalKg,
+    this.weightStartKg,
+    this.stepsGoal = 8000,
+    this.workoutGoalMinutes = 60,
+    this.waterGoalMl = 2000,
+    this.sleepGoalHours = 8,
+  });
+
+  final int? heightCm;
+  final double? weightGoalKg;
+  final double? weightStartKg;
+  final int stepsGoal;
+  final int workoutGoalMinutes;
+  final int waterGoalMl;
+  final double sleepGoalHours;
+
+  factory HealthProfile.fromJson(Map<String, dynamic> json) => HealthProfile(
+        heightCm: json['height_cm'] as int?,
+        weightGoalKg: (json['weight_goal_kg'] as num?)?.toDouble(),
+        weightStartKg: (json['weight_start_kg'] as num?)?.toDouble(),
+        stepsGoal: json['steps_goal'] as int? ?? 8000,
+        workoutGoalMinutes: json['workout_goal_minutes'] as int? ?? 60,
+        waterGoalMl: json['water_goal_ml'] as int? ?? 2000,
+        sleepGoalHours: (json['sleep_goal_hours'] as num?)?.toDouble() ?? 8,
+      );
+}
+
+/// Everything the dashboard needs for one day, in a single round trip.
+class HealthDayOverview {
+  const HealthDayOverview({
+    required this.date,
+    this.log,
+    required this.water,
+    required this.activities,
+    this.profile,
+  });
+
+  final DateTime date;
+  final HealthLog? log;
+  final List<HealthWaterEntry> water;
+  final List<HealthActivity> activities;
+  final HealthProfile? profile;
+
+  factory HealthDayOverview.fromJson(Map<String, dynamic> json) =>
+      HealthDayOverview(
+        date: DateTime.parse(json['date'] as String),
+        log: json['log'] == null
+            ? null
+            : HealthLog.fromJson(json['log'] as Map<String, dynamic>),
+        water: (json['water'] as List<dynamic>? ?? const [])
+            .map((e) => HealthWaterEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        activities: (json['activities'] as List<dynamic>? ?? const [])
+            .map((e) => HealthActivity.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        profile: json['profile'] == null
+            ? null
+            : HealthProfile.fromJson(json['profile'] as Map<String, dynamic>),
+      );
+}
+
+/// One day of a trend series; `value` stays null for days with no data so the
+/// chart keeps the axis honest instead of drawing a false zero.
+class HealthTrendPoint {
+  const HealthTrendPoint({required this.date, this.value, this.goal});
+
+  final DateTime date;
+  final double? value;
+  final double? goal;
+
+  factory HealthTrendPoint.fromJson(Map<String, dynamic> json) =>
+      HealthTrendPoint(
+        date: DateTime.parse(json['date'] as String),
+        value: (json['value'] as num?)?.toDouble(),
+        goal: (json['goal'] as num?)?.toDouble(),
+      );
 }
 
 /// A diary entry for one day.
@@ -382,7 +555,8 @@ class DiaryEntry {
     return filled;
   }
 
-  static bool _filled(String? value) => value != null && value.trim().isNotEmpty;
+  static bool _filled(String? value) =>
+      value != null && value.trim().isNotEmpty;
 }
 
 /// A quick note with title, tags, pin/archive/trash flags.
@@ -998,9 +1172,8 @@ class RouteWeatherSample {
         precipitationProbability: json['precipitation_probability'] as int?,
         windSpeedKmh: (json['wind_speed_kmh'] as num?)?.toDouble(),
         severity: json['severity'] as String? ?? RouteSeverity.info,
-        reasons: ((json['reasons'] as List?) ?? const [])
-            .map((e) => '$e')
-            .toList(),
+        reasons:
+            ((json['reasons'] as List?) ?? const []).map((e) => '$e').toList(),
         status: json['status'] as String? ?? 'unavailable',
       );
 }
@@ -1316,14 +1489,12 @@ class JourneyDetail {
           (json['journey'] as Map?)?.cast<String, dynamic>() ?? const {},
         ),
         stops: ((json['stops'] as List?) ?? const [])
-            .map((e) => JourneyStop.fromJson((e as Map).cast<String, dynamic>()))
+            .map(
+                (e) => JourneyStop.fromJson((e as Map).cast<String, dynamic>()))
             .toList(),
         weatherPoints: ((json['weather_points'] as List?) ?? const [])
-            .map((e) =>
-                JourneyWeatherPoint.fromJson((e as Map).cast<String, dynamic>()))
+            .map((e) => JourneyWeatherPoint.fromJson(
+                (e as Map).cast<String, dynamic>()))
             .toList(),
       );
 }
-
-
-
