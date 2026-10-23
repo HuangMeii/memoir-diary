@@ -9,3 +9,6 @@ fields:
   recordedAt: DateTime, default=now
   note: String?
   createdAt: DateTime, default=now
+indexes:
+  idx_health_water_user_date:
+    fields: userId, logDate, recordedAt

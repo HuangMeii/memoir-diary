@@ -21,3 +21,6 @@ fields:
   sleepQuality: String?
   sleepNote: String?
   createdAt: DateTime, default=now
+indexes:
+  idx_health_logs_user_date:
+    fields: userId, logDate

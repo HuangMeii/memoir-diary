@@ -11,3 +11,6 @@ fields:
   ### `note` (tự thêm) — chỗ để mở rộng loại mốc khác sau này.
   kind: String, default='note'
   createdAt: DateTime, default=now
+indexes:
+  idx_health_activity_user_date:
+    fields: userId, logDate, atTime
