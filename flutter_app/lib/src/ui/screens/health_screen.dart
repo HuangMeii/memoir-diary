@@ -11,6 +11,7 @@ import '../health/health_quick_form.dart';
 import '../health/health_summary_cards.dart';
 import '../health/health_timeline.dart';
 import '../health/health_trends.dart';
+import '../health/quick_log_sheet.dart';
 import '../home/home_scale.dart';
 import '../tokens.dart';
 import '../widgets/app_header.dart';
@@ -41,10 +42,12 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     setState(() => _date = day);
   }
 
-  void _showQuickLog() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Ghi nhận nhanh sẽ có trong phiên tiếp theo.')),
+  void _showQuickLog([QuickLogTab tab = QuickLogTab.workout]) {
+    showQuickLogSheet(
+      context,
+      ref,
+      date: _date,
+      initialTab: tab,
     );
   }
 
@@ -132,6 +135,9 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                           date: _date,
                           ref: ref,
                         ),
+                        onAddWater: () => _showQuickLog(QuickLogTab.water),
+                        onOpenSleepSheet: () =>
+                            _showQuickLog(QuickLogTab.sleep),
                         onMetricChanged: (value) =>
                             setState(() => _metric = value),
                         onRangeChanged: (value) =>
@@ -164,6 +170,8 @@ class _Dashboard extends StatelessWidget {
     required this.onQuickLog,
     required this.onOpenJournal,
     required this.onOpenBodySheet,
+    required this.onAddWater,
+    required this.onOpenSleepSheet,
     required this.onMetricChanged,
     required this.onRangeChanged,
   });
@@ -181,6 +189,8 @@ class _Dashboard extends StatelessWidget {
   final VoidCallback onQuickLog;
   final VoidCallback onOpenJournal;
   final VoidCallback onOpenBodySheet;
+  final VoidCallback onAddWater;
+  final VoidCallback onOpenSleepSheet;
   final ValueChanged<HealthMetric> onMetricChanged;
   final ValueChanged<HealthTrendRange> onRangeChanged;
 
@@ -225,6 +235,8 @@ class _Dashboard extends StatelessWidget {
                         profile: profile,
                         onSaved: () {},
                         onOpenBodySheet: onOpenBodySheet,
+                        onAddWater: onAddWater,
+                        onOpenSleepSheet: onOpenSleepSheet,
                       ),
                       const SizedBox(height: MemoirSpace.s4),
                       HealthTrends(

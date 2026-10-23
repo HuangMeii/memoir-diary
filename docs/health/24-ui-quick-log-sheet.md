@@ -22,20 +22,20 @@ nội dung tab và footer `Hủy / Để sau` + nút lưu.
 
 ## Việc cần làm
 
-- [ ] `enum QuickLogTab { sleep, workout, water }` + `label`/`icon`:
+- [x] `enum QuickLogTab { sleep, workout, water }` + `label`/`icon`:
       `Giờ ngủ` (`Icons.bedtime`), `Thời gian tập` (`Icons.fitness_center`),
       `Uống nước` (`Icons.water_drop`).
-- [ ] `Future<void> showQuickLogSheet(BuildContext context, WidgetRef ref,
+- [x] `Future<void> showQuickLogSheet(BuildContext context, WidgetRef ref,
       {required DateTime date, QuickLogTab initialTab = QuickLogTab.workout})`
       — `showModalBottomSheet(isScrollControlled: true, useSafeArea: true)`, mobile là
       sheet trượt lên, web là panel giữa rộng ~560 (giống các modal khác của app).
-- [ ] Khung: tiêu đề **“Ghi nhận sức khoẻ”** + phụ đề “Cập nhật nhật ký thể trạng cá nhân
+- [x] Khung: tiêu đề **“Ghi nhận sức khoẻ”** + phụ đề “Cập nhật nhật ký thể trạng cá nhân
       cho ngày hôm nay” + nút `close`; dưới đó là dòng ngày “Ngày dd/MM/yyyy”.
-- [ ] Tab strip: 3 tab với trạng thái chọn (nền trắng + chữ đậm, tab khác chữ mờ) —
+- [x] Tab strip: 3 tab với trạng thái chọn (nền trắng + chữ đậm, tab khác chữ mờ) —
       dùng `SegmentedTabs<QuickLogTab>` sẵn có (H0-S1 đã có token nền pill).
 - [ ] Thân: `switch (tab)` ⇒ `QuickWorkoutTab` / `QuickWaterTab` / `QuickSleepTab`, truyền
       xuống `date`, `overview` (từ `healthDayProvider(date)`) và callback `onSaved`.
-- [ ] Footer: `TextButton('Hủy / Để sau')` đóng sheet **không** ghi gì, và nút
+- [x] Footer: `TextButton('Hủy / Để sau')` đóng sheet **không** ghi gì, và nút
       `FilledButton.icon(Icons.save, 'Lưu vào nhật ký')` ⇒ gọi `save()` của tab đang mở;
       thành công ⇒ `refreshHealth(ref, day: date)`, đóng sheet, snackbar “Đã ghi nhận vào
       nhật ký ngày dd/MM”.
