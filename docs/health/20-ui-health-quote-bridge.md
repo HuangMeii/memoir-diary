@@ -19,15 +19,15 @@ dàng” (câu động viên).
 
 ## Việc cần làm
 
-- [ ] `HealthJournalBridgeCard({required VoidCallback onOpenJournal})` — nền
+- [x] `HealthJournalBridgeCard({required VoidCallback onOpenJournal})` — nền
       `palette.surfaceBrandSubtle`, icon `Icons.menu_book`, câu dẫn của thiết kế,
       `TextButton` “Mở nhật ký hôm nay” ⇒ `Navigator.push` màn nhật ký hiện có
       (`ui/screens/entry_editor.dart`) cho ngày đang chọn.
-- [ ] `HealthGentleReminderCard({String? text, String? source})` — khung quote biên tập:
+- [x] `HealthGentleReminderCard({String? text, String? source})` — khung quote biên tập:
       chữ `serifFamily` + `MemoirType.headingEditorial`, dấu ngoặc kép, dòng nguồn
       nghiêng `Trích Memoir Mindful Journal`; nền `backgroundPage` +
       viền `borderDefault`, icon `Icons.spa`.
-- [ ] Nội dung mặc định **nguyên văn** thiết kế khi chưa có nguồn động:
+- [x] Nội dung mặc định **nguyên văn** thiết kế khi chưa có nguồn động:
       “Cơ thể bạn là ngôi đền duy nhất bạn có suốt cuộc đời. Đừng quá khắt khe với những
       ngày chưa chạm đến mục tiêu, chỉ cần lắng nghe và tiếp tục bước đi.”
 - [ ] (Tuỳ chọn, nếu rẻ) lấy câu theo ngày từ kho câu sẵn có (`daily_quotes` /
