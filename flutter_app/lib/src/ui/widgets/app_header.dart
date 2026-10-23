@@ -55,7 +55,8 @@ String initialsOf(String? displayName) {
 enum AppDestination {
   home('Trang chủ'),
   monthGrid('Lưới tháng'),
-  eventHistory('Lịch sử kiện');
+  eventHistory('Lịch sử kiện'),
+  health('Sức khoẻ');
 
   const AppDestination(this.label);
 
@@ -238,7 +239,6 @@ class AppHeader extends StatelessWidget {
   }
 }
 
-
 /// The `Trang chủ · Lưới tháng · Lịch sử kiện` row the design puts next to the
 /// wordmark.
 ///
@@ -379,4 +379,3 @@ class _Account extends StatelessWidget {
     );
   }
 }
-

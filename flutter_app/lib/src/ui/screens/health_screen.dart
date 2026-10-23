@@ -1,11 +1,24 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/auth_provider.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../health/health_body_sheet.dart';
+import '../health/health_chrome.dart';
+import '../health/health_quote_card.dart';
+import '../health/health_quick_form.dart';
+import '../health/health_summary_cards.dart';
+import '../health/health_timeline.dart';
+import '../health/health_trends.dart';
+import '../home/home_scale.dart';
+import '../tokens.dart';
+import '../widgets/app_header.dart';
+import 'calendar_screen.dart';
+import 'entry_editor.dart';
+import 'month_grids_screen.dart';
 
-/// Daily health tracking: a quick form for one day plus a 30-day trend chart.
+/// The full daily health dashboard.
 class HealthScreen extends ConsumerStatefulWidget {
   const HealthScreen({super.key});
 
@@ -14,197 +27,121 @@ class HealthScreen extends ConsumerStatefulWidget {
 }
 
 class _HealthScreenState extends ConsumerState<HealthScreen> {
-  final _steps = TextEditingController();
-  final _workout = TextEditingController();
-  final _water = TextEditingController();
-  final _sleep = TextEditingController();
-  final _weight = TextEditingController();
-  final _note = TextEditingController();
+  DateTime _date = _midnight(DateTime.now());
+  HealthMetric _metric = HealthMetric.steps;
+  HealthTrendRange _range = HealthTrendRange.month;
 
-  DateTime _day = DateTime.now();
-  bool _saving = false;
+  static DateTime _midnight(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
-  @override
-  void dispose() {
-    for (final c in [_steps, _workout, _water, _sleep, _weight, _note]) {
-      c.dispose();
-    }
-    super.dispose();
+  void _setDate(DateTime value) {
+    final today = _midnight(DateTime.now());
+    final day = _midnight(value);
+    if (day.isAfter(today)) return;
+    setState(() => _date = day);
   }
 
-  /// Inclusive YYYY-MM-DD bounds covering the last 30 days.
-  ({String from, String to}) get _range => (
-        from: DateTime.now()
-            .subtract(const Duration(days: 29))
-            .toIso8601String()
-            .substring(0, 10),
-        to: DateTime.now().toIso8601String().substring(0, 10),
-      );
-
-  /// Prefill the form with whatever is already stored for the selected day.
-  void _prefill(List<HealthLog> logs) {
-    final iso = _day.toIso8601String().substring(0, 10);
-    HealthLog? match;
-    for (final log in logs) {
-      if (log.logDate.toIso8601String().substring(0, 10) == iso) {
-        match = log;
-        break;
-      }
-    }
-    _steps.text = match?.steps?.toString() ?? '';
-    _workout.text = match?.workoutMinutes?.toString() ?? '';
-    _water.text = match?.waterMl?.toString() ?? '';
-    _sleep.text = match?.sleepHours?.toString() ?? '';
-    _weight.text = match?.weightKg?.toString() ?? '';
-    _note.text = match?.note ?? '';
-  }
-
-  /// POST upserts on log_date, so saving twice a day updates a single row.
-  Future<void> _save() async {
-    final log = HealthLog(
-      id: '',
-      logDate: _day,
-      steps: int.tryParse(_steps.text.trim()),
-      workoutMinutes: int.tryParse(_workout.text.trim()),
-      waterMl: int.tryParse(_water.text.trim()),
-      sleepHours: double.tryParse(_sleep.text.trim()),
-      weightKg: double.tryParse(_weight.text.trim()),
-      note: _note.text.trim(),
+  void _showQuickLog() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('Ghi nhận nhanh sẽ có trong phiên tiếp theo.')),
     );
-
-    final payload = log.toPayload();
-    if (payload.isEmpty) {
-      _toast('Chưa nhập gì để lưu');
-      return;
-    }
-
-    setState(() => _saving = true);
-    try {
-      await ref.read(healthRepositoryProvider).save(
-            logDate: log.logDate,
-            steps: log.steps,
-            workoutMinutes: log.workoutMinutes,
-            waterMl: log.waterMl,
-            sleepHours: log.sleepHours,
-            weightKg: log.weightKg,
-            note: (log.note == null || log.note!.isEmpty) ? null : log.note,
-          );
-      ref.invalidate(healthLogsProvider(_range));
-      // The month summary aggregates health data too, so refresh it as well.
-      ref.invalidate(
-        monthSummaryProvider(monthKey(DateTime(_day.year, _day.month))),
-      );
-      _toast('Đã lưu ngày ${log.logDate.day}/${log.logDate.month}');
-    } catch (e) {
-      _toast('$e');
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
   }
 
-  void _toast(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+  void _openJournal() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EntryEditorScreen(date: _date),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final logs = ref.watch(healthLogsProvider(_range));
+    final auth = ref.watch(authProvider);
+    ref.watch(authReadyProvider);
+    if (auth.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final displayName = auth.user?['display_name'] as String?;
+    final day = ref.watch(healthDayProvider(_date));
+    final profile = ref.watch(healthProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sức khoẻ')),
-      body: logs.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (items) {
-          _prefill(items);
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-            children: [
-              _DayPicker(day: _day, onChanged: (d) => setState(() => _day = d)),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('NHẬP NHANH', style: theme.textTheme.labelLarge),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _NumField(
-                              controller: _steps,
-                              label: 'Bước chân',
-                              hint: '8000',
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _NumField(
-                              controller: _workout,
-                              label: 'Tập (phút)',
-                              hint: '45',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _NumField(
-                              controller: _water,
-                              label: 'Nước (ml)',
-                              hint: '2000',
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _NumField(
-                              controller: _sleep,
-                              label: 'Ngủ (giờ)',
-                              hint: '7.5',
-                              decimal: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      _NumField(
-                        controller: _weight,
-                        label: 'Cân nặng (kg)',
-                        hint: '65.5',
-                        decimal: true,
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _note,
-                        maxLines: 2,
-                        decoration: const InputDecoration(labelText: 'Ghi chú'),
-                      ),
-                      const SizedBox(height: 14),
-                      // Spans the card: `filledButtonTheme` only pins the
-                      // height, so a button that must fill its column asks for
-                      // it explicitly.
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _saving ? null : _save,
-                          icon: const Icon(Icons.save_outlined),
-                          label: Text(_saving ? 'Đang lưu...' : 'Lưu'),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final scale = homeScaleFor(constraints.maxWidth);
+          final horizontal = (constraints.maxWidth - 1200 * scale) / 2;
+          final gutter = horizontal.clamp(16.0, double.infinity);
+          return HomeScale(
+            factor: scale,
+            textFactor: homeTextScaleFor(constraints.maxWidth),
+            child: Column(
+              children: [
+                AppHeader(
+                  date: _date,
+                  initials: initialsOf(displayName),
+                  name: displayName,
+                  destination: AppDestination.health,
+                  gutter: gutter,
+                  onLogout: () => ref.read(authProvider.notifier).logout(),
+                  onNavigate: (destination) {
+                    if (destination == AppDestination.home) {
+                      Navigator.of(context).pop();
+                    } else if (destination == AppDestination.monthGrid) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const MonthGridsScreen(),
                         ),
+                      );
+                    } else if (destination == AppDestination.eventHistory) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const CalendarScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                Expanded(
+                  child: day.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, _) => Center(child: Text('$error')),
+                    data: (overview) => profile.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (error, _) => Center(child: Text('$error')),
+                      data: (savedProfile) => _Dashboard(
+                        date: _date,
+                        overview: overview,
+                        profile: savedProfile ?? const HealthProfile(),
+                        metric: _metric,
+                        range: _range,
+                        displayName: displayName,
+                        gutter: gutter,
+                        onPrevious: () =>
+                            _setDate(_date.subtract(const Duration(days: 1))),
+                        onNext: () =>
+                            _setDate(_date.add(const Duration(days: 1))),
+                        onDatePicked: _setDate,
+                        onQuickLog: _showQuickLog,
+                        onOpenJournal: _openJournal,
+                        onOpenBodySheet: () => showHealthBodySheet(
+                          context,
+                          date: _date,
+                          ref: ref,
+                        ),
+                        onMetricChanged: (value) =>
+                            setState(() => _metric = value),
+                        onRangeChanged: (value) =>
+                            setState(() => _range = value),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              _TrendSection(logs: items),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -212,275 +149,131 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   }
 }
 
-/// Day selector bounded to the last 30 days (no future entries).
-class _DayPicker extends StatelessWidget {
-  const _DayPicker({required this.day, required this.onChanged});
-
-  final DateTime day;
-  final ValueChanged<DateTime> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final today = DateTime.now();
-    final label = '${day.day}/${day.month}/${day.year}';
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: day.isAfter(today)
-              ? null
-              : () => onChanged(day.subtract(const Duration(days: 1))),
-        ),
-        Text(label, style: Theme.of(context).textTheme.titleMedium),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: day.isBefore(today) ? null : () => onChanged(today),
-        ),
-      ],
-    );
-  }
-}
-
-/// Numeric input; an empty field means not recorded, not zero.
-class _NumField extends StatelessWidget {
-  const _NumField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    this.decimal = false,
+class _Dashboard extends StatelessWidget {
+  const _Dashboard({
+    required this.date,
+    required this.overview,
+    required this.profile,
+    required this.metric,
+    required this.range,
+    required this.displayName,
+    required this.gutter,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onDatePicked,
+    required this.onQuickLog,
+    required this.onOpenJournal,
+    required this.onOpenBodySheet,
+    required this.onMetricChanged,
+    required this.onRangeChanged,
   });
 
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final bool decimal;
+  final DateTime date;
+  final HealthDayOverview overview;
+  final HealthProfile profile;
+  final HealthMetric metric;
+  final HealthTrendRange range;
+  final String? displayName;
+  final double gutter;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final ValueChanged<DateTime> onDatePicked;
+  final VoidCallback onQuickLog;
+  final VoidCallback onOpenJournal;
+  final VoidCallback onOpenBodySheet;
+  final ValueChanged<HealthMetric> onMetricChanged;
+  final ValueChanged<HealthTrendRange> onRangeChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-      decoration: InputDecoration(labelText: label, hintText: hint),
-    );
-  }
-}
-
-/// Totals plus the steps / workout trend for the fetched window.
-class _TrendSection extends StatelessWidget {
-  const _TrendSection({required this.logs});
-
-  final List<HealthLog> logs;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // The API returns newest first; the chart x axis needs chronological order.
-    final points = [...logs]..sort((a, b) => a.logDate.compareTo(b.logDate));
-    final withSteps = points.where((l) => l.steps != null).toList();
-    final withWorkout = points.where((l) => l.workoutMinutes != null).toList();
-
-    var totalSteps = 0;
-    var totalWorkout = 0;
-    for (final log in points) {
-      totalSteps += log.steps ?? 0;
-      totalWorkout += log.workoutMinutes ?? 0;
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('30 NGÀY GẦN NHẤT', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _Stat(
-                    icon: Icons.directions_walk,
-                    label: 'Tổng bước',
-                    value: '$totalSteps',
-                  ),
-                ),
-                Expanded(
-                  child: _Stat(
-                    icon: Icons.timer_outlined,
-                    label: 'Phút tập',
-                    value: '$totalWorkout',
-                  ),
-                ),
-                Expanded(
-                  child: _Stat(
-                    icon: Icons.event_note,
-                    label: 'Ngày có data',
-                    value: '${points.length}',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            if (withSteps.isEmpty)
-              Text(
-                'Chưa có dữ liệu bước chân. Nhập ở trên để xem biểu đồ.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              _LineChart(
-                points: withSteps,
-                valueOf: (l) => l.steps!.toDouble(),
-                color: theme.colorScheme.primary,
-                title: 'Bước chân',
+    final scale = HomeScale.textOf(context);
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        MemoirSpace.s5 * scale,
+        gutter,
+        MemoirSpace.s8 * scale,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const HealthBreadcrumb(),
+              SizedBox(height: MemoirSpace.s3 * scale),
+              HealthPageHeader(
+                date: date,
+                onPrevious: onPrevious,
+                onNext: onNext,
+                onDatePicked: onDatePicked,
+                onQuickLog: onQuickLog,
               ),
-            if (withWorkout.isNotEmpty) ...[
-              const SizedBox(height: 22),
-              _LineChart(
-                points: withWorkout,
-                valueOf: (l) => l.workoutMinutes!.toDouble(),
-                color: theme.colorScheme.tertiary,
-                title: 'Phút tập luyện',
+              SizedBox(height: MemoirSpace.s3 * scale),
+              HealthContextBanner(firstName: displayName, date: date),
+              SizedBox(height: MemoirSpace.s5 * scale),
+              HealthSummaryCards(day: overview, profile: profile),
+              SizedBox(height: MemoirSpace.s5 * scale),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final left = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      HealthQuickForm(
+                        date: date,
+                        day: overview,
+                        profile: profile,
+                        onSaved: () {},
+                        onOpenBodySheet: onOpenBodySheet,
+                      ),
+                      const SizedBox(height: MemoirSpace.s4),
+                      HealthTrends(
+                        date: date,
+                        metric: metric,
+                        onMetricChanged: onMetricChanged,
+                        range: range,
+                        onRangeChanged: onRangeChanged,
+                      ),
+                    ],
+                  );
+                  final right = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      HealthJournalBridgeCard(onOpenJournal: onOpenJournal),
+                      const SizedBox(height: MemoirSpace.s4),
+                      HealthTimeline(
+                        date: date,
+                        day: overview,
+                        onChanged: () {},
+                      ),
+                      const SizedBox(height: MemoirSpace.s4),
+                      const HealthGentleReminderCard(),
+                    ],
+                  );
+                  if (constraints.maxWidth < 1000) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        left,
+                        const SizedBox(height: MemoirSpace.s5),
+                        right,
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 65, child: left),
+                      const SizedBox(width: MemoirSpace.s5),
+                      Expanded(flex: 35, child: right),
+                    ],
+                  );
+                },
               ),
             ],
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(height: 4),
-        Text(value, style: theme.textTheme.titleMedium),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: 11,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
-/// Line chart over the fixed 30-day window.
-///
-/// The x axis spans the whole window so unlogged days still advance it,
-/// instead of squeezing logged days together.
-class _LineChart extends StatelessWidget {
-  const _LineChart({
-    required this.points,
-    required this.valueOf,
-    required this.color,
-    required this.title,
-  });
-
-  final List<HealthLog> points;
-  final double Function(HealthLog) valueOf;
-  final Color color;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final start = DateTime.now().subtract(const Duration(days: 29));
-    final span = DateTime.now().difference(start).inDays + 1;
-
-    final spots = <FlSpot>[];
-    for (final log in points) {
-      final idx = log.logDate.difference(start).inDays;
-      if (idx >= 0 && idx < span) {
-        spots.add(FlSpot(idx.toDouble(), valueOf(log)));
-      }
-    }
-    spots.sort((a, b) => a.x.compareTo(b.x));
-    if (spots.isEmpty) return const SizedBox.shrink();
-
-    var maxY = 0.0;
-    for (final spot in spots) {
-      if (spot.y > maxY) maxY = spot.y;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 160,
-          child: LineChart(
-            LineChartData(
-              minX: 0,
-              maxX: (span - 1).toDouble(),
-              minY: 0,
-              // Headroom so the peak does not touch the top border.
-              maxY: maxY <= 0 ? 1 : maxY * 1.2,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  curveSmoothness: 0.25,
-                  color: color,
-                  barWidth: 2.5,
-                  dotData: const FlDotData(show: true),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: color.withValues(alpha: 0.12),
-                  ),
-                ),
-              ],
-              titlesData: FlTitlesData(
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                leftTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: true, reservedSize: 38),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 26,
-                    // Label every 7th day to avoid overlapping tick text.
-                    getTitlesWidget: (value, meta) {
-                      final day = value.toInt() + 1;
-                      if (day % 7 != 0) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text('$day', style: theme.textTheme.bodySmall),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              gridData: const FlGridData(show: true, drawVerticalLine: false),
-              borderData: FlBorderData(show: false),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

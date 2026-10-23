@@ -30,21 +30,23 @@ enum HealthTrendRange {
 class HealthTrends extends ConsumerWidget {
   const HealthTrends({
     super.key,
+    required this.date,
     required this.metric,
     required this.onMetricChanged,
     required this.range,
     required this.onRangeChanged,
   });
 
+  final DateTime date;
   final HealthMetric metric;
-  final VoidCallback onMetricChanged;
+  final ValueChanged<HealthMetric> onMetricChanged;
   final HealthTrendRange range;
-  final VoidCallback onRangeChanged;
+  final ValueChanged<HealthTrendRange> onRangeChanged;
 
-  /// Bounds `[from, to]` (YYYY-MM-DD) của kỳ kết thúc hôm nay.
-  ({String from, String to}) _period(DateTime today) {
-    final from = today.subtract(Duration(days: range.days - 1));
-    return (from: dayKey(from), to: dayKey(today));
+  /// Bounds `[from, to]` (YYYY-MM-DD) của kỳ kết thúc ở ngày đang chọn.
+  ({String from, String to}) _period(DateTime selectedDay) {
+    final from = selectedDay.subtract(Duration(days: range.days - 1));
+    return (from: dayKey(from), to: dayKey(selectedDay));
   }
 
   String _statValue(double value) {
@@ -95,8 +97,7 @@ class HealthTrends extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scale = HomeScale.textOf(context);
-    final today = DateTime.now();
-    final period = _period(today);
+    final period = _period(date);
     final pointsAsync = ref.watch(
       healthTrendsProvider((
         from: period.from,
@@ -124,7 +125,7 @@ class HealthTrends extends ConsumerWidget {
                       .map((m) => SegmentedTab(m, m.label))
                       .toList(),
                   selected: metric,
-                  onChanged: (m) => onMetricChanged(),
+                  onChanged: onMetricChanged,
                   scale: 1,
                 ),
               ),
@@ -136,7 +137,7 @@ class HealthTrends extends ConsumerWidget {
                       .map((r) => SegmentedTab(r, r.label))
                       .toList(),
                   selected: range,
-                  onChanged: (r) => onRangeChanged(),
+                  onChanged: onRangeChanged,
                   scale: 0.85,
                 ),
               ),
@@ -146,7 +147,7 @@ class HealthTrends extends ConsumerWidget {
         const Divider(height: 1),
         // ---------- 4 ô số ----------
         pointsAsync.when(
-          data: (points) => _buildBody(context, scale, points, today),
+          data: (points) => _buildBody(context, scale, points, date),
           loading: () => _statCardSkeleton(context, scale),
           error: (e, st) => _statCardSkeleton(context, scale),
         ),
@@ -311,8 +312,9 @@ class HealthTrends extends ConsumerWidget {
 
   Color _barColor(double value, double goal, bool isToday, ThemeData theme) {
     if (isToday) return theme.colorScheme.primary;
-    if (goal <= 0)
+    if (goal <= 0) {
       return theme.colorScheme.primary; // weight: không có mục tiêu
+    }
     final dark = theme.brightness == Brightness.dark;
     final partial = dark
         ? MemoirColorsDark.healthBmiNormal
