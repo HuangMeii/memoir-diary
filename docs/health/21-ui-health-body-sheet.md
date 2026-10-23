@@ -23,12 +23,12 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
 
 ## Việc cần làm
 
-- [ ] `showHealthBodySheet(BuildContext, {required DateTime date, required WidgetRef ref})`
+- [x] `showHealthBodySheet(BuildContext, {required DateTime date, required WidgetRef ref})`
       — `showModalBottomSheet(isScrollControlled: true)` (mobile) / drawer phải rộng
       ~460 (web) như thiết kế; nền mờ bấm ra ngoài để đóng.
-- [ ] **Cân nặng hiện tại**: `TextField` số (1 số lẻ) prefill từ cân nặng **gần nhất**
+- [x] **Cân nặng hiện tại**: `TextField` số (1 số lẻ) prefill từ cân nặng **gần nhất**
       (ngày đang chọn, nếu trống thì bản ghi có cân nặng mới nhất trong 90 ngày).
-- [ ] 4 nút stepper `−0.5`, `−0.1`, `+0.1`, `+0.5` cộng/trừ giá trị đang hiển thị;
+- [x] 4 nút stepper `−0.5`, `−0.1`, `+0.1`, `+0.5` cộng/trừ giá trị đang hiển thị;
       chặn dưới `0`; mỗi lần bấm chỉ đổi ô nhập (chưa gọi API).
 - [ ] **Chiều cao (cm)**: `TextField` số, helper “Cố định · Dùng làm mốc tính chỉ số
       BMI & BMR” (chỉ ghi vào `profile.heightCm`, không theo ngày).
