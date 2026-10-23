@@ -21,24 +21,24 @@ sức, rồi lưu vào log của ngày đang xem.
 
 ## Việc cần làm
 
-- [ ] `QuickWorkoutTab({required DateTime date, required HealthDayOverview day,
+- [x] `QuickWorkoutTab({required DateTime date, required HealthDayOverview day,
       required ValueChanged<bool> onDirtyChanged})` — `ConsumerStatefulWidget`.
-- [ ] Đoạn dẫn nguyên văn thiết kế: “Ghi nhận thời lượng, loại hình vận động và mức độ
+- [x] Đoạn dẫn nguyên văn thiết kế: “Ghi nhận thời lượng, loại hình vận động và mức độ
       gắng sức để đồng bộ nhịp rèn luyện thể chất.”
-- [ ] Ô `Số phút tập luyện` (`TextField` số, suffix `phút`), prefill `day.log?.workoutMinutes`.
-- [ ] Ô `Loại hình bài tập` (`TextField` tự do, gợi ý nhanh dạng chip: `Chạy bộ`, `Yoga`,
+- [x] Ô `Số phút tập luyện` (`TextField` số, suffix `phút`), prefill `day.log?.workoutMinutes`.
+- [x] Ô `Loại hình bài tập` (`TextField` tự do, gợi ý nhanh dạng chip: `Chạy bộ`, `Yoga`,
       `Đạp xe`, `Bơi`), prefill `day.log?.workoutType`.
-- [ ] `Mức độ gắng sức`: 3 lựa chọn lớn `Tập nhẹ` / `Tập vừa` / `Tập nặng` ↔
+- [x] `Mức độ gắng sức`: 3 lựa chọn lớn `Tập nhẹ` / `Tập vừa` / `Tập nặng` ↔
       `nhe | vua | nang` (dùng `SegmentedTabs` hoặc 3 card có icon + phụ đề như thiết kế),
       prefill `day.log?.workoutIntensity`.
-- [ ] Dòng ghi chú bảo mật: icon `Icons.lock_outline` + “Dữ liệu được lưu trữ riêng tư trong
+- [x] Dòng ghi chú bảo mật: icon `Icons.lock_outline` + “Dữ liệu được lưu trữ riêng tư trong
       tài khoản Memoir của bạn.”
-- [ ] `save()` của tab (khung gọi khi bấm “Lưu vào nhật ký”):
+- [x] `save()` của tab (khung gọi khi bấm “Lưu vào nhật ký”):
       `healthRepository.save(logDate: date, workoutMinutes: …, workoutType: …,
       workoutIntensity: …)`; field để trống ⇒ **không** gửi (giữ nguyên giá trị cũ).
-- [ ] Báo `onDirtyChanged(true)` khi người dùng sửa lần đầu (khung dùng để quyết định có
+- [x] Báo `onDirtyChanged(true)` khi người dùng sửa lần đầu (khung dùng để quyết định có
       hỏi xác nhận khi đóng hay không).
-- [ ] Nhập không hợp lệ (chữ, số âm, phút > 1440) ⇒ chặn lưu và hiện `errorText` ngay dưới ô.
+- [x] Nhập không hợp lệ (chữ, số âm, phút > 1440) ⇒ chặn lưu và hiện `errorText` ngay dưới ô.
 - [ ] `flutter analyze`.
 
 ## Acceptance Criteria

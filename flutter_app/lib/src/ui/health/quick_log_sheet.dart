@@ -5,6 +5,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
+import 'quick_workout_tab.dart';
 
 enum QuickLogTab {
   sleep('Giờ ngủ', Icons.bedtime),
@@ -44,6 +45,8 @@ class _QuickLogSheet extends ConsumerStatefulWidget {
 class _QuickLogSheetState extends ConsumerState<_QuickLogSheet> {
   late QuickLogTab _tab = widget.initialTab;
   bool _saving = false;
+  bool _dirty = false;
+  final _workoutKey = GlobalKey<QuickWorkoutTabState>();
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,19 @@ class _QuickLogSheetState extends ConsumerState<_QuickLogSheet> {
               ),
             ),
             const SizedBox(height: MemoirSpace.s5),
-            _TabPlaceholder(tab: _tab, day: day),
+            IndexedStack(
+              index: _tab.index,
+              children: [
+                _TabPlaceholder(tab: QuickLogTab.sleep, day: day),
+                QuickWorkoutTab(
+                  key: _workoutKey,
+                  date: widget.date,
+                  day: day,
+                  onDirtyChanged: (dirty) => setState(() => _dirty = dirty),
+                ),
+                _TabPlaceholder(tab: QuickLogTab.water, day: day),
+              ],
+            ),
             const SizedBox(height: MemoirSpace.s5),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -143,6 +158,11 @@ class _QuickLogSheetState extends ConsumerState<_QuickLogSheet> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
+      if (_tab == QuickLogTab.workout) {
+        await _workoutKey.currentState!.save();
+      } else {
+        throw StateError('Tab ${_tab.label} chưa được triển khai');
+      }
       refreshHealth(ref, day: widget.date);
       if (mounted) {
         Navigator.pop(context);
@@ -167,7 +187,28 @@ class _QuickLogSheetState extends ConsumerState<_QuickLogSheet> {
   }
 
   Future<void> _close() async {
-    if (mounted) Navigator.pop(context);
+    if (!_dirty) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bỏ thay đổi?'),
+        content: const Text('Dữ liệu chưa lưu sẽ bị mất.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Ở lại'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Bỏ thay đổi'),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) Navigator.pop(context);
   }
 }
 
