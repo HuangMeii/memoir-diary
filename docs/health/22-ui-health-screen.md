@@ -23,13 +23,13 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
 
 ## Việc cần làm
 
-- [ ] `HealthScreen` là `ConsumerStatefulWidget` với state cục bộ: `_date` (mặc định hôm
+- [x] `HealthScreen` là `ConsumerStatefulWidget` với state cục bộ: `_date` (mặc định hôm
       nay theo **giờ VN**), `_metric` (`HealthMetric.steps`), `_range`
       (`HealthTrendRange.month`).
-- [ ] Dựng: `AppHeader(date: _date, initials: initialsOf(displayName), onLogout: …,
+- [x] Dựng: `AppHeader(date: _date, initials: initialsOf(displayName), onLogout: …,
       destination: AppDestination.health, name: displayName)` (copy cách `HomeScreen`/
       `NotesScreen` đang lấy `displayName`).
-- [ ] Nội dung trong `SingleChildScrollView` + `Center` + `ConstrainedBox(maxWidth: 1200)`,
+- [x] Nội dung trong `SingleChildScrollView` + `Center` + `ConstrainedBox(maxWidth: 1200)`,
       `HomeScale` theo bề rộng như các màn khác:
   1. `HealthBreadcrumb` + `HealthPageHeader(date: _date, onPrevious/onNext/onDate, onQuickLog)`;
   2. `HealthContextBanner`;
@@ -38,17 +38,17 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
      - trái: `HealthQuickForm(...)` rồi `HealthTrends(metric: _metric, range: _range, …)`;
      - phải: `HealthJournalBridgeCard(...)`, `HealthTimeline(...)`,
        `HealthGentleReminderCard()`.
-- [ ] Nguồn dữ liệu: `ref.watch(healthDayProvider(_date))` cho thẻ/form/timeline và
+- [x] Nguồn dữ liệu: `ref.watch(healthDayProvider(_date))` cho thẻ/form/timeline và
       `ref.watch(healthTrendsProvider((from: …, to: …, metric: _metric)))` +
       `ref.watch(healthProfileProvider)` cho xu hướng/đích mục tiêu.
-- [ ] Hành vi:
+- [x] Hành vi:
   - `onQuickLog` ⇒ `showQuickLogSheet(...)` với tab mặc định `Thời gian tập` (H4-S1);
   - `onOpenBodySheet` (từ form) ⇒ `showHealthBodySheet(...)` (H3-S7);
   - sau **mọi** hành vi ghi ⇒ `refreshHealth(ref, day: _date)` (H2-S5) **thay vì**
     đoạn `ref.invalidate(healthLogsProvider)`/`monthSummaryProvider` cũ (dòng 87–91).
-- [ ] **Gỡ bỏ** khỏi màn: `_NumField`, `_Stat`, `_LineChart`, `_DayPicker`, `_prefill`,
+- [x] **Gỡ bỏ** khỏi màn: `_NumField`, `_Stat`, `_LineChart`, `_DayPicker`, `_prefill`,
       `_range` cũ và logic `substring(0, 10)` (đã thay bằng helper chung + provider).
-- [ ] Giữ mở màn bằng `Navigator.push` (thẻ shortcut) — không đổi `main.dart`.
+- [x] Giữ mở màn bằng `Navigator.push` (thẻ shortcut) — không đổi `main.dart`.
 - [ ] `flutter analyze ; flutter test`.
 
 ## Acceptance Criteria
