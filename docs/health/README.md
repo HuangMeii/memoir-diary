@@ -119,7 +119,7 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | H3-S2 | 3 thẻ tóm tắt hero | 3 | H3-S1 | [16-ui-health-summary-cards.md](16-ui-health-summary-cards.md) | DONE |
 | H3-S3 | Form “Nhập nhanh chỉ số hôm nay” | 5 | H2-S6 | [17-ui-health-quick-form.md](17-ui-health-quick-form.md) | DONE |
 | H3-S4 | Khối “Xu hướng 30 ngày gần nhất” | 5 | H2-S6 | [18-ui-health-trends.md](18-ui-health-trends.md) | DONE |
-| H3-S5 | Card “Dòng thời gian hoạt động” | 3 | H2-S5 | [19-ui-health-timeline.md](19-ui-health-timeline.md) | TODO |
+| H3-S5 | Card "Dòng thời gian hoạt động" | 3 | H2-S5 | [19-ui-health-timeline.md](19-ui-health-timeline.md) | DONE |
 | H3-S6 | Card cầu nối nhật ký + “Lời nhắc dịu dàng” | 1 | H3-S1 | [20-ui-health-quote-bridge.md](20-ui-health-quote-bridge.md) | TODO |
 | H3-S7 | Drawer “Thông số cá nhân & Thể trạng” (BMI) | 5 | H2-S6 | [21-ui-health-body-sheet.md](21-ui-health-body-sheet.md) | TODO |
 | H3-S8 | Viết lại `health_screen.dart` + nav “Sức khoẻ” | 3 | H3-S2…H3-S7 | [22-ui-health-screen.md](22-ui-health-screen.md) | TODO |
