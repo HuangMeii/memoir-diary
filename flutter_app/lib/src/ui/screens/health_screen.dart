@@ -103,6 +103,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                           builder: (_) => const CalendarScreen(),
                         ),
                       );
+                    } else if (destination == AppDestination.health) {
+                      Navigator.of(context).pop();
                     }
                   },
                 ),

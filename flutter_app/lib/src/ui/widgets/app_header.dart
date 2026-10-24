@@ -56,7 +56,7 @@ enum AppDestination {
   home('Trang chủ'),
   monthGrid('Lưới tháng'),
   eventHistory('Lịch sử kiện'),
-  health('Sức khoẻ');
+  health('Sức khỏe');
 
   const AppDestination(this.label);
 

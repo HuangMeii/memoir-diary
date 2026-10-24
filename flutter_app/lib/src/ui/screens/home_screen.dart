@@ -19,6 +19,7 @@ import '../tokens.dart';
 import '../widgets/app_header.dart';
 import 'calendar_screen.dart';
 import 'entry_editor.dart';
+import 'health_screen.dart';
 import 'month_grids_screen.dart';
 
 /// Content width of the web layout: the design's 1024 px dashboard centred on
@@ -104,6 +105,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const CalendarScreen(),
+                            ),
+                          );
+                        } else if (destination == AppDestination.health) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const HealthScreen(),
                             ),
                           );
                         }
