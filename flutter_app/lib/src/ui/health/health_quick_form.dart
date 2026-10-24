@@ -219,10 +219,9 @@ class _HealthQuickFormState extends ConsumerState<HealthQuickForm> {
         ? _goalPct(breakdown.totalMl, waterGoal)
         : 0;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           Container(
             decoration: BoxDecoration(
               color: palette.surfaceCard,
@@ -580,8 +579,7 @@ class _HealthQuickFormState extends ConsumerState<HealthQuickForm> {
               ],
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
