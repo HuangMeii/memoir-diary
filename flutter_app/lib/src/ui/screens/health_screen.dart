@@ -211,6 +211,7 @@ class _Dashboard extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const HealthBreadcrumb(),
               SizedBox(height: MemoirSpace.s3 * scale),
