@@ -132,7 +132,7 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | H4-S1 | Khung sheet 3 tab | 2 | H2-S5 | [24-ui-quick-log-sheet.md](24-ui-quick-log-sheet.md) | DONE |
 | H4-S2 | Tab Thời gian tập | 3 | H4-S1 | [25-ui-quick-log-workout.md](25-ui-quick-log-workout.md) | DONE |
 | H4-S3 | Tab Uống nước | 3 | H4-S1 | [26-ui-quick-log-water.md](26-ui-quick-log-water.md) | DONE |
-| H4-S4 | Tab Giờ ngủ | 3 | H4-S1 | [27-ui-quick-log-sleep.md](27-ui-quick-log-sleep.md) | TODO |
+| H4-S4 | Tab Giờ ngủ | 3 | H4-S1 | [27-ui-quick-log-sleep.md](27-ui-quick-log-sleep.md) | DONE |
 
 ### Epic H5 — Kiểm thử, tài liệu, kiểm chứng
 
