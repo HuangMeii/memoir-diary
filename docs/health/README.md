@@ -121,9 +121,9 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | H3-S4 | Khối “Xu hướng 30 ngày gần nhất” | 5 | H2-S6 | [18-ui-health-trends.md](18-ui-health-trends.md) | DONE |
 | H3-S5 | Card "Dòng thời gian hoạt động" | 3 | H2-S5 | [19-ui-health-timeline.md](19-ui-health-timeline.md) | DONE |
 | H3-S6 | Card cầu nối nhật ký + “Lời nhắc dịu dàng” | 1 | H3-S1 | [20-ui-health-quote-bridge.md](20-ui-health-quote-bridge.md) | DONE |
-| H3-S7 | Drawer “Thông số cá nhân & Thể trạng” (BMI) | 5 | H2-S6 | [21-ui-health-body-sheet.md](21-ui-health-body-sheet.md) | TODO |
-| H3-S8 | Viết lại `health_screen.dart` + nav “Sức khoẻ” | 3 | H3-S2…H3-S7 | [22-ui-health-screen.md](22-ui-health-screen.md) | TODO |
-| H3-S9 | States: loading / empty / error / thiếu dữ liệu | 2 | H3-S8 | [23-ui-health-states.md](23-ui-health-states.md) | TODO |
+| H3-S7 | Drawer “Thông số cá nhân & Thể trạng” (BMI) | 5 | H2-S6 | [21-ui-health-body-sheet.md](21-ui-health-body-sheet.md) | DONE |
+| H3-S8 | Viết lại `health_screen.dart` + nav “Sức khoẻ” | 3 | H3-S2…H3-S7 | [22-ui-health-screen.md](22-ui-health-screen.md) | DONE |
+| H3-S9 | States: loading / empty / error / thiếu dữ liệu | 2 | H3-S8 | [23-ui-health-states.md](23-ui-health-states.md) | DONE |
 
 ### Epic H4 — UI ghi nhận nhanh (3 modal)
 
