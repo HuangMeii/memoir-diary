@@ -139,8 +139,8 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 | ID | Task | Ước lượng | Phụ thuộc | File | Trạng thái |
 |---|---|---|---|---|---|
 | H5-S1 | `test/health_test.dart` | 3 | H2-S6 | [28-test-flutter-health.md](28-test-flutter-health.md) | DONE |
-| H5-S2 | Cập nhật tài liệu dự án | 2 | H1-S6, H3-S9, H4-S4 | [29-docs-update.md](29-docs-update.md) | TODO |
-| H5-S3 | Kiểm chứng end-to-end | 2 | toàn bộ | [30-verification.md](30-verification.md) | TODO |
+| H5-S2 | Cập nhật tài liệu dự án | 2 | H1-S6, H3-S9, H4-S4 | [29-docs-update.md](29-docs-update.md) | DONE |
+| H5-S3 | Kiểm chứng end-to-end | 2 | toàn bộ | [30-verification.md](30-verification.md) | DONE |
 
 ## 7. Thứ tự thực hiện
 
