@@ -135,4 +135,30 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(find.byType(Dialog), findsNothing);
   });
+
+  // "Biến động cân nặng" buckets the weigh-ins by day/week/month and lets the
+  // user add a number by hand, so the series works without a synced scale.
+  testWidgets('offers day/week/month buckets and a manual weigh-in',
+      (tester) async {
+    await pumpScreen(tester, const Size(1904, 1024));
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Thông số'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Biến động cân nặng'), findsOneWidget);
+    expect(find.text('Ngày'), findsOneWidget);
+    expect(find.text('Tuần'), findsOneWidget);
+    expect(find.text('Tháng'), findsOneWidget);
+
+    final input = find.byKey(const ValueKey<String>('weight-entry-field'));
+    await tester.ensureVisible(input);
+    await tester.enterText(input, 'abc');
+    await tester.ensureVisible(find.text('Thêm'));
+    await tester.tap(find.text('Thêm'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // The invalid value is rejected before any request is made.
+    expect(find.text('Cân nặng không hợp lệ (0 – 500 kg)'), findsOneWidget);
+  });
 }

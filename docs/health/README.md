@@ -37,7 +37,7 @@ chỉ khác tab đang mở: H4-S1 dựng khung, H4-S2…S4 dựng từng tab.
 | 253–447 | **“Xu hướng 30 ngày gần nhất”**: pill metric *Luyện tập · Nước · Giấc ngủ · Cân nặng* (265), chip *7 ngày · 30 ngày · 3 tháng* (272), 4 ô số (280–314), bar chart + đường mốc 8.000 (319) + đường TB 7.200 (324), 30 cột (328–427), nhãn ngày (430), legend (439) |
 | 450–521 | Cột phải: card cầu nối nhật ký (450), **“Dòng thời gian hoạt động”** + `+ Thêm mốc` (453–505), card “Lời nhắc dịu dàng” (507–521) |
 | 522–541 | Footer biên tập |
-| 539–720 | **Drawer “Thông số cá nhân & Thể trạng”** (chỉ ở bản `…_bmi`): cân nặng + stepper (564–603), BMI + spectrum + tiến độ đích (604–661), chart biến động 4 tuần/6 tháng (662–706), quote (707), footer *Hủy* / *Lưu thay đổi* (715–720) |
+| 539–720 | **Drawer “Thông số cá nhân & Thể trạng”** (chỉ ở bản `…_bmi`): cân nặng + stepper (564–603), BMI + spectrum + tiến độ đích (604–661), chart biến động (662–706) — nay là chip *Ngày / Tuần / Tháng* + ô nhập tay `Ngày` + `Cân nặng (kg)` + `Thêm` (25.10.2026), quote (707), footer *Hủy* / *Lưu thay đổi* (715–720) |
 
 Từ dòng 240 trở đi, bản 52 KB lệch **−2 dòng** so với bảng trên.
 

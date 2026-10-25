@@ -40,7 +40,7 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
   ({String from, String to}) get _range {
     final today = DateTime.now();
     return (
-      from: dayKey(today.subtract(const Duration(days: 89))),
+      from: dayKey(today.subtract(const Duration(days: 179))),
       to: dayKey(today),
     );
   }
@@ -90,6 +90,13 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
     final value = (_number(_weight) ?? 0) + amount;
     _weight.text = (value < 0 ? 0 : value).toStringAsFixed(1);
     setState(() {});
+  }
+
+  /// Stores one weigh-in for [date]. `refreshHealth` re-reads the logs, so the
+  /// "Biến động cân nặng" series updates without closing the sheet.
+  Future<void> _addWeight(DateTime date, double kg) async {
+    await ref.read(healthRepositoryProvider).save(logDate: date, weightKg: kg);
+    refreshHealth(ref, day: date);
   }
 
   Future<void> _save() async {
@@ -230,7 +237,11 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
                   goal: double.tryParse(_goal.text),
                 ),
               const SizedBox(height: MemoirSpace.s4),
-              _WeightVariation(logs: logs),
+              _WeightVariation(
+                logs: logs,
+                date: widget.date,
+                onAddWeight: _addWeight,
+              ),
               const SizedBox(height: MemoirSpace.s4),
               const Text(
                 'Cân nặng chỉ là một chỉ số tham khảo, không định nghĩa giá trị '
@@ -400,56 +411,172 @@ class _WeightProgress extends StatelessWidget {
 }
 
 class _WeightVariation extends StatefulWidget {
-  const _WeightVariation({required this.logs});
+  const _WeightVariation({
+    required this.logs,
+    required this.date,
+    required this.onAddWeight,
+  });
 
   final List<HealthLog> logs;
+
+  /// Day the sheet was opened for; a manual weigh-in starts from this date.
+  final DateTime date;
+
+  /// Persists one weigh-in: `(date, kg)`.
+  final Future<void> Function(DateTime date, double kg) onAddWeight;
 
   @override
   State<_WeightVariation> createState() => _WeightVariationState();
 }
 
 class _WeightVariationState extends State<_WeightVariation> {
-  bool _sixMonths = false;
+  final _kg = TextEditingController();
+  WeightBucket _bucket = WeightBucket.week;
+  late DateTime _entryDate = widget.date;
+  bool _adding = false;
+
+  @override
+  void dispose() {
+    _kg.dispose();
+    super.dispose();
+  }
+
+  static String _two(int value) => value.toString().padLeft(2, '0');
+
+  String get _dateLabel =>
+      '${_two(_entryDate.day)}/${_two(_entryDate.month)}/${_entryDate.year}';
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _entryDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && mounted) setState(() => _entryDate = picked);
+  }
+
+  Future<void> _add() async {
+    final value = double.tryParse(_kg.text.trim().replaceAll(',', '.'));
+    if (value == null || value <= 0 || value > 500) {
+      _toast('Cân nặng không hợp lệ (0 – 500 kg)');
+      return;
+    }
+    setState(() => _adding = true);
+    try {
+      await widget.onAddWeight(_entryDate, value);
+      if (!mounted) return;
+      _kg.clear();
+      _toast('Đã thêm ${value.toStringAsFixed(1)} kg · $_dateLabel');
+    } catch (error) {
+      if (mounted) _toast('$error');
+    } finally {
+      if (mounted) setState(() => _adding = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final points = widget.logs
-        .where((log) => log.weightKg != null)
-        .where((log) =>
-            !_sixMonths ||
-            log.logDate
-                .isAfter(DateTime.now().subtract(const Duration(days: 180))))
-        .toList()
-      ..sort((a, b) => a.logDate.compareTo(b.logDate));
-    final values = points.map((log) => log.weightKg!).toList();
-    final change = values.length < 2 ? null : values.last - values.first;
+    final theme = Theme.of(context);
+    final points = weightPointsOf(
+      widget.logs,
+      _bucket,
+      until: DateTime.now(),
+    );
+    final change = points.length < 2 ? null : points.last.kg - points.first.kg;
+    final unit = switch (_bucket) {
+      WeightBucket.day => 'theo từng ngày',
+      WeightBucket.week => 'trung bình mỗi tuần',
+      WeightBucket.month => 'trung bình mỗi tháng',
+    };
+    final latest =
+        points.length <= 4 ? points : points.sublist(points.length - 4);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          spacing: MemoirSpace.s2,
+          runSpacing: MemoirSpace.s2,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Expanded(
-              child: Text('Biến động cân nặng',
-                  style: Theme.of(context).textTheme.titleMedium),
-            ),
-            SegmentedTabs<bool>(
-              options: const [
-                SegmentedTab(false, '4 tuần'),
-                SegmentedTab(true, '6 tháng'),
+            Text('Biến động cân nặng', style: theme.textTheme.titleMedium),
+            SegmentedTabs<WeightBucket>(
+              options: [
+                for (final bucket in WeightBucket.values)
+                  SegmentedTab(bucket, bucket.label),
               ],
-              selected: _sixMonths,
-              onChanged: (value) => setState(() => _sixMonths = value),
+              selected: _bucket,
+              onChanged: (value) => setState(() => _bucket = value),
             ),
           ],
         ),
         const SizedBox(height: MemoirSpace.s2),
-        if (change == null)
-          const Text('Chưa đủ dữ liệu để vẽ biến động')
-        else
-          Text(
-            '${change < 0 ? 'Giảm' : 'Tăng'} ${change.abs().toStringAsFixed(1)} kg '
-            'trong ${_sixMonths ? '6 tháng' : '4 tuần'} qua',
+        Text(
+          change == null
+              ? 'Chưa đủ dữ liệu để vẽ biến động · thêm số cân bên dưới'
+              : '${change < 0 ? 'Giảm' : 'Tăng'} '
+                  '${change.abs().toStringAsFixed(1)} kg · 6 tháng qua · $unit',
+          style: theme.textTheme.bodyMedium,
+        ),
+        if (latest.isNotEmpty) ...[
+          const SizedBox(height: MemoirSpace.s2),
+          Wrap(
+            spacing: MemoirSpace.s2,
+            runSpacing: MemoirSpace.s1,
+            children: [
+              for (final point in latest)
+                Chip(
+                  label: Text(
+                    '${point.label} · ${point.kg.toStringAsFixed(1)} kg',
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+            ],
           ),
+        ],
+        const SizedBox(height: MemoirSpace.s3),
+        // Manual weigh-in: the user types the number and picks the day, so the
+        // series can be filled without a scale that syncs by itself.
+        Wrap(
+          spacing: MemoirSpace.s2,
+          runSpacing: MemoirSpace.s2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _adding ? null : _pickDate,
+              icon: const Icon(Icons.calendar_today, size: 16),
+              label: Text('Ngày $_dateLabel'),
+            ),
+            SizedBox(
+              width: 160,
+              child: TextField(
+                key: const ValueKey<String>('weight-entry-field'),
+                controller: _kg,
+                enabled: !_adding,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Cân nặng (kg)',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (_) => _add(),
+              ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: _adding ? null : _add,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Thêm'),
+            ),
+          ],
+        ),
       ],
     );
   }

@@ -256,3 +256,97 @@ String formatClock(DateTime utc) {
   final m = vn.minute.toString().padLeft(2, '0');
   return '$h:$m';
 }
+
+/// How the "Biến động cân nặng" series is bucketed.
+enum WeightBucket {
+  day('Ngày'),
+  week('Tuần'),
+  month('Tháng');
+
+  const WeightBucket(this.label);
+
+  /// Vietnamese chip label.
+  final String label;
+}
+
+/// One point of the weight series: a single weigh-in for [WeightBucket.day], or
+/// the average of one week / one month.
+class WeightPoint {
+  const WeightPoint({
+    required this.date,
+    required this.label,
+    required this.kg,
+  });
+
+  /// Start of the bucket: the day itself, the Monday of the week, or the first
+  /// day of the month.
+  final DateTime date;
+
+  /// Short chip label: `25/10`, `Tuần 20/10`, `Th 10/2026`.
+  final String label;
+
+  /// Weight in kilograms (averaged for the week/month buckets).
+  final double kg;
+}
+
+/// Buckets the weigh-ins of [logs] inside the [days] days ending at [until].
+///
+/// The day bucket keeps every weigh-in; the week bucket averages by ISO week
+/// (Monday start) and the month bucket by calendar month, so the same window
+/// can be read at three levels of detail.
+List<WeightPoint> weightPointsOf(
+  List<HealthLog> logs,
+  WeightBucket bucket, {
+  required DateTime until,
+  int days = 180,
+}) {
+  final last = DateTime(until.year, until.month, until.day);
+  final first = last.subtract(Duration(days: days - 1));
+  final entries = logs
+      .where((log) => log.weightKg != null)
+      .map((log) => (
+            date:
+                DateTime(log.logDate.year, log.logDate.month, log.logDate.day),
+            kg: log.weightKg!,
+          ))
+      .where(
+          (entry) => !entry.date.isBefore(first) && !entry.date.isAfter(last))
+      .toList()
+    ..sort((a, b) => a.date.compareTo(b.date));
+  if (bucket == WeightBucket.day) {
+    return [
+      for (final entry in entries)
+        WeightPoint(
+          date: entry.date,
+          label: '${_two(entry.date.day)}/${_two(entry.date.month)}',
+          kg: entry.kg,
+        ),
+    ];
+  }
+  final totals = <DateTime, List<double>>{};
+  for (final entry in entries) {
+    final key = bucket == WeightBucket.week
+        ? startOfWeek(entry.date)
+        : DateTime(entry.date.year, entry.date.month);
+    (totals[key] ??= <double>[]).add(entry.kg);
+  }
+  final keys = totals.keys.toList()..sort();
+  return [
+    for (final key in keys)
+      WeightPoint(
+        date: key,
+        label: bucket == WeightBucket.week
+            ? 'Tuần ${_two(key.day)}/${_two(key.month)}'
+            : 'Th ${_two(key.month)}/${key.year}',
+        kg: totals[key]!.reduce((a, b) => a + b) / totals[key]!.length,
+      ),
+  ];
+}
+
+/// Monday 00:00 of [value]'s week, used to group weigh-ins.
+DateTime startOfWeek(DateTime value) {
+  final day = DateTime(value.year, value.month, value.day);
+  return day.subtract(Duration(days: day.weekday - DateTime.monday));
+}
+
+String _two(int value) => value.toString().padLeft(2, '0');
