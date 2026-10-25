@@ -15,6 +15,7 @@ import '../widgets/app_header.dart';
 import '../widgets/period_control.dart';
 import 'calendar_screen.dart';
 import 'entry_editor.dart';
+import 'health_screen.dart';
 
 /// Content width of the `Lưới tháng · Web` frame: 1280 minus its 36 px gutters.
 const double kMonthContentWidth = 1208;
@@ -117,6 +118,12 @@ class _MonthGridsScreenState extends ConsumerState<MonthGridsScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const CalendarScreen(),
+                            ),
+                          );
+                        } else if (destination == AppDestination.health) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const HealthScreen(),
                             ),
                           );
                         }

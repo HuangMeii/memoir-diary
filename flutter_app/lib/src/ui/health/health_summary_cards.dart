@@ -40,15 +40,21 @@ class HealthSummaryCards extends StatelessWidget {
             ],
           );
         }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: workout),
-            const SizedBox(width: MemoirSpace.s3),
-            Expanded(child: water),
-            const SizedBox(width: MemoirSpace.s3),
-            Expanded(child: sleep),
-          ],
+        // The dashboard scrolls vertically, so the page hands this row an
+        // unbounded height. `IntrinsicHeight` turns the three cards into one
+        // finite height before `stretch` equalises them — without it the row
+        // asks for an infinite height and layout fails.
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: workout),
+              const SizedBox(width: MemoirSpace.s3),
+              Expanded(child: water),
+              const SizedBox(width: MemoirSpace.s3),
+              Expanded(child: sleep),
+            ],
+          ),
         );
       },
     );
@@ -168,8 +174,7 @@ class _WorkoutCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardHeader(
-                context, Icons.fitness_center, 'Thá»i gian luyá»‡n táº­p'),
+            _cardHeader(context, Icons.fitness_center, 'Thời gian luyện tập'),
             const SizedBox(height: MemoirSpace.s3),
             Row(
               children: [
@@ -191,7 +196,7 @@ class _WorkoutCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: MemoirSpace.s2),
-            _chip(context, '$pct% Má»¥c tiÃªu'),
+            _chip(context, '$pct% Mục tiêu'),
             const SizedBox(height: MemoirSpace.s2),
             if (intensity != null && intensity.isNotEmpty)
               Text(
@@ -249,7 +254,7 @@ class _WaterCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardHeader(context, Icons.water_drop, 'NÆ°á»›c uá»‘ng'),
+            _cardHeader(context, Icons.water_drop, 'Nước uống'),
             const SizedBox(height: MemoirSpace.s3),
             Row(
               children: [
@@ -271,13 +276,13 @@ class _WaterCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: MemoirSpace.s2),
-            _chip(context, '$pct% Má»¥c tiÃªu'),
+            _chip(context, '$pct% Mục tiêu'),
             const SizedBox(height: MemoirSpace.s3),
             ..._periodLines(context, breakdown),
             const SizedBox(height: MemoirSpace.s3),
             if (breakdown.lastAt != null)
               Text(
-                '${breakdown.count} láº§n uá»‘ng Â· Gáº§n nháº¥t '
+                '${breakdown.count} lần uống · Gần nhất '
                 '${formatClock(breakdown.lastAt!)}',
                 style: _caption(context, theme, scale),
               ),
@@ -322,13 +327,13 @@ class _WaterCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${formatMl(ml)} Â· $count láº§n náº¡p',
+                '${formatMl(ml)} · $count lần nạp',
                 style: _caption(context, theme, scale),
               ),
               if (isPeak) ...[
                 const SizedBox(width: MemoirSpace.s2),
                 Text(
-                  'Cao nháº¥t',
+                  'Cao nhất',
                   style: _caption(context, theme, scale).copyWith(
                     color: _accent(context, true),
                     fontWeight: FontWeight.w600,
@@ -374,7 +379,7 @@ class _SleepCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardHeader(context, Icons.bedtime, 'Giáº¥c ngá»§'),
+            _cardHeader(context, Icons.bedtime, 'Giấc ngủ'),
             const SizedBox(height: MemoirSpace.s3),
             Row(
               children: [
@@ -405,7 +410,7 @@ class _SleepCard extends StatelessWidget {
             if (d > 0 && h > 0) ...[
               const SizedBox(height: MemoirSpace.s2),
               Text(
-                'SÃ¢u ${formatMinutes(deep)} Â· $deepPct%',
+                'Sâu ${formatMinutes(deep)} · $deepPct%',
                 style: _caption(context, theme, scale),
               ),
             ],
@@ -429,9 +434,9 @@ class _SleepCard extends StatelessWidget {
   }
 
   String _qualityLabel(String? q) => switch (q) {
-        'Ráº¥t tá»‘t' => 'Ráº¥t tá»‘t',
-        'BÃ¬nh thÆ°á»ng' => 'BÃ¬nh thÆ°á»ng',
-        'Cháº­p chá»n' => 'Cháº­p chá»n',
+        'Rất tốt' => 'Rất tốt',
+        'Bình thường' => 'Bình thường',
+        'Chập chờn' => 'Chập chờn',
         _ => '--',
       };
 }

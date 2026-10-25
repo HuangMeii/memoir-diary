@@ -49,7 +49,7 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
 - [x] **Gỡ bỏ** khỏi màn: `_NumField`, `_Stat`, `_LineChart`, `_DayPicker`, `_prefill`,
       `_range` cũ và logic `substring(0, 10)` (đã thay bằng helper chung + provider).
 - [x] Giữ mở màn bằng `Navigator.push` (thẻ shortcut) — không đổi `main.dart`.
-- [ ] `flutter analyze ; flutter test`.
+- [x] `flutter analyze ; flutter test`.
 
 ## Acceptance Criteria
 
@@ -85,3 +85,8 @@ Select-String -Path 'lib\src\ui\widgets\app_header.dart' -Pattern 'health'
   “Ghi chú”, “Nhật ký” trong nav — ngoài phạm vi, đừng thêm hàng loạt trong task này.
 - Đừng đổi chữ ký `HealthScreen()` (const, không tham số): `shortcut_cards.dart` gọi
   `HealthScreen.new`.
+- **Layout 390 px:** lưới 3 thẻ hero nằm trong `SingleChildScrollView` (height vô hạn), nên
+  `HealthSummaryCards` phải bọc `IntrinsicHeight` quanh `Row(stretch)` — thiếu nó,
+  `stretch` đòi infinite height và cả trang trắng. `AppHeader` ẩn dòng ngày (< 460) và
+  chuyển nút đăng xuất sang icon-only ở cùng ngưỡng; `HealthDateNavigator` cho nhãn
+  ellipsis. `test/health_screen_test.dart` canh cả 390 px lẫn 1904 px.

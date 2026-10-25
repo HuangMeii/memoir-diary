@@ -13,6 +13,7 @@ import '../tokens.dart';
 import '../widgets/app_header.dart';
 import '../widgets/segmented_tabs.dart';
 import 'entry_editor.dart';
+import 'health_screen.dart';
 import 'month_grids_screen.dart';
 
 /// One event as `/events` returns it.
@@ -507,6 +508,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const MonthGridsScreen(),
+                            ),
+                          );
+                        } else if (destination == AppDestination.health) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const HealthScreen(),
                             ),
                           );
                         }

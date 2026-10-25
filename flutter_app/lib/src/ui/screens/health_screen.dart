@@ -62,7 +62,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    ref.watch(authReadyProvider);
     if (auth.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -90,7 +89,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                   onLogout: () => ref.read(authProvider.notifier).logout(),
                   onNavigate: (destination) {
                     if (destination == AppDestination.home) {
-                      Navigator.of(context).pop();
+                      Navigator.of(context)
+                          .popUntil((route) => route.isFirst);
                     } else if (destination == AppDestination.monthGrid) {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -103,8 +103,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                           builder: (_) => const CalendarScreen(),
                         ),
                       );
-                    } else if (destination == AppDestination.health) {
-                      Navigator.of(context).pop();
                     }
                   },
                 ),
@@ -211,7 +209,6 @@ class _Dashboard extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
               const HealthBreadcrumb(),
               SizedBox(height: MemoirSpace.s3 * scale),

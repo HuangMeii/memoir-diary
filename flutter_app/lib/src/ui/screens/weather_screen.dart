@@ -16,6 +16,7 @@ import '../widgets/app_header.dart';
 import '../widgets/segmented_tabs.dart';
 import '../widgets/weather_card.dart';
 import 'calendar_screen.dart';
+import 'health_screen.dart';
 import 'month_grids_screen.dart';
 
 /// Width of the `Thời tiết · … · Web` frames: 1280 with 36 px gutters.
@@ -155,6 +156,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => const CalendarScreen(),
+                            ),
+                          );
+                        } else if (destination == AppDestination.health) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const HealthScreen(),
                             ),
                           );
                         }

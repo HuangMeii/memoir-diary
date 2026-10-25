@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:memoir_server_client/memoir_server_client.dart' as sp;
-import 'package:serverpod_client/serverpod_client.dart' show ClientAuthKeyProvider;
+import 'package:serverpod_client/serverpod_client.dart'
+    show ClientAuthKeyProvider, wrapAsBearerAuthHeaderValue;
 
 import 'session.dart';
 import 'config.dart';
@@ -18,7 +19,7 @@ class _SessionAuthKeyProvider implements ClientAuthKeyProvider {
   Future<String?> get authHeaderValue async {
     final token = _session.accessToken;
     if (token == null || token.isEmpty) return null;
-    return 'Bearer $token';
+    return wrapAsBearerAuthHeaderValue(token);
   }
 }
 

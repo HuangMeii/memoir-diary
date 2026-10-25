@@ -38,11 +38,15 @@ class HealthBreadcrumb extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text('/', style: captionStyle),
         ),
-        Text(
-          'Sức khoẻ & Thể chất',
-          style: captionStyle?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            'Sức khoẻ & Thể chất',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: captionStyle?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -115,37 +119,47 @@ class HealthDateNavigator extends StatelessWidget {
         children: [
           IconButton(
             visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
             tooltip: 'Ngày hôm trước',
             onPressed: onPrevious,
             icon: const Icon(Icons.chevron_left, size: 18),
           ),
-          InkWell(
-            onTap: () => _pickDate(context),
-            borderRadius: BorderRadius.circular(MemoirRadius.pill),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: MemoirSpace.s2,
-                vertical: MemoirSpace.s1,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_today,
-                      size: 16, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    _labelOf(date),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: MemoirType.label * scale,
-                      fontWeight: FontWeight.w600,
+          Flexible(
+            child: InkWell(
+              onTap: () => _pickDate(context),
+              borderRadius: BorderRadius.circular(MemoirRadius.pill),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MemoirSpace.s2,
+                  vertical: MemoirSpace.s1,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_today,
+                        size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _labelOf(date),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: MemoirType.label * scale,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
             tooltip: 'Ngày kế tiếp',
             onPressed: onNext,
             icon: const Icon(Icons.chevron_right, size: 18),

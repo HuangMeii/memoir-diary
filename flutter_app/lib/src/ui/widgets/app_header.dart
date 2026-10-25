@@ -56,7 +56,7 @@ enum AppDestination {
   home('Trang chủ'),
   monthGrid('Lưới tháng'),
   eventHistory('Lịch sử kiện'),
-  health('Sức khỏe');
+  health('Sức khoẻ');
 
   const AppDestination(this.label);
 
@@ -91,7 +91,7 @@ class AppHeader extends StatelessWidget {
   final VoidCallback onLogout;
 
   /// Which navigation entry is the current screen.
-  final AppDestination destination;
+  final AppDestination? destination;
 
   /// Called when another destination is tapped; null leaves the navigation
   /// read-only.
@@ -117,6 +117,10 @@ class AppHeader extends StatelessWidget {
   static const double _utilitiesFrom = 720;
   static const double _nameFrom = 960;
 
+  /// Below this the date under the wordmark goes: the mark and the account
+  /// actions are what a 390 px window has room for, not the full weekday line.
+  static const double _dateFrom = 460;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -135,6 +139,7 @@ class AppHeader extends StatelessWidget {
           final showNav = width >= _navFrom;
           final showPills = showUtilities && width >= _utilitiesFrom;
           final showName = width >= _nameFrom;
+          final showDate = width >= _dateFrom;
 
           return Row(
             children: [
@@ -152,18 +157,23 @@ class AppHeader extends StatelessWidget {
                 children: [
                   Text(
                     'Memoir',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       color: on,
                       fontSize: MemoirType.brand,
                     ),
                   ),
-                  Text(
-                    shortDate(date),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: muted,
-                      fontSize: MemoirType.caption,
+                  if (showDate)
+                    Text(
+                      shortDate(date),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: muted,
+                        fontSize: MemoirType.caption,
+                      ),
                     ),
-                  ),
                 ],
               ),
               // The middle slot holds the navigation and the utility pills when
@@ -230,6 +240,9 @@ class AppHeader extends StatelessWidget {
                 name: showName ? name : null,
                 onLogout: onLogout,
                 scale: scale,
+                // At phone widths the labelled button eats a third of the bar;
+                // the icon keeps the action while the wordmark stays whole.
+                compact: width < _dateFrom,
               ),
             ],
           );
@@ -251,7 +264,7 @@ class _Navigation extends StatelessWidget {
     required this.scale,
   });
 
-  final AppDestination active;
+  final AppDestination? active;
   final ValueChanged<AppDestination>? onNavigate;
   final double scale;
 
@@ -316,12 +329,16 @@ class _Account extends StatelessWidget {
     required this.name,
     required this.onLogout,
     required this.scale,
+    this.compact = false,
   });
 
   final String initials;
   final String? name;
   final VoidCallback onLogout;
   final double scale;
+
+  /// Icon-only logout for windows too narrow for the label.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -364,17 +381,28 @@ class _Account extends StatelessWidget {
           ),
         ],
         SizedBox(width: MemoirSpace.s4 * scale),
-        TextButton.icon(
-          onPressed: onLogout,
-          icon: MemoirIcon('log-out', size: _iconSize * scale, color: brand),
-          label: Text(
-            'Đăng xuất',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: muted,
-              fontSize: MemoirType.caption,
+        if (compact)
+          IconButton(
+            onPressed: onLogout,
+            tooltip: 'Đăng xuất',
+            icon: MemoirIcon(
+              'log-out',
+              size: _iconSize * scale,
+              color: brand,
+            ),
+          )
+        else
+          TextButton.icon(
+            onPressed: onLogout,
+            icon: MemoirIcon('log-out', size: _iconSize * scale, color: brand),
+            label: Text(
+              'Đăng xuất',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: muted,
+                fontSize: MemoirType.caption,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

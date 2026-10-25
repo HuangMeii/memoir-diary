@@ -666,22 +666,27 @@ class _HealthQuickFormState extends ConsumerState<HealthQuickForm> {
           child: InputDecorator(
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
+              isDense: true,
               contentPadding: EdgeInsets.symmetric(
-                horizontal: MemoirSpace.s3,
+                horizontal: MemoirSpace.s2,
                 vertical: MemoirSpace.s2,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value ?? '--:--',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: MemoirType.body * scale,
+                Flexible(
+                  child: Text(
+                    value ?? '--:--',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: MemoirType.body * scale,
+                    ),
                   ),
                 ),
-                const SizedBox(width: MemoirSpace.s2),
-                const Icon(Icons.access_time, size: 18),
+                const SizedBox(width: MemoirSpace.s1),
+                const Icon(Icons.access_time, size: 16),
               ],
             ),
           ),

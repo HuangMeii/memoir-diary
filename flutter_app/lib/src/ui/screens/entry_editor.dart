@@ -16,6 +16,7 @@ import '../tokens.dart';
 import '../widgets/app_header.dart';
 import '../widgets/entry_images_section.dart';
 import 'calendar_screen.dart';
+import 'health_screen.dart';
 
 /// Content width of the `JOURNAL-02 · Web` frames: 1280 minus 36 px gutters.
 const double kJournalContentWidth = 1208;
@@ -406,6 +407,12 @@ class _EntryEditorScreenState extends ConsumerState<EntryEditorScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const CalendarScreen(),
+                    ),
+                  );
+                } else if (destination == AppDestination.health) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HealthScreen(),
                     ),
                   );
                 }

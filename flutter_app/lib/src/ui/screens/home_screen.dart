@@ -158,6 +158,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+
   /// The recording half of the dashboard: quick picks, the saved bar, the
   /// daily quote and this month's writing rhythm.
   Widget _mainColumn(

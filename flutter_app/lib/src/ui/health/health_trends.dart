@@ -117,20 +117,17 @@ class HealthTrends extends ConsumerWidget {
             MemoirSpace.s4,
             MemoirSpace.s2,
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: SegmentedTabs<HealthMetric>(
-                  options: HealthMetric.values
-                      .map((m) => SegmentedTab(m, m.label))
-                      .toList(),
-                  selected: metric,
-                  onChanged: onMetricChanged,
-                  scale: 1,
-                ),
-              ),
-              const SizedBox(width: MemoirSpace.s3),
-              SizedBox(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final metricTabs = SegmentedTabs<HealthMetric>(
+                options: HealthMetric.values
+                    .map((m) => SegmentedTab(m, m.label))
+                    .toList(),
+                selected: metric,
+                onChanged: onMetricChanged,
+                scale: 1,
+              );
+              final rangeTabs = SizedBox(
                 width: 150,
                 child: SegmentedTabs<HealthTrendRange>(
                   options: HealthTrendRange.values
@@ -140,8 +137,28 @@ class HealthTrends extends ConsumerWidget {
                   onChanged: onRangeChanged,
                   scale: 0.85,
                 ),
-              ),
-            ],
+              );
+              if (constraints.maxWidth < 700) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    metricTabs,
+                    const SizedBox(height: MemoirSpace.s2),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: rangeTabs,
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: metricTabs),
+                  const SizedBox(width: MemoirSpace.s3),
+                  rangeTabs,
+                ],
+              );
+            },
           ),
         ),
         const Divider(height: 1),

@@ -45,11 +45,14 @@ class SegmentedTabs<T> extends StatelessWidget {
         borderRadius: BorderRadius.circular(MemoirRadius.control * scale + 3),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final option in options) _option(context, option),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final option in options) _option(context, option),
+          ],
+        ),
       ),
     );
   }
