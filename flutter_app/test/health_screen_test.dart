@@ -35,7 +35,11 @@ void main() {
     activities: const <HealthActivity>[],
   );
 
-  Future<void> pumpScreen(WidgetTester tester, Size size) async {
+  Future<void> pumpScreen(
+    WidgetTester tester,
+    Size size, {
+    List<HealthLog> logs = const <HealthLog>[],
+  }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -50,7 +54,7 @@ void main() {
           healthProfileProvider
               .overrideWith((ref) async => const HealthProfile()),
           healthLogsProvider.overrideWith(
-            (ref, range) async => const <HealthLog>[],
+            (ref, range) async => logs,
           ),
           healthTrendsProvider.overrideWith(
             (ref, range) async => const <HealthTrendPoint>[],
@@ -136,59 +140,65 @@ void main() {
     expect(find.byType(Dialog), findsNothing);
   });
 
-  // "Biến động cân nặng" buckets the weigh-ins by day/week/month and lets the
-  // user add a number by hand, so the series works without a synced scale.
-  testWidgets('offers day/week/month buckets and a manual weigh-in',
-      (tester) async {
+  // "Biến động cân nặng" follows the design: three window pills and four cards
+  // (three past segments plus today), with no manual weigh-in row.
+  testWidgets('shows the designed weight fluctuation cards', (tester) async {
     await pumpScreen(tester, const Size(1904, 1024));
 
     await tester.tap(find.widgetWithText(OutlinedButton, 'Thông số'));
     await tester.pumpAndSettle();
 
     expect(find.text('Biến động cân nặng'), findsOneWidget);
-    expect(find.text('Ngày'), findsOneWidget);
-    expect(find.text('Tuần'), findsOneWidget);
-    expect(find.text('Tháng'), findsOneWidget);
-
-    // `5` + `ngày` looks at the last five days and reports the change there.
-    final window = find.byKey(const ValueKey<String>('weight-window-count'));
-    await tester.ensureVisible(window);
-    await tester.enterText(window, '5');
-    await tester.pump();
-    await tester.tap(find.text('tháng'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ngày').last);
-    await tester.pumpAndSettle();
+    final sheet = find.byType(Dialog);
+    for (final label in ['4 tuần', '3 tháng', '6 tháng']) {
+      expect(
+        find.descendant(of: sheet, matching: find.text(label)),
+        findsOneWidget,
+      );
+    }
+    for (final title in ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Hôm nay']) {
+      expect(
+        find.descendant(of: sheet, matching: find.text(title)),
+        findsOneWidget,
+      );
+    }
     expect(
-      find.text(
-        'Chưa đủ dữ liệu để vẽ biến động trong 5 ngày qua · '
-        'nhập số cân ở trên',
-      ),
+      find.text('Chưa đủ dữ liệu trong 4 tuần qua để thấy biến động'),
       findsOneWidget,
     );
-
-    // The window's first day is shown as dd/MM/yyyy, and the section has no
-    // separate "Thêm" button — the sheet's footer saves the weigh-in.
-    String two(int value) => value.toString().padLeft(2, '0');
-    final entry = DateTime.now().subtract(const Duration(days: 4));
     expect(
-      find.text(
-        '· Ngày ${two(entry.day)}/${two(entry.month)}/${entry.year}',
-      ),
+      find.byKey(const ValueKey<String>('weight-entry-field')),
+      findsNothing,
+    );
+    expect(find.text('Thời gian'), findsNothing);
+  });
+
+  testWidgets('fills the weight cards from the logs', (tester) async {
+    final now = DateTime.now();
+    await pumpScreen(
+      tester,
+      const Size(1904, 1024),
+      logs: [
+        HealthLog(
+          id: 'a',
+          logDate: now.subtract(const Duration(days: 12)),
+          weightKg: 58.9,
+        ),
+        HealthLog(
+          id: 'b',
+          logDate: now.subtract(const Duration(days: 5)),
+          weightKg: 58.6,
+        ),
+        HealthLog(id: 'c', logDate: now, weightKg: 58.3),
+      ],
+    );
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Thông số'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh'),
       findsOneWidget,
     );
-    expect(find.text('Thêm'), findsNothing);
-
-    final input = find.byKey(const ValueKey<String>('weight-entry-field'));
-    await tester.ensureVisible(input);
-    await tester.enterText(input, 'abc');
-    final save = find.text('Lưu thay đổi');
-    await tester.ensureVisible(save);
-    await tester.tap(save);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    // The invalid value is rejected before any request is made.
-    expect(find.text('Cân nặng không hợp lệ (0 – 500 kg)'), findsOneWidget);
   });
 }

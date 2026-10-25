@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../home/home_scale.dart';
+import '../theme.dart';
 import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
 import 'health_metrics.dart';
@@ -35,12 +36,6 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
   late final TextEditingController _weight;
   late final TextEditingController _height;
   late final TextEditingController _goal;
-
-  /// Compact weigh-in inside "Biến động cân nặng": the number, the window it
-  /// refers to, and the day that window starts on.
-  late final TextEditingController _variationWeight;
-  late final TextEditingController _window;
-  WeightWindow _windowUnit = WeightWindow.month;
   bool _saving = false;
 
   ({String from, String to}) get _range {
@@ -57,8 +52,6 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
     _weight = TextEditingController();
     _height = TextEditingController();
     _goal = TextEditingController();
-    _variationWeight = TextEditingController();
-    _window = TextEditingController(text: '6');
   }
 
   @override
@@ -66,8 +59,6 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
     _weight.dispose();
     _height.dispose();
     _goal.dispose();
-    _variationWeight.dispose();
-    _window.dispose();
     super.dispose();
   }
 
@@ -102,62 +93,29 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
     setState(() {});
   }
 
-  /// Typed window length; blank or garbage falls back to six units.
-  int get _windowCount =>
-      (int.tryParse(_window.text.trim()) ?? 6).clamp(1, 999);
-
-  int get _windowDays => weightWindowDays(_windowCount, _windowUnit);
-
-  /// First day of the typed window — the day the compact weigh-in lands on.
-  DateTime get _variationDate =>
-      DateTime.now().subtract(Duration(days: _windowDays - 1));
-
-  String get _variationDateLabel {
-    final date = _variationDate;
-    String two(int value) => value.toString().padLeft(2, '0');
-    return '${two(date.day)}/${two(date.month)}/${date.year}';
-  }
-
-  double? get _variationKg =>
-      double.tryParse(_variationWeight.text.trim().replaceAll(',', '.'));
-
   Future<void> _save() async {
     final weight = _number(_weight);
     final height = int.tryParse(_height.text.trim());
     final goal = _number(_goal);
-    final variation = _variationKg;
     if (_weight.text.trim().isNotEmpty && (weight == null || weight < 0) ||
         _height.text.trim().isNotEmpty && (height == null || height < 0) ||
         _goal.text.trim().isNotEmpty && (goal == null || goal < 0)) {
       _toast('Giá trị không hợp lệ. Hãy nhập số không âm.');
       return;
     }
-    // The compact weigh-in must stay plausible before anything is sent.
-    if (_variationWeight.text.trim().isNotEmpty &&
-        (variation == null || variation <= 0 || variation > 500)) {
-      _toast('Cân nặng không hợp lệ (0 – 500 kg)');
-      return;
-    }
-    if (weight == null && height == null && goal == null && variation == null) {
+    if (weight == null && height == null && goal == null) {
       _toast('Chưa có thay đổi để lưu');
       return;
     }
 
     setState(() => _saving = true);
-    var weightSaved = weight == null && variation == null;
+    var weightSaved = weight == null;
     var profileSaved = height == null && goal == null;
     try {
       if (weight != null) {
         await ref.read(healthRepositoryProvider).save(
               logDate: widget.date,
               weightKg: weight,
-            );
-        weightSaved = true;
-      }
-      if (variation != null) {
-        await ref.read(healthRepositoryProvider).save(
-              logDate: _variationDate,
-              weightKg: variation,
             );
         weightSaved = true;
       }
@@ -273,18 +231,7 @@ class _HealthBodySheetState extends ConsumerState<_HealthBodySheet> {
                   goal: double.tryParse(_goal.text),
                 ),
               const SizedBox(height: MemoirSpace.s4),
-              _WeightVariation(
-                logs: logs,
-                weightController: _variationWeight,
-                windowController: _window,
-                windowUnit: _windowUnit,
-                windowDays: _windowDays,
-                windowLabel: weightWindowLabel(_windowCount, _windowUnit),
-                entryDateLabel: _variationDateLabel,
-                onWindowChanged: () => setState(() {}),
-                onWindowUnitChanged: (value) =>
-                    setState(() => _windowUnit = value),
-              ),
+              _WeightVariation(logs: logs),
               const SizedBox(height: MemoirSpace.s4),
               const Text(
                 'Cân nặng chỉ là một chỉ số tham khảo, không định nghĩa giá trị '
@@ -454,61 +401,23 @@ class _WeightProgress extends StatelessWidget {
 }
 
 class _WeightVariation extends StatefulWidget {
-  const _WeightVariation({
-    required this.logs,
-    required this.weightController,
-    required this.windowController,
-    required this.windowUnit,
-    required this.windowDays,
-    required this.windowLabel,
-    required this.entryDateLabel,
-    required this.onWindowChanged,
-    required this.onWindowUnitChanged,
-  });
+  const _WeightVariation({required this.logs});
 
   final List<HealthLog> logs;
-
-  /// Typed weigh-in (kg). Owned by the sheet, so "Lưu thay đổi" persists it —
-  /// the section has no separate "Thêm" button.
-  final TextEditingController weightController;
-
-  /// Typed window length plus its unit, e.g. `5` + `ngày`.
-  final TextEditingController windowController;
-  final WeightWindow windowUnit;
-  final int windowDays;
-  final String windowLabel;
-
-  /// `dd/MM/yyyy` the typed weigh-in lands on inside that window.
-  final String entryDateLabel;
-
-  final VoidCallback onWindowChanged;
-  final ValueChanged<WeightWindow> onWindowUnitChanged;
 
   @override
   State<_WeightVariation> createState() => _WeightVariationState();
 }
 
 class _WeightVariationState extends State<_WeightVariation> {
-  WeightBucket _bucket = WeightBucket.week;
+  WeightRange _range = WeightRange.fourWeeks;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final points = weightPointsOf(
-      widget.logs,
-      _bucket,
-      until: DateTime.now(),
-      days: widget.windowDays,
-    );
-    final change = points.length < 2 ? null : points.last.kg - points.first.kg;
-    final unit = switch (_bucket) {
-      WeightBucket.day => 'theo từng ngày',
-      WeightBucket.week => 'trung bình mỗi tuần',
-      WeightBucket.month => 'trung bình mỗi tháng',
-    };
-    final window = '${widget.windowLabel} qua';
-    final latest =
-        points.length <= 4 ? points : points.sublist(points.length - 4);
+    final cards = weightCardsOf(widget.logs, _range, until: DateTime.now());
+    final values = cards.map((card) => card.kg).whereType<double>().toList();
+    final change = values.length < 2 ? null : values.last - values.first;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -517,105 +426,100 @@ class _WeightVariationState extends State<_WeightVariation> {
           runSpacing: MemoirSpace.s2,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
+            Icon(Icons.trending_down,
+                size: 18, color: theme.colorScheme.primary),
             Text('Biến động cân nặng', style: theme.textTheme.titleMedium),
-            SegmentedTabs<WeightBucket>(
+            SegmentedTabs<WeightRange>(
               options: [
-                for (final bucket in WeightBucket.values)
-                  SegmentedTab(bucket, bucket.label),
+                for (final range in WeightRange.values)
+                  SegmentedTab(range, range.label),
               ],
-              selected: _bucket,
-              onChanged: (value) => setState(() => _bucket = value),
+              selected: _range,
+              onChanged: (value) => setState(() => _range = value),
             ),
           ],
         ),
-        const SizedBox(height: MemoirSpace.s3),
-        // Compact weigh-in: the number and the window it refers to, with the
-        // resulting day shown as dd/MM/yyyy. There is no "Thêm" button — the
-        // sheet's "Lưu thay đổi" stores it.
-        SizedBox(
-          width: 180,
-          child: TextField(
-            key: const ValueKey<String>('weight-entry-field'),
-            controller: widget.weightController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
-            decoration: const InputDecoration(
-              labelText: 'Cân nặng (kg)',
-              isDense: true,
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        const SizedBox(height: MemoirSpace.s2),
-        Wrap(
-          spacing: MemoirSpace.s2,
-          runSpacing: MemoirSpace.s2,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            const Text('Thời gian'),
-            SizedBox(
-              width: 64,
-              child: TextField(
-                key: const ValueKey<String>('weight-window-count'),
-                controller: widget.windowController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (_) => widget.onWindowChanged(),
-              ),
-            ),
-            DropdownButton<WeightWindow>(
-              value: widget.windowUnit,
-              isDense: true,
-              underline: const SizedBox.shrink(),
-              items: [
-                for (final unit in WeightWindow.values)
-                  DropdownMenuItem(value: unit, child: Text(unit.label)),
-              ],
-              onChanged: (value) {
-                if (value != null) widget.onWindowUnitChanged(value);
-              },
-            ),
-            Text(
-              '· Ngày ${widget.entryDateLabel}',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
-        Text(
-          'Sẽ lưu cùng nút “Lưu thay đổi” bên dưới.',
-          style: theme.textTheme.bodySmall,
-        ),
-        const SizedBox(height: MemoirSpace.s2),
+        const SizedBox(height: MemoirSpace.s1),
         Text(
           change == null
-              ? 'Chưa đủ dữ liệu để vẽ biến động trong $window · '
-                  'nhập số cân ở trên'
+              ? 'Chưa đủ dữ liệu trong ${_range.label} qua để thấy biến động'
               : '${change < 0 ? 'Giảm' : 'Tăng'} '
-                  '${change.abs().toStringAsFixed(1)} kg · $window · $unit',
-          style: theme.textTheme.bodyMedium,
+                  '${change.abs().toStringAsFixed(1)} kg trong ${_range.label} '
+                  'qua một cách lành mạnh',
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        if (latest.isNotEmpty) ...[
-          const SizedBox(height: MemoirSpace.s2),
-          Wrap(
-            spacing: MemoirSpace.s2,
-            runSpacing: MemoirSpace.s1,
-            children: [
-              for (final point in latest)
-                Chip(
-                  label: Text(
-                    '${point.label} · ${point.kg.toStringAsFixed(1)} kg',
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-            ],
+        const SizedBox(height: MemoirSpace.s3),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const gap = MemoirSpace.s2;
+            final columns = constraints.maxWidth < 380 ? 2 : 4;
+            final width =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final card in cards)
+                  SizedBox(width: width, child: _card(context, card)),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// One column of the design: label, value and the date/delta caption. The
+  /// "Hôm nay" column uses the brand tint and primary text.
+  Widget _card(BuildContext context, WeightCard card) {
+    final theme = Theme.of(context);
+    final palette = MemoirPalette.of(context);
+    final accent = theme.colorScheme.primary;
+    final today = card.isToday;
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      color: today ? accent : theme.colorScheme.onSurfaceVariant,
+      fontWeight: today ? FontWeight.w600 : null,
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MemoirSpace.s2,
+        vertical: MemoirSpace.s3,
+      ),
+      decoration: BoxDecoration(
+        color: today ? palette.surfaceBrandSubtle : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(MemoirRadius.card),
+        border: Border.all(
+          color: today
+              ? accent.withValues(alpha: 0.4)
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(card.title, style: labelStyle, textAlign: TextAlign.center),
+          const SizedBox(height: MemoirSpace.s1),
+          Text(
+            card.kg?.toStringAsFixed(1) ?? '--',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: today ? accent : theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: MemoirSpace.s1),
+          Text(
+            card.caption,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: card.caption == '--'
+                  ? theme.colorScheme.onSurfaceVariant
+                  : accent,
+            ),
           ),
         ],
-      ],
+      ),
     );
   }
 }

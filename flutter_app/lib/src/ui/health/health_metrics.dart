@@ -257,51 +257,63 @@ String formatClock(DateTime utc) {
   return '$h:$m';
 }
 
-/// How the "Biến động cân nặng" series is bucketed.
-enum WeightBucket {
-  day('Ngày'),
-  week('Tuần'),
-  month('Tháng');
+/// Window offered by the pills of "Biến động cân nặng" (design: 4 tuần /
+/// 3 tháng / 6 tháng).
+enum WeightRange {
+  fourWeeks('4 tuần', 28, 'Tuần'),
+  threeMonths('3 tháng', 90, 'Tháng'),
+  sixMonths('6 tháng', 180, 'Tháng');
 
-  const WeightBucket(this.label);
+  const WeightRange(this.label, this.days, this.unit);
 
   /// Vietnamese chip label.
   final String label;
+
+  /// Days the window looks back, today included.
+  final int days;
+
+  /// Unit used to title the past cards (`Tuần 1`, `Tháng 2`, …).
+  final String unit;
+
+  /// Length of one past card; the window is split in four, the last card being
+  /// "Hôm nay".
+  int get segmentDays => (days / 4).floor();
 }
 
-/// One point of the weight series: a single weigh-in for [WeightBucket.day], or
-/// the average of one week / one month.
-class WeightPoint {
-  const WeightPoint({
-    required this.date,
-    required this.label,
+/// One card of the "Biến động cân nặng" row.
+class WeightCard {
+  const WeightCard({
+    required this.title,
+    required this.caption,
     required this.kg,
+    this.isToday = false,
   });
 
-  /// Start of the bucket: the day itself, the Monday of the week, or the first
-  /// day of the month.
-  final DateTime date;
+  /// `Tuần 1` … `Tuần 3`, or `Hôm nay` for the highlighted card.
+  final String title;
 
-  /// Short chip label: `25/10`, `Tuần 20/10`, `Th 10/2026`.
-  final String label;
+  /// `23/09` on the first card, `-0.3 kg` on the following ones, `--` when the
+  /// data is missing.
+  final String caption;
 
-  /// Weight in kilograms (averaged for the week/month buckets).
-  final double kg;
+  /// Average of the segment, or the latest weigh-in for the "Hôm nay" card.
+  final double? kg;
+
+  final bool isToday;
 }
 
-/// Buckets the weigh-ins of [logs] inside the [days] days ending at [until].
+/// Builds the four cards the design shows for the [range] window ending at
+/// [until]: three averages for the past segments plus today's weigh-in.
 ///
-/// The day bucket keeps every weigh-in; the week bucket averages by ISO week
-/// (Monday start) and the month bucket by calendar month, so the same window
-/// can be read at three levels of detail.
-List<WeightPoint> weightPointsOf(
+/// Weigh-ins after [until] are ignored, so a future-dated row can never skew the
+/// series.
+List<WeightCard> weightCardsOf(
   List<HealthLog> logs,
-  WeightBucket bucket, {
+  WeightRange range, {
   required DateTime until,
-  int days = 180,
 }) {
   final last = DateTime(until.year, until.month, until.day);
-  final first = last.subtract(Duration(days: days - 1));
+  final first = last.subtract(Duration(days: range.days - 1));
   final entries = logs
       .where((log) => log.weightKg != null)
       .map((log) => (
@@ -313,67 +325,47 @@ List<WeightPoint> weightPointsOf(
           (entry) => !entry.date.isBefore(first) && !entry.date.isAfter(last))
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
-  if (bucket == WeightBucket.day) {
-    return [
-      for (final entry in entries)
-        WeightPoint(
-          date: entry.date,
-          label: '${_two(entry.date.day)}/${_two(entry.date.month)}',
-          kg: entry.kg,
-        ),
-    ];
-  }
-  final totals = <DateTime, List<double>>{};
-  for (final entry in entries) {
-    final key = bucket == WeightBucket.week
-        ? startOfWeek(entry.date)
-        : DateTime(entry.date.year, entry.date.month);
-    (totals[key] ??= <double>[]).add(entry.kg);
-  }
-  final keys = totals.keys.toList()..sort();
-  return [
-    for (final key in keys)
-      WeightPoint(
-        date: key,
-        label: bucket == WeightBucket.week
-            ? 'Tuần ${_two(key.day)}/${_two(key.month)}'
-            : 'Th ${_two(key.month)}/${key.year}',
-        kg: totals[key]!.reduce((a, b) => a + b) / totals[key]!.length,
+
+  final cards = <WeightCard>[];
+  double? previous;
+  for (var index = 0; index < 3; index++) {
+    final start = first.add(Duration(days: index * range.segmentDays));
+    final end = start.add(Duration(days: range.segmentDays - 1));
+    final values = entries
+        .where(
+            (entry) => !entry.date.isBefore(start) && !entry.date.isAfter(end))
+        .map((entry) => entry.kg)
+        .toList();
+    final average =
+        values.isEmpty ? null : values.reduce((a, b) => a + b) / values.length;
+    cards.add(
+      WeightCard(
+        title: '${range.unit} ${index + 1}',
+        caption: index == 0 ? _dayMonth(start) : _delta(average, previous),
+        kg: average,
       ),
-  ];
+    );
+    previous = average ?? previous;
+  }
+  final latest = entries.isEmpty ? null : entries.last.kg;
+  cards.add(
+    WeightCard(
+      title: 'Hôm nay',
+      caption: _delta(latest, previous),
+      kg: latest,
+      isToday: true,
+    ),
+  );
+  return cards;
 }
 
-/// Monday 00:00 of [value]'s week, used to group weigh-ins.
-DateTime startOfWeek(DateTime value) {
-  final day = DateTime(value.year, value.month, value.day);
-  return day.subtract(Duration(days: day.weekday - DateTime.monday));
+/// `-0.3 kg` / `+0.2 kg`, or `--` when one side is missing.
+String _delta(double? kg, double? previous) {
+  if (kg == null || previous == null) return '--';
+  final delta = kg - previous;
+  return '${delta > 0 ? '+' : ''}${delta.toStringAsFixed(1)} kg';
 }
 
-/// Unit of the custom observation window the user types in
-/// "Biến động cân nặng" (`5` + `ngày` ⇒ the last five days).
-enum WeightWindow {
-  day('ngày', 1),
-  week('tuần', 7),
-  month('tháng', 30);
-
-  const WeightWindow(this.label, this.days);
-
-  /// Vietnamese label shown in the dropdown and the summary.
-  final String label;
-
-  /// Days covered by one unit.
-  final int days;
-}
-
-/// Turns a typed window into the number of days the series looks back.
-///
-/// Clamped to 1–730 so a stray `0`, an empty field or a huge number can never
-/// blank the section or ask for years of logs.
-int weightWindowDays(int count, WeightWindow unit) =>
-    (count * unit.days).clamp(1, 730);
-
-/// `5 ngày` / `2 tuần` / `6 tháng` — the summary reads "… · 5 ngày qua".
-String weightWindowLabel(int count, WeightWindow unit) =>
-    '${count.clamp(1, 999)} ${unit.label}';
+String _dayMonth(DateTime value) => '${_two(value.day)}/${_two(value.month)}';
 
 String _two(int value) => value.toString().padLeft(2, '0');

@@ -48,24 +48,19 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
       “Còn 1.2 kg”, “Khởi điểm: 61.0 kg”, “Đã giảm 2.8 kg (70% chặng đường)”,
       “Đích: 57.0 kg” (dùng `healthTrendUp` cho phần đã đạt); nếu tăng cân ⇒ câu
       tương ứng (không hiện số âm mơ hồ).
-- [ ] **Biến động cân nặng** (cập nhật 25.10.2026): pill `Ngày / Tuần / Tháng`
-      (`SegmentedTabs<WeightBucket>`) chọn **cách gộp** trên cùng một cửa sổ —
-      điểm theo ngày, trung bình mỗi tuần (bắt đầu thứ Hai) hoặc trung bình mỗi tháng
-      (`weightPointsOf` trong `health_metrics.dart`, thuần, có test riêng);
-  - **ô khoảng tự chọn**: `TextField` số (mặc định `6`, key `weight-window-count`) +
-    `DropdownButton` đơn vị `ngày / tuần / tháng` ⇒ `weightWindowDays` (clamp `1–730`)
-    quyết định số ngày nhìn lại, ví dụ `5` + `ngày` ⇒ đọc 5 ngày gần nhất; câu tóm tắt
-    đọc “Giảm 1.0 kg · 5 ngày qua · theo từng ngày”;
-  - **xếp gọn (25.10.2026):** chỉ 2 dòng — `Cân nặng (kg)` (key `weight-entry-field`,
-    nhận cả dấu `,`) và `Thời gian [n] [ngày|tuần|tháng]`; cạnh ô thời gian hiện
-    `· Ngày dd/MM/yyyy` = ngày đầu của khoảng đang chọn (`5` + `ngày` ⇒ hôm nay − 4).
-    **Không còn nút `Thêm`**: số cân được lưu cùng nút `Lưu thay đổi` của form
-    (`save(logDate: <ngày đã hiện>, weightKg: …)`), giá trị ngoài `0 – 500` bị chặn
-    trước khi gọi API;
-  - hiện 4 mốc mới nhất dạng `Chip` (`25/10 · 40.0 kg`) và câu tóm tắt
-    “Giảm 0.6 kg · 6 tháng qua · trung bình mỗi tuần”;
-  - ít hơn 2 điểm trong khoảng đang chọn ⇒ hiện “Chưa đủ dữ liệu để vẽ biến động trong
-    `5 ngày` qua · thêm số cân bên dưới”.
+- [ ] **Biến động cân nặng** (làm lại theo thiết kế gốc, 25.10.2026): icon `trending_down`
+      + tiêu đề + pill `4 tuần / 3 tháng / 6 tháng` (`SegmentedTabs<WeightRange>`);
+      câu phụ “Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh”, hoặc
+      “Chưa đủ dữ liệu trong 4 tuần qua để thấy biến động”;
+  - **4 card** đều nhau (`Wrap`: 4 cột, `< 380 px` ⇒ 2 cột): `Tuần 1/2/3` + `Hôm nay`,
+    mỗi card gồm label – số kg – caption (`dd/MM` ở card đầu, `±x.y kg` ở các card sau,
+    `--` khi thiếu); card “Hôm nay” nền `surfaceBrandSubtle`, viền primary, chữ primary;
+  - số liệu từ `weightCardsOf` (thuần, `health_metrics.dart`): chia cửa sổ 28 / 90 / 180
+    ngày thành 4 kỳ bằng nhau — 3 kỳ đầu lấy **trung bình**, card cuối lấy **lần cân mới
+    nhất**; mốc **sau hôm nay bị bỏ qua**;
+  - **không còn** ô nhập tay `Cân nặng (kg)` / `Thời gian`, chip Ngày/Tuần/Tháng hay nút
+    `Thêm`: số cân nhập ở field “Cân nặng hiện tại (kg)” phía trên và lưu bằng
+    `Lưu thay đổi`.
 - [ ] **Quote** khối cuối: nguyên văn thiết kế “Cân nặng chỉ là một chỉ số tham khảo,
       không định nghĩa giá trị của bạn. Hãy lắng nghe nguồn năng lượng và sự nhẹ nhõm của
       cơ thể mỗi ngày.”
@@ -92,14 +87,13 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
    profile nhận `heightCm`/`weightGoalKg`, và màn Sức khoẻ cập nhật ngay (biểu đồ/timeline).
 6. *Given* bấm “Hủy”, *then* không có request nào được gửi và giá trị cũ còn nguyên khi
    mở lại drawer.
-7. *Given* chỉ có 1 bản ghi cân nặng trong 6 tháng, *then* khối biến động hiện “Chưa đủ
-   dữ liệu” + mời nhập tay thay vì vẽ 1 cột.
-8. *Given* nhập `41,5` và `Thời gian: 5 ngày` rồi bấm `Lưu thay đổi`, *then* log của
-   ngày hiện cạnh ô thời gian (`dd/MM/yyyy`, hôm nay − 4 ngày) có `weightKg: 41.5` và
-   khối biến động/màn Sức khoẻ cập nhật ngay; nhập `abc` ⇒ snackbar “Cân nặng không hợp
-   lệ (0 – 500 kg)” và **không** gọi API.
-9. *Given* nhập khoảng `5` và chọn `ngày`, *then* khối biến động chỉ đọc 5 ngày gần nhất
-   và tóm tắt “Giảm/Tăng … kg · 5 ngày qua”; bỏ trống ô ⇒ dùng lại mặc định `6`.
+7. *Given* chỉ có 1 lần cân trong cửa sổ, *then* 3 card kỳ hiện `--` và câu phụ là
+   “Chưa đủ dữ liệu trong 4 tuần qua để thấy biến động”.
+8. *Given* các lần cân 59.0 / 58.8 (Tuần 1), 58.6 (Tuần 2), 58.4 (Tuần 3), 58.3 (hôm nay),
+   *then* 4 card hiện `Tuần 1 58.9`, `Tuần 2 58.6 -0.3 kg`, `Tuần 3 58.4 -0.2 kg`,
+   `Hôm nay 58.3 -0.1 kg` và câu phụ “Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh”.
+9. *Given* một mốc có ngày **sau hôm nay**, *then* mốc đó bị bỏ qua (không lên card
+   “Hôm nay”, không ảnh hưởng câu phụ).
 10. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
 
 ## Kiểm chứng
