@@ -349,4 +349,31 @@ DateTime startOfWeek(DateTime value) {
   return day.subtract(Duration(days: day.weekday - DateTime.monday));
 }
 
+/// Unit of the custom observation window the user types in
+/// "Biến động cân nặng" (`5` + `ngày` ⇒ the last five days).
+enum WeightWindow {
+  day('ngày', 1),
+  week('tuần', 7),
+  month('tháng', 30);
+
+  const WeightWindow(this.label, this.days);
+
+  /// Vietnamese label shown in the dropdown and the summary.
+  final String label;
+
+  /// Days covered by one unit.
+  final int days;
+}
+
+/// Turns a typed window into the number of days the series looks back.
+///
+/// Clamped to 1–730 so a stray `0`, an empty field or a huge number can never
+/// blank the section or ask for years of logs.
+int weightWindowDays(int count, WeightWindow unit) =>
+    (count * unit.days).clamp(1, 730);
+
+/// `5 ngày` / `2 tuần` / `6 tháng` — the summary reads "… · 5 ngày qua".
+String weightWindowLabel(int count, WeightWindow unit) =>
+    '${count.clamp(1, 999)} ${unit.label}';
+
 String _two(int value) => value.toString().padLeft(2, '0');

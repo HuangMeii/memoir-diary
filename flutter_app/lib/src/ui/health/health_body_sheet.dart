@@ -431,15 +431,24 @@ class _WeightVariation extends StatefulWidget {
 
 class _WeightVariationState extends State<_WeightVariation> {
   final _kg = TextEditingController();
+  final _window = TextEditingController(text: '6');
   WeightBucket _bucket = WeightBucket.week;
+  WeightWindow _windowUnit = WeightWindow.month;
   late DateTime _entryDate = widget.date;
   bool _adding = false;
 
   @override
   void dispose() {
     _kg.dispose();
+    _window.dispose();
     super.dispose();
   }
+
+  /// Typed window length; blank or garbage falls back to six units.
+  int get _windowCount =>
+      (int.tryParse(_window.text.trim()) ?? 6).clamp(1, 999);
+
+  int get _windowDays => weightWindowDays(_windowCount, _windowUnit);
 
   static String _two(int value) => value.toString().padLeft(2, '0');
 
@@ -487,6 +496,7 @@ class _WeightVariationState extends State<_WeightVariation> {
       widget.logs,
       _bucket,
       until: DateTime.now(),
+      days: _windowDays,
     );
     final change = points.length < 2 ? null : points.last.kg - points.first.kg;
     final unit = switch (_bucket) {
@@ -494,6 +504,7 @@ class _WeightVariationState extends State<_WeightVariation> {
       WeightBucket.week => 'trung bình mỗi tuần',
       WeightBucket.month => 'trung bình mỗi tháng',
     };
+    final window = '${weightWindowLabel(_windowCount, _windowUnit)} qua';
     final latest =
         points.length <= 4 ? points : points.sublist(points.length - 4);
     return Column(
@@ -516,11 +527,48 @@ class _WeightVariationState extends State<_WeightVariation> {
           ],
         ),
         const SizedBox(height: MemoirSpace.s2),
+        // Custom window: the user types a length and picks its unit, e.g.
+        // `5` + `ngày` reads the last five days and reports the change there.
+        Wrap(
+          spacing: MemoirSpace.s2,
+          runSpacing: MemoirSpace.s2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            const Text('Xem trong'),
+            SizedBox(
+              width: 72,
+              child: TextField(
+                key: const ValueKey<String>('weight-window-count'),
+                controller: _window,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            DropdownButton<WeightWindow>(
+              value: _windowUnit,
+              isDense: true,
+              underline: const SizedBox.shrink(),
+              items: [
+                for (final unit in WeightWindow.values)
+                  DropdownMenuItem(value: unit, child: Text(unit.label)),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _windowUnit = value);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: MemoirSpace.s2),
         Text(
           change == null
-              ? 'Chưa đủ dữ liệu để vẽ biến động · thêm số cân bên dưới'
+              ? 'Chưa đủ dữ liệu để vẽ biến động trong $window · '
+                  'thêm số cân bên dưới'
               : '${change < 0 ? 'Giảm' : 'Tăng'} '
-                  '${change.abs().toStringAsFixed(1)} kg · 6 tháng qua · $unit',
+                  '${change.abs().toStringAsFixed(1)} kg · $window · $unit',
           style: theme.textTheme.bodyMedium,
         ),
         if (latest.isNotEmpty) ...[

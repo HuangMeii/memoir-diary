@@ -49,9 +49,13 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
       “Đích: 57.0 kg” (dùng `healthTrendUp` cho phần đã đạt); nếu tăng cân ⇒ câu
       tương ứng (không hiện số âm mơ hồ).
 - [ ] **Biến động cân nặng** (cập nhật 25.10.2026): pill `Ngày / Tuần / Tháng`
-      (`SegmentedTabs<WeightBucket>`) chọn **cách gộp** trên cùng cửa sổ 6 tháng —
+      (`SegmentedTabs<WeightBucket>`) chọn **cách gộp** trên cùng một cửa sổ —
       điểm theo ngày, trung bình mỗi tuần (bắt đầu thứ Hai) hoặc trung bình mỗi tháng
       (`weightPointsOf` trong `health_metrics.dart`, thuần, có test riêng);
+  - **ô khoảng tự chọn**: `TextField` số (mặc định `6`, key `weight-window-count`) +
+    `DropdownButton` đơn vị `ngày / tuần / tháng` ⇒ `weightWindowDays` (clamp `1–730`)
+    quyết định số ngày nhìn lại, ví dụ `5` + `ngày` ⇒ đọc 5 ngày gần nhất; câu tóm tắt
+    đọc “Giảm 1.0 kg · 5 ngày qua · theo từng ngày”;
   - **người dùng tự nhập số**: `OutlinedButton` chọn `Ngày dd/MM/yyyy` (`showDatePicker`,
     không cho ngày tương lai) + `TextField` `Cân nặng (kg)` (nhận cả dấu `,`) +
     `FilledButton.tonalIcon` `Thêm` ⇒ `save(logDate: ngày đã chọn, weightKg: …)` rồi
@@ -59,7 +63,8 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
     bị chặn trước khi gọi API;
   - hiện 4 mốc mới nhất dạng `Chip` (`25/10 · 40.0 kg`) và câu tóm tắt
     “Giảm 0.6 kg · 6 tháng qua · trung bình mỗi tuần”;
-  - ít hơn 2 điểm ⇒ hiện “Chưa đủ dữ liệu để vẽ biến động · thêm số cân bên dưới”.
+  - ít hơn 2 điểm trong khoảng đang chọn ⇒ hiện “Chưa đủ dữ liệu để vẽ biến động trong
+    `5 ngày` qua · thêm số cân bên dưới”.
 - [ ] **Quote** khối cuối: nguyên văn thiết kế “Cân nặng chỉ là một chỉ số tham khảo,
       không định nghĩa giá trị của bạn. Hãy lắng nghe nguồn năng lượng và sự nhẹ nhõm của
       cơ thể mỗi ngày.”
@@ -91,7 +96,9 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
 8. *Given* nhập `41,5` cho ngày `20/10/2026` rồi bấm `Thêm`, *then* log ngày đó có
    `weightKg: 41.5`, khối biến động và màn Sức khoẻ cập nhật ngay; nhập `abc` ⇒ snackbar
    “Cân nặng không hợp lệ (0 – 500 kg)” và **không** gọi API.
-9. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
+9. *Given* nhập khoảng `5` và chọn `ngày`, *then* khối biến động chỉ đọc 5 ngày gần nhất
+   và tóm tắt “Giảm/Tăng … kg · 5 ngày qua”; bỏ trống ô ⇒ dùng lại mặc định `6`.
+10. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
 
 ## Kiểm chứng
 

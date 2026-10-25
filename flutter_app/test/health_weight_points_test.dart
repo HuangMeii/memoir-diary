@@ -93,4 +93,42 @@ void main() {
       expect(startOfWeek(DateTime(2026, 10, 19)), DateTime(2026, 10, 19));
     });
   });
+
+  group('weightWindowDays', () {
+    test('converts the typed length by unit', () {
+      expect(weightWindowDays(5, WeightWindow.day), 5);
+      expect(weightWindowDays(2, WeightWindow.week), 14);
+      expect(weightWindowDays(6, WeightWindow.month), 180);
+    });
+
+    test('clamps to 1–730 days so a stray value cannot blank the series', () {
+      expect(weightWindowDays(0, WeightWindow.day), 1);
+      expect(weightWindowDays(-3, WeightWindow.week), 1);
+      expect(weightWindowDays(999, WeightWindow.month), 730);
+    });
+
+    test('labels the window the way the summary reads it', () {
+      expect(weightWindowLabel(5, WeightWindow.day), '5 ngày');
+      expect(weightWindowLabel(2, WeightWindow.week), '2 tuần');
+      expect(weightWindowLabel(0, WeightWindow.month), '1 tháng');
+    });
+  });
+
+  group('weightPointsOf with a typed window', () {
+    test('respects the days it is given', () {
+      final logs = [
+        _log(DateTime(2026, 10, 24), 40.0),
+        _log(DateTime(2026, 10, 15), 41.0),
+      ];
+
+      expect(
+        weightPointsOf(logs, WeightBucket.day, until: until, days: 5),
+        hasLength(1),
+      );
+      expect(
+        weightPointsOf(logs, WeightBucket.day, until: until, days: 30),
+        hasLength(2),
+      );
+    });
+  });
 }

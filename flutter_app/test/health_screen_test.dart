@@ -150,6 +150,23 @@ void main() {
     expect(find.text('Tuần'), findsOneWidget);
     expect(find.text('Tháng'), findsOneWidget);
 
+    // `5` + `ngày` looks at the last five days and reports the change there.
+    final window = find.byKey(const ValueKey<String>('weight-window-count'));
+    await tester.ensureVisible(window);
+    await tester.enterText(window, '5');
+    await tester.pump();
+    await tester.tap(find.text('tháng'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ngày').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Chưa đủ dữ liệu để vẽ biến động trong 5 ngày qua · '
+        'thêm số cân bên dưới',
+      ),
+      findsOneWidget,
+    );
+
     final input = find.byKey(const ValueKey<String>('weight-entry-field'));
     await tester.ensureVisible(input);
     await tester.enterText(input, 'abc');
