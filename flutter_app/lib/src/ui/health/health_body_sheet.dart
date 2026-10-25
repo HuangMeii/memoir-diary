@@ -453,6 +453,25 @@ class _WeightVariationState extends State<_WeightVariation> {
         LayoutBuilder(
           builder: (context, constraints) {
             const gap = MemoirSpace.s2;
+            // Six months give six cards, so the row scrolls sideways once it no
+            // longer fits the four equal columns of the design.
+            if (cards.length > 4) {
+              final width = (constraints.maxWidth - gap * 3) / 4;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var index = 0; index < cards.length; index++) ...[
+                      if (index > 0) const SizedBox(width: gap),
+                      SizedBox(
+                        width: width,
+                        child: _card(context, cards[index]),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }
             final columns = constraints.maxWidth < 380 ? 2 : 4;
             final width =
                 (constraints.maxWidth - gap * (columns - 1)) / columns;
@@ -501,7 +520,9 @@ class _WeightVariationState extends State<_WeightVariation> {
           Text(card.title, style: labelStyle, textAlign: TextAlign.center),
           const SizedBox(height: MemoirSpace.s1),
           Text(
-            card.kg?.toStringAsFixed(1) ?? '--',
+            card.kg == null
+                ? '--'
+                : '${card.estimated ? '≈' : ''}${card.kg!.toStringAsFixed(1)}',
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,

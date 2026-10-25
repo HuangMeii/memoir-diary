@@ -48,16 +48,20 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
       “Còn 1.2 kg”, “Khởi điểm: 61.0 kg”, “Đã giảm 2.8 kg (70% chặng đường)”,
       “Đích: 57.0 kg” (dùng `healthTrendUp` cho phần đã đạt); nếu tăng cân ⇒ câu
       tương ứng (không hiện số âm mơ hồ).
-- [ ] **Biến động cân nặng** (làm lại theo thiết kế gốc, 25.10.2026): icon `trending_down`
-      + tiêu đề + pill `4 tuần / 3 tháng / 6 tháng` (`SegmentedTabs<WeightRange>`);
-      câu phụ “Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh”, hoặc
+- [ ] **Biến động cân nặng** (logic đầy đủ, 25.10.2026): icon `trending_down` + tiêu đề +
+      pill `4 tuần / 3 tháng / 6 tháng` (`SegmentedTabs<WeightRange>`); câu phụ
+      “Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh”, hoặc
       “Chưa đủ dữ liệu trong 4 tuần qua để thấy biến động”;
-  - **4 card** đều nhau (`Wrap`: 4 cột, `< 380 px` ⇒ 2 cột): `Tuần 1/2/3` + `Hôm nay`,
-    mỗi card gồm label – số kg – caption (`dd/MM` ở card đầu, `±x.y kg` ở các card sau,
-    `--` khi thiếu); card “Hôm nay” nền `surfaceBrandSubtle`, viền primary, chữ primary;
-  - số liệu từ `weightCardsOf` (thuần, `health_metrics.dart`): chia cửa sổ 28 / 90 / 180
-    ngày thành 4 kỳ bằng nhau — 3 kỳ đầu lấy **trung bình**, card cuối lấy **lần cân mới
-    nhất**; mốc **sau hôm nay bị bỏ qua**;
+  - **kỳ (card)** đúng nghĩa: `4 tuần` ⇒ 4 kỳ **7 ngày**; `3 tháng` ⇒ 3 **tháng dương lịch**
+    (Th 8, Th 9, Th 10); `6 tháng` ⇒ 6 tháng dương lịch (cuộn ngang). Card cuối luôn là
+    **kỳ hiện tại** và mang nhãn `Hôm nay`;
+  - **giá trị** = trung bình các lần cân trong kỳ (card cuối = trung bình tuần/tháng hiện
+    tại, không phải 1 lần cân lẻ);
+  - **lấp chỗ trống**: kỳ không có lần cân nào lấy giá trị của kỳ gần nhất (carry-forward,
+    kể cả lùi về trước) và hiển thị `≈58.9` để biết là ước tính;
+  - caption: card 1 = `dd/MM` ngày bắt đầu kỳ; các card sau = `±x.y kg` chênh lệch so với
+    kỳ trước; `--` khi chưa từng có lần cân nào;
+  - mốc **sau hôm nay bị bỏ qua**; card “Hôm nay” nền `surfaceBrandSubtle`, viền primary;
   - **không còn** ô nhập tay `Cân nặng (kg)` / `Thời gian`, chip Ngày/Tuần/Tháng hay nút
     `Thêm`: số cân nhập ở field “Cân nặng hiện tại (kg)” phía trên và lưu bằng
     `Lưu thay đổi`.
@@ -87,14 +91,16 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
    profile nhận `heightCm`/`weightGoalKg`, và màn Sức khoẻ cập nhật ngay (biểu đồ/timeline).
 6. *Given* bấm “Hủy”, *then* không có request nào được gửi và giá trị cũ còn nguyên khi
    mở lại drawer.
-7. *Given* chỉ có 1 lần cân trong cửa sổ, *then* 3 card kỳ hiện `--` và câu phụ là
-   “Chưa đủ dữ liệu trong 4 tuần qua để thấy biến động”.
-8. *Given* các lần cân 59.0 / 58.8 (Tuần 1), 58.6 (Tuần 2), 58.4 (Tuần 3), 58.3 (hôm nay),
-   *then* 4 card hiện `Tuần 1 58.9`, `Tuần 2 58.6 -0.3 kg`, `Tuần 3 58.4 -0.2 kg`,
-   `Hôm nay 58.3 -0.1 kg` và câu phụ “Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh”.
-9. *Given* một mốc có ngày **sau hôm nay**, *then* mốc đó bị bỏ qua (không lên card
-   “Hôm nay”, không ảnh hưởng câu phụ).
-10. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
+7. *Given* chỉ có 1 lần cân trong cửa sổ, *then* mọi card đều có số (các kỳ trống lấy mốc
+   gần nhất và hiện `≈`), card hiện tại là số thật.
+8. *Given* các lần cân 59.0 / 58.8 (Tuần 1), 58.6 (Tuần 2), 58.4 (Tuần 3), 58.5 + 58.3
+   (tuần hiện tại), *then* 4 card hiện `Tuần 1 58.9`, `Tuần 2 58.6 -0.3 kg`,
+   `Tuần 3 58.4 -0.2 kg`, `Hôm nay 58.4 0.0 kg`.
+9. *Given* chọn `3 tháng`, *then* có 3 card theo **tháng dương lịch** (Th 8, Th 9, Hôm nay);
+   chọn `6 tháng` ⇒ 6 card tháng cuộn ngang; card đầu hiện `dd/MM` = ngày 1 của tháng.
+10. *Given* một mốc có ngày **sau hôm nay**, *then* mốc đó bị bỏ qua (không lên card,
+    không ảnh hưởng câu phụ).
+11. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
 
 ## Kiểm chứng
 

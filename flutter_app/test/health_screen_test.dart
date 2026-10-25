@@ -179,6 +179,8 @@ void main() {
       tester,
       const Size(1904, 1024),
       logs: [
+        // One weigh-in in the third week and one in the current week: the empty
+        // earlier weeks are carried over and marked with "≈".
         HealthLog(
           id: 'a',
           logDate: now.subtract(const Duration(days: 12)),
@@ -187,9 +189,8 @@ void main() {
         HealthLog(
           id: 'b',
           logDate: now.subtract(const Duration(days: 5)),
-          weightKg: 58.6,
+          weightKg: 58.3,
         ),
-        HealthLog(id: 'c', logDate: now, weightKg: 58.3),
       ],
     );
 
@@ -200,5 +201,7 @@ void main() {
       find.text('Giảm 0.6 kg trong 4 tuần qua một cách lành mạnh'),
       findsOneWidget,
     );
+    expect(find.text('≈58.9'), findsWidgets);
+    expect(find.text('58.3'), findsWidgets);
   });
 }

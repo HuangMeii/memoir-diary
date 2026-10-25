@@ -260,24 +260,17 @@ String formatClock(DateTime utc) {
 /// Window offered by the pills of "Biến động cân nặng" (design: 4 tuần /
 /// 3 tháng / 6 tháng).
 enum WeightRange {
-  fourWeeks('4 tuần', 28, 'Tuần'),
-  threeMonths('3 tháng', 90, 'Tháng'),
-  sixMonths('6 tháng', 180, 'Tháng');
+  fourWeeks('4 tuần'),
+  threeMonths('3 tháng'),
+  sixMonths('6 tháng');
 
-  const WeightRange(this.label, this.days, this.unit);
+  const WeightRange(this.label);
 
   /// Vietnamese chip label.
   final String label;
 
-  /// Days the window looks back, today included.
-  final int days;
-
-  /// Unit used to title the past cards (`Tuần 1`, `Tháng 2`, …).
-  final String unit;
-
-  /// Length of one past card; the window is split in four, the last card being
-  /// "Hôm nay".
-  int get segmentDays => (days / 4).floor();
+  /// `Tuần` for the weekly window, `Tháng` for the calendar-month ones.
+  String get unit => this == WeightRange.fourWeeks ? 'Tuần' : 'Tháng';
 }
 
 /// One card of the "Biến động cân nặng" row.
@@ -287,33 +280,49 @@ class WeightCard {
     required this.caption,
     required this.kg,
     this.isToday = false,
+    this.estimated = false,
   });
 
-  /// `Tuần 1` … `Tuần 3`, or `Hôm nay` for the highlighted card.
+  /// `Tuần 1` / `Tháng 1` …, or `Hôm nay` for the current period.
   final String title;
 
   /// `23/09` on the first card, `-0.3 kg` on the following ones, `--` when the
   /// data is missing.
   final String caption;
 
-  /// Average of the segment, or the latest weigh-in for the "Hôm nay" card.
+  /// Average of the period, or `null` when no weigh-in exists at all.
   final double? kg;
 
+  /// The current week/month card, highlighted by the design.
   final bool isToday;
+
+  /// True when the period had no weigh-in and the nearest known value was
+  /// carried over, so the UI can mark the number as an estimate.
+  final bool estimated;
 }
 
-/// Builds the four cards the design shows for the [range] window ending at
-/// [until]: three averages for the past segments plus today's weigh-in.
+/// One period the cards cover: a 7-day week or a calendar month.
+class _WeightPeriod {
+  const _WeightPeriod({required this.start, required this.end});
+
+  final DateTime start;
+  final DateTime end;
+}
+
+/// Builds the cards of "Biến động cân nặng" for [range], ending at [until].
 ///
-/// Weigh-ins after [until] are ignored, so a future-dated row can never skew the
-/// series.
+/// * `4 tuần` → four 7-day weeks; `3 tháng` / `6 tháng` → real calendar months
+///   (Aug, Sep, Oct for 3 tháng), so a `Tháng` card is a month, not 22/45 days.
+/// * The last card is the **current** period and is titled `Hôm nay`.
+/// * A period without a weigh-in inherits the nearest known value (marked
+///   [WeightCard.estimated]) so one weigh-in still lights up the whole row.
+/// * Weigh-ins dated after [until] are ignored.
 List<WeightCard> weightCardsOf(
   List<HealthLog> logs,
   WeightRange range, {
   required DateTime until,
 }) {
-  final last = DateTime(until.year, until.month, until.day);
-  final first = last.subtract(Duration(days: range.days - 1));
+  final today = DateTime(until.year, until.month, until.day);
   final entries = logs
       .where((log) => log.weightKg != null)
       .map((log) => (
@@ -321,42 +330,85 @@ List<WeightCard> weightCardsOf(
                 DateTime(log.logDate.year, log.logDate.month, log.logDate.day),
             kg: log.weightKg!,
           ))
-      .where(
-          (entry) => !entry.date.isBefore(first) && !entry.date.isAfter(last))
+      .where((entry) => !entry.date.isAfter(today))
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
 
-  final cards = <WeightCard>[];
-  double? previous;
-  for (var index = 0; index < 3; index++) {
-    final start = first.add(Duration(days: index * range.segmentDays));
-    final end = start.add(Duration(days: range.segmentDays - 1));
+  final periods = _periodsOf(range, today);
+  final averages = <double?>[];
+  for (final period in periods) {
     final values = entries
-        .where(
-            (entry) => !entry.date.isBefore(start) && !entry.date.isAfter(end))
+        .where((entry) =>
+            !entry.date.isBefore(period.start) &&
+            !entry.date.isAfter(period.end))
         .map((entry) => entry.kg)
         .toList();
-    final average =
-        values.isEmpty ? null : values.reduce((a, b) => a + b) / values.length;
+    averages.add(
+      values.isEmpty ? null : values.reduce((a, b) => a + b) / values.length,
+    );
+  }
+
+  // Carry the nearest known value into the empty periods.
+  final kgs = <double?>[];
+  double? carry;
+  for (final average in averages) {
+    if (average != null) carry = average;
+    kgs.add(average ?? carry);
+  }
+  double? backwards;
+  for (final kg in kgs) {
+    if (kg != null) {
+      backwards = kg;
+      break;
+    }
+  }
+  for (var index = kgs.length - 1; index >= 0; index--) {
+    if (kgs[index] != null) {
+      backwards = kgs[index];
+    } else {
+      kgs[index] = backwards;
+    }
+  }
+
+  final cards = <WeightCard>[];
+  for (var index = 0; index < periods.length; index++) {
+    final estimated = averages[index] == null && kgs[index] != null;
+    final isToday = index == periods.length - 1;
     cards.add(
       WeightCard(
-        title: '${range.unit} ${index + 1}',
-        caption: index == 0 ? _dayMonth(start) : _delta(average, previous),
-        kg: average,
+        title: isToday ? 'Hôm nay' : '${range.unit} ${index + 1}',
+        caption: index == 0
+            ? _dayMonth(periods[index].start)
+            : _delta(kgs[index], kgs[index - 1]),
+        kg: kgs[index],
+        isToday: isToday,
+        estimated: estimated,
       ),
     );
-    previous = average ?? previous;
   }
-  final latest = entries.isEmpty ? null : entries.last.kg;
-  cards.add(
-    WeightCard(
-      title: 'Hôm nay',
-      caption: _delta(latest, previous),
-      kg: latest,
-      isToday: true,
-    ),
-  );
   return cards;
+}
+
+/// The periods each pill covers, oldest first.
+List<_WeightPeriod> _periodsOf(WeightRange range, DateTime today) {
+  if (range == WeightRange.fourWeeks) {
+    return [
+      for (var index = 0; index < 4; index++)
+        _WeightPeriod(
+          start: today.subtract(Duration(days: 27 - index * 7)),
+          end: today.subtract(Duration(days: 21 - index * 7)),
+        ),
+    ];
+  }
+  final months = range == WeightRange.threeMonths ? 3 : 6;
+  return [
+    for (var index = 0; index < months; index++)
+      _WeightPeriod(
+        start: DateTime(today.year, today.month - (months - 1 - index), 1),
+        // Day 0 of the next month is the last day of this one.
+        end: DateTime(today.year, today.month - (months - 2 - index), 0),
+      ),
+  ];
 }
 
 /// `-0.3 kg` / `+0.2 kg`, or `--` when one side is missing.
