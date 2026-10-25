@@ -31,7 +31,7 @@ chỉ khác tab đang mở: H4-S1 dựng khung, H4-S2…S4 dựng từng tab.
 | Dòng (`memoir_c_p_nh_t_th_ng_s_c_nh_n_bmi/code.html`) | Khối |
 |---|---|
 | 140–190 | Top utility/nav: wordmark, 6 mục nav, bookmark, chuông, “Lưu vào nhật ký”, chip user |
-| 193–240 | Sub-header: breadcrumb (195), `h1` “Sức khoẻ & Thể chất” (206), date navigator ‹ Hôm nay, 17/10/2026 › (213), 2 nút *Xuất báo cáo* / *+ Ghi nhận nhanh* (226) — thêm nút *Thông số* (BMI) từ 25.10.2026, banner ngữ cảnh (237) |
+| 193–240 | Sub-header: breadcrumb (195), `h1` “Sức khoẻ & Thể chất” (206), date navigator ‹ Hôm nay, 17/10/2026 › (213), 2 nút *Xuất báo cáo* / *+ Ghi nhận nhanh* (226) — *Xuất báo cáo* đã gỡ 25.10.2026, *Thông số* (BMI) thêm cùng ngày, banner ngữ cảnh (237) |
 | 244–246 | 3 thẻ hero: tập `45/60 phút · 75% · ~240 kcal`; nước `1.750/2.000 ml · 88%` + phân bố Sáng/Chiều/Tối; ngủ `7h30/8h00 · 23:00–06:30 · Sâu 1h45` |
 | 249–316 | Form **“Nhập nhanh chỉ số hôm nay”** (thời lượng + cường độ; nước; ngủ; thông số cá nhân; ghi chú; *Lưu chỉ số*) — **đã gỡ khỏi màn 25.10.2026**, chỉ còn bản ghi thiết kế |
 | 253–447 | **“Xu hướng 30 ngày gần nhất”**: pill metric *Luyện tập · Nước · Giấc ngủ · Cân nặng* (265), chip *7 ngày · 30 ngày · 3 tháng* (272), 4 ô số (280–314), bar chart + đường mốc 8.000 (319) + đường TB 7.200 (324), 30 cột (328–427), nhãn ngày (430), legend (439) |
@@ -180,7 +180,7 @@ dart run tool/gen_tokens.dart
 - Migration chỉ **sinh** trong kế hoạch này; **apply** là bước bạn kiểm soát
   (`serverpod start` tự áp khi boot).
 - Ngoài phạm vi (ghi rõ để không hiểu nhầm): HealthKit/Google Fit, **“Xuất báo cáo”**
-  (PDF/CSV — H3-S1 chỉ dựng nút ở trạng thái chờ), đồng bộ thiết bị y tế, nhắc uống
+  (PDF/CSV — nút chờ ở H3-S1 đã gỡ 25.10.2026, hiện **không còn UI**), đồng bộ thiết bị y tế, nhắc uống
   nước/đi ngủ, BMR & kcal thật (thiết kế có `~240 kcal` — hiển thị ước tính theo phút
   tập hoặc ẩn nếu chưa chốt công thức), màn “Xem toàn bộ lịch sử 7 ngày”.
 - Nguồn ảnh để verify: xem §1 — hai modal ngủ/nước **không có `screen.png`** dùng được.

@@ -29,11 +29,13 @@ ngày, hai nút hành động và banner ngữ cảnh.
   - `HealthDateNavigator(date, onPrevious, onNext, onToday)` — `OutlinedButton`/`IconButton`
     `chevron_left` + nhãn `Hôm nay, dd/MM/yyyy` (`Icons.calendar_today` bên trái) +
     `chevron_right`; bấm nhãn ⇒ `showDatePicker` chọn ngày khác.
-  - Nút **“Xuất báo cáo”** (`OutlinedButton.icon`, `Icons.file_download`):
-    **chưa có tính năng** — `onPressed: null` + `Tooltip('Sẽ có sau')` (ngoài phạm vi,
-    `README.md` §9).
   - Nút **“+ Ghi nhận nhanh”** (`FilledButton.icon`, `Icons.add_circle`) ⇒ gọi
     `onQuickLog` (mở sheet H4-S1).
+  - Nút **“Thông số”** (`OutlinedButton.icon`, `Icons.monitor_weight_outlined`, thêm
+    25.10.2026) ⇒ gọi `onOpenBodySheet` (drawer BMI H3-S7).
+  - Nút **“Xuất báo cáo”** trong thiết kế **đã gỡ khỏi giao diện ngày 25.10.2026** —
+    trước đó là nút chết (`onPressed: null` + `Tooltip('Sẽ có sau')`), không có code
+    tính năng phía sau.
 - [ ] `HealthContextBanner({required String? firstName, required DateTime date})` —
       nền `palette.surfaceBrandSubtle`, icon `Icons.edit_calendar`, câu “Nhật ký sức khoẻ
       cá nhân hôm nay sẵn sàng để ghi nhận và theo dõi.”
@@ -49,8 +51,9 @@ ngày, hai nút hành động và banner ngữ cảnh.
    thị `dd/MM/yyyy` **không** kèm chữ “Hôm nay”.
 2. *Given* bấm `‹`/`›`, *then* gọi `onPrevious`/`onNext` **đúng một lần** mỗi lần bấm.
 3. *Given* bấm “+ Ghi nhận nhanh”, *then* `onQuickLog` được gọi (mở sheet ghi nhận nhanh).
-4. *Given* bấm “Xuất báo cáo”, *then* không có gì xảy ra và có tooltip “Sẽ có sau”.
-5. *Given* màn hẹp 390px, *then* không tràn (`tester.takeException()` null) và hai nút
+4. *Given* màn Sức khoẻ, *then* **không** còn nút “Xuất báo cáo” (đã gỡ 25.10.2026 —
+   nút chết không có tính năng phía sau); chỉ còn *Xuất báo cáo* trong bản thiết kế.
+5. *Given* màn hẹp 390px, *then* không tràn (`tester.takeException()` null) và các nút
    nằm dưới tiêu đề.
 6. *Then* tiêu đề dùng `serifFamily`, không hard-code px rời rạc; `flutter analyze` sạch.
 
@@ -65,7 +68,8 @@ flutter run -d chrome --web-port 8080   # so vùng đầu trang với ..._bmi/sc
 ## Rủi ro / ghi chú
 
 - Text phụ đề/banner lấy **nguyên văn** từ `code.html` để khớp thiết kế.
-- Không tự thêm chức năng cho “Xuất báo cáo”; nếu bạn muốn làm CSV ở phase sau, mở
-  task mới thay vì nới phạm vi task này.
+- Nút “Xuất báo cáo” đã bị **gỡ** (25.10.2026) cùng `Tooltip('Sẽ có sau')` vì không có
+  tính năng phía sau; nếu sau này làm CSV/PDF thật thì mở task mới thay vì dựng lại nút
+  chờ. `Icons.file_download` không còn dùng trong `health_chrome.dart`.
 - `HealthDateNavigator` nhận `date` từ màn (H3-S8) — không giữ state riêng để tránh
   hai nguồn sự thật.

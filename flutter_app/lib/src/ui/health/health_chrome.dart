@@ -171,7 +171,7 @@ class HealthDateNavigator extends StatelessWidget {
 }
 
 /// Editorial page header: serif h1, design subtitle, date navigator and the
-/// three action buttons (report, body metrics, quick log).
+/// two action buttons (body metrics + quick log).
 ///
 /// Narrow screens (<768px) stack vertically with the actions underneath; the
 /// filled button spans the column via `SizedBox(width: double.infinity)` —
@@ -232,16 +232,6 @@ class HealthPageHeader extends StatelessWidget {
       onNext: onNext,
       onDatePicked: onDatePicked,
     );
-    // Out of scope for now (README §9): the button only promises a
-    // future report instead of pretending to work.
-    final exportButton = Tooltip(
-      message: 'Sẽ có sau',
-      child: OutlinedButton.icon(
-        onPressed: null,
-        icon: const Icon(Icons.file_download, size: 18),
-        label: const Text('Xuất báo cáo'),
-      ),
-    );
     final bodyButton = Tooltip(
       message: 'Cân nặng · Chiều cao · BMI',
       child: OutlinedButton.icon(
@@ -268,7 +258,7 @@ class HealthPageHeader extends StatelessWidget {
                 spacing: MemoirSpace.s3,
                 runSpacing: MemoirSpace.s2,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: [navigator, exportButton, bodyButton],
+                children: [navigator, bodyButton],
               ),
               const SizedBox(height: MemoirSpace.s2),
               // Full-width only through the parent constraint — never an
@@ -293,7 +283,6 @@ class HealthPageHeader extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   navigator,
-                  exportButton,
                   bodyButton,
                   quickLogButton,
                 ],

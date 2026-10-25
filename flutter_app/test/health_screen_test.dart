@@ -72,8 +72,10 @@ void main() {
     expect(find.text(pageTitle), findsWidgets);
     expect(find.text('Thời gian luyện tập'), findsOneWidget);
     // The inline "Nhập nhanh chỉ số hôm nay" card is gone; the header button
-    // is now the only way into the body-metrics drawer.
+    // is now the only way into the body-metrics drawer. The dead "Xuất báo
+    // cáo" placeholder went with it.
     expect(find.text('NHẬP NHANH CHỈ SỐ HÔM NAY'), findsNothing);
+    expect(find.text('Xuất báo cáo'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Thông số'), findsOneWidget);
   });
 
@@ -88,6 +90,7 @@ void main() {
     expect(find.text('Nước uống'), findsWidgets);
     expect(find.text('Giấc ngủ'), findsWidgets);
     expect(find.text('NHẬP NHANH CHỈ SỐ HÔM NAY'), findsNothing);
+    expect(find.text('Xuất báo cáo'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Thông số'), findsOneWidget);
   });
 }
