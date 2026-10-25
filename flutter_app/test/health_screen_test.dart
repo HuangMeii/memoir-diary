@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memoir_app/src/core/session.dart';
 import 'package:memoir_app/src/data/models.dart';
 import 'package:memoir_app/src/data/providers.dart';
+import 'package:memoir_app/src/ui/health/health_modal.dart';
 import 'package:memoir_app/src/ui/screens/health_screen.dart';
 
 /// A session with nothing stored.
@@ -48,6 +49,9 @@ void main() {
           healthDayProvider.overrideWith((ref, date) async => overview),
           healthProfileProvider
               .overrideWith((ref) async => const HealthProfile()),
+          healthLogsProvider.overrideWith(
+            (ref, range) async => const <HealthLog>[],
+          ),
           healthTrendsProvider.overrideWith(
             (ref, range) async => const <HealthTrendPoint>[],
           ),
@@ -92,5 +96,43 @@ void main() {
     expect(find.text('NHẬP NHANH CHỈ SỐ HÔM NAY'), findsNothing);
     expect(find.text('Xuất báo cáo'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Thông số'), findsOneWidget);
+  });
+
+  // Both secondary forms used to be bottom sheets at every width, so on a
+  // desktop window they hugged the lower edge instead of sitting in the middle.
+  testWidgets('centres the small forms on a wide window', (tester) async {
+    await pumpScreen(tester, const Size(1904, 1024));
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Thông số'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    final bodyPanel = tester.getRect(find.byKey(healthModalPanelKey));
+    expect(bodyPanel.center.dx, closeTo(1904 / 2, 1));
+    expect(bodyPanel.center.dy, closeTo(1024 / 2, 1));
+    expect(bodyPanel.width, lessThanOrEqualTo(560));
+    expect(bodyPanel.bottom, lessThan(1024));
+
+    await tester.tap(find.byTooltip('Đóng'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilledButton, '+ Ghi nhận nhanh'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    final logPanel = tester.getRect(find.byKey(healthModalPanelKey));
+    expect(logPanel.center.dx, closeTo(1904 / 2, 1));
+    expect(logPanel.center.dy, closeTo(1024 / 2, 1));
+    expect(logPanel.bottom, lessThan(1024));
+  });
+
+  testWidgets('keeps the small forms as bottom sheets on a phone',
+      (tester) async {
+    await pumpScreen(tester, const Size(390, 844));
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Thông số'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
   });
 }

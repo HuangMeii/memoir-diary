@@ -79,6 +79,12 @@ Select-String -Path 'lib\src\ui\widgets\app_header.dart' -Pattern 'health'
 
 ## Rủi ro / ghi chú
 
+- **Modal phụ nằm giữa màn hình (25.10.2026):** nút *Thông số* và *+ Ghi nhận nhanh* mở
+  form qua `ui/health/health_modal.dart` (`showHealthModal`) — `< 700 px` vẫn là bottom
+  sheet, `≥ 700 px` là `Dialog` giữa màn hình (rộng ≤ 560, cao ≤ 86 %), vì bottom sheet
+  bám đáy nên trên cửa sổ desktop form trông lệch xuống dưới. `test/health_screen_test.dart`
+  đo panel qua `healthModalPanelKey` để canh tâm màn hình ở 1904 × 1024.
+
 - **Đã gỡ khối “Nhập nhanh chỉ số hôm nay” (25.10.2026):** `health_quick_form.dart` bị
   xoá, cột trái chỉ còn `HealthTrends`; nút *Thông số* trên header
   (`HealthPageHeader.onOpenBodySheet`) là điểm vào **duy nhất** của drawer BMI (H3-S7).

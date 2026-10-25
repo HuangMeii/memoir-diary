@@ -7,17 +7,17 @@ import '../home/home_scale.dart';
 import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
 import 'health_metrics.dart';
+import 'health_modal.dart';
 
-/// Opens the responsive health body sheet for the selected calendar day.
+/// Opens the body-metrics form for the selected calendar day: a bottom sheet on
+/// phones and a centred dialog on wide windows (see [showHealthModal]).
 Future<void> showHealthBodySheet(
   BuildContext context, {
   required DateTime date,
   required WidgetRef ref,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+}) async {
+  await showHealthModal<void>(
+    context,
     builder: (_) => _HealthBodySheet(date: date),
   );
 }

@@ -27,8 +27,10 @@ nội dung tab và footer `Hủy / Để sau` + nút lưu.
       `Uống nước` (`Icons.water_drop`).
 - [x] `Future<void> showQuickLogSheet(BuildContext context, WidgetRef ref,
       {required DateTime date, QuickLogTab initialTab = QuickLogTab.workout})`
-      — `showModalBottomSheet(isScrollControlled: true, useSafeArea: true)`, mobile là
-      sheet trượt lên, web là panel giữa rộng ~560 (giống các modal khác của app).
+      — qua `showHealthModal` (25.10.2026): `< 700 px` là sheet trượt lên
+      (`DraggableScrollableSheet` 45–92 %), `≥ 700 px` là **panel giữa màn hình** rộng
+      ≤ 560 (giống các modal khác của app) nhờ `Dialog` + `ConstrainedBox`; danh sách
+      dùng chung một `_form()` cho cả hai nhánh.
 - [x] Khung: tiêu đề **“Ghi nhận sức khoẻ”** + phụ đề “Cập nhật nhật ký thể trạng cá nhân
       cho ngày hôm nay” + nút `close`; dưới đó là dòng ngày “Ngày dd/MM/yyyy”.
 - [x] Tab strip: 3 tab với trạng thái chọn (nền trắng + chữ đậm, tab khác chữ mờ) —

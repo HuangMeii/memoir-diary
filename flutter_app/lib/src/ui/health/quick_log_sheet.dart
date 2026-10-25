@@ -5,6 +5,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../tokens.dart';
 import '../widgets/segmented_tabs.dart';
+import 'health_modal.dart';
 import 'quick_workout_tab.dart';
 
 enum QuickLogTab {
@@ -18,16 +19,16 @@ enum QuickLogTab {
   final IconData icon;
 }
 
+/// Opens the quick-log form: a bottom sheet on phones and a centred dialog on
+/// wide windows (see [showHealthModal]).
 Future<void> showQuickLogSheet(
   BuildContext context,
   WidgetRef ref, {
   required DateTime date,
   QuickLogTab initialTab = QuickLogTab.workout,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+}) async {
+  await showHealthModal<void>(
+    context,
     builder: (_) => _QuickLogSheet(date: date, initialTab: initialTab),
   );
 }
@@ -65,93 +66,103 @@ class _QuickLogSheetState extends ConsumerState<_QuickLogSheet> {
   }
 
   Widget _content(HealthDayOverview day) {
+    // Phones keep the draggable sheet they expect. A wide window already
+    // centres the form inside a `Dialog` with a bounded height, so the list can
+    // fill that box directly.
+    if (MediaQuery.sizeOf(context).width < kHealthModalBreakpoint) {
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.72,
+        minChildSize: 0.45,
+        maxChildSize: 0.92,
+        builder: (context, controller) => Material(
+          color: Theme.of(context).colorScheme.surface,
+          child: _form(day, controller),
+        ),
+      );
+    }
+    return _form(day, null);
+  }
+
+  Widget _form(HealthDayOverview day, ScrollController? controller) {
     final theme = Theme.of(context);
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.72,
-      minChildSize: 0.45,
-      maxChildSize: 0.92,
-      builder: (context, controller) => Material(
-        color: theme.colorScheme.surface,
-        child: ListView(
-          controller: controller,
-          padding: const EdgeInsets.fromLTRB(
-            MemoirSpace.s5,
-            MemoirSpace.s3,
-            MemoirSpace.s5,
-            MemoirSpace.s5,
-          ),
+    return ListView(
+      controller: controller,
+      padding: const EdgeInsets.fromLTRB(
+        MemoirSpace.s5,
+        MemoirSpace.s3,
+        MemoirSpace.s5,
+        MemoirSpace.s5,
+      ),
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Ghi nhận sức khoẻ',
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Đóng',
-                  onPressed: _close,
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            Text(
-              'Cập nhật nhật ký thể trạng cá nhân cho ngày hôm nay',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: MemoirSpace.s2),
-            Text(
-              'Ngày ${widget.date.day.toString().padLeft(2, '0')}/'
-              '${widget.date.month.toString().padLeft(2, '0')}/'
-              '${widget.date.year}',
-              style: theme.textTheme.labelLarge,
-            ),
-            const SizedBox(height: MemoirSpace.s4),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedTabs<QuickLogTab>(
-                options: QuickLogTab.values
-                    .map((item) => SegmentedTab(item, item.label))
-                    .toList(),
-                selected: _tab,
-                onChanged: (value) => setState(() => _tab = value),
+            Expanded(
+              child: Text(
+                'Ghi nhận sức khoẻ',
+                style: theme.textTheme.headlineSmall,
               ),
             ),
-            const SizedBox(height: MemoirSpace.s5),
-            IndexedStack(
-              index: _tab.index,
-              children: [
-                _TabPlaceholder(tab: QuickLogTab.sleep, day: day),
-                QuickWorkoutTab(
-                  key: _workoutKey,
-                  date: widget.date,
-                  day: day,
-                  onDirtyChanged: (dirty) => setState(() => _dirty = dirty),
-                ),
-                _TabPlaceholder(tab: QuickLogTab.water, day: day),
-              ],
-            ),
-            const SizedBox(height: MemoirSpace.s5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _saving ? null : _close,
-                  child: const Text('Huỷ / Để sau'),
-                ),
-                const SizedBox(width: MemoirSpace.s2),
-                FilledButton.icon(
-                  onPressed: _saving ? null : _save,
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(_saving ? 'Đang lưu...' : 'Lưu vào nhật ký'),
-                ),
-              ],
+            IconButton(
+              tooltip: 'Đóng',
+              onPressed: _close,
+              icon: const Icon(Icons.close),
             ),
           ],
         ),
-      ),
+        Text(
+          'Cập nhật nhật ký thể trạng cá nhân cho ngày hôm nay',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: MemoirSpace.s2),
+        Text(
+          'Ngày ${widget.date.day.toString().padLeft(2, '0')}/'
+          '${widget.date.month.toString().padLeft(2, '0')}/'
+          '${widget.date.year}',
+          style: theme.textTheme.labelLarge,
+        ),
+        const SizedBox(height: MemoirSpace.s4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SegmentedTabs<QuickLogTab>(
+            options: QuickLogTab.values
+                .map((item) => SegmentedTab(item, item.label))
+                .toList(),
+            selected: _tab,
+            onChanged: (value) => setState(() => _tab = value),
+          ),
+        ),
+        const SizedBox(height: MemoirSpace.s5),
+        IndexedStack(
+          index: _tab.index,
+          children: [
+            _TabPlaceholder(tab: QuickLogTab.sleep, day: day),
+            QuickWorkoutTab(
+              key: _workoutKey,
+              date: widget.date,
+              day: day,
+              onDirtyChanged: (dirty) => setState(() => _dirty = dirty),
+            ),
+            _TabPlaceholder(tab: QuickLogTab.water, day: day),
+          ],
+        ),
+        const SizedBox(height: MemoirSpace.s5),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _saving ? null : _close,
+              child: const Text('Huỷ / Để sau'),
+            ),
+            const SizedBox(width: MemoirSpace.s2),
+            FilledButton.icon(
+              onPressed: _saving ? null : _save,
+              icon: const Icon(Icons.save_outlined),
+              label: Text(_saving ? 'Đang lưu...' : 'Lưu vào nhật ký'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
