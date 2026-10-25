@@ -31,9 +31,9 @@ chỉ khác tab đang mở: H4-S1 dựng khung, H4-S2…S4 dựng từng tab.
 | Dòng (`memoir_c_p_nh_t_th_ng_s_c_nh_n_bmi/code.html`) | Khối |
 |---|---|
 | 140–190 | Top utility/nav: wordmark, 6 mục nav, bookmark, chuông, “Lưu vào nhật ký”, chip user |
-| 193–240 | Sub-header: breadcrumb (195), `h1` “Sức khoẻ & Thể chất” (206), date navigator ‹ Hôm nay, 17/10/2026 › (213), 2 nút *Xuất báo cáo* / *+ Ghi nhận nhanh* (226), banner ngữ cảnh (237) |
+| 193–240 | Sub-header: breadcrumb (195), `h1` “Sức khoẻ & Thể chất” (206), date navigator ‹ Hôm nay, 17/10/2026 › (213), 2 nút *Xuất báo cáo* / *+ Ghi nhận nhanh* (226) — thêm nút *Thông số* (BMI) từ 25.10.2026, banner ngữ cảnh (237) |
 | 244–246 | 3 thẻ hero: tập `45/60 phút · 75% · ~240 kcal`; nước `1.750/2.000 ml · 88%` + phân bố Sáng/Chiều/Tối; ngủ `7h30/8h00 · 23:00–06:30 · Sâu 1h45` |
-| 249–316 | Form **“Nhập nhanh chỉ số hôm nay”** (thời lượng + cường độ; nước; ngủ; thông số cá nhân; ghi chú; *Lưu chỉ số*) |
+| 249–316 | Form **“Nhập nhanh chỉ số hôm nay”** (thời lượng + cường độ; nước; ngủ; thông số cá nhân; ghi chú; *Lưu chỉ số*) — **đã gỡ khỏi màn 25.10.2026**, chỉ còn bản ghi thiết kế |
 | 253–447 | **“Xu hướng 30 ngày gần nhất”**: pill metric *Luyện tập · Nước · Giấc ngủ · Cân nặng* (265), chip *7 ngày · 30 ngày · 3 tháng* (272), 4 ô số (280–314), bar chart + đường mốc 8.000 (319) + đường TB 7.200 (324), 30 cột (328–427), nhãn ngày (430), legend (439) |
 | 450–521 | Cột phải: card cầu nối nhật ký (450), **“Dòng thời gian hoạt động”** + `+ Thêm mốc` (453–505), card “Lời nhắc dịu dàng” (507–521) |
 | 522–541 | Footer biên tập |
@@ -117,7 +117,7 @@ Trạng thái: `TODO` · `DOING` · `DONE`.
 |---|---|---|---|---|---|
 | H3-S1 | Chrome trang + date navigator + banner | 2 | H2-S5 | [15-ui-health-chrome.md](15-ui-health-chrome.md) | DONE |
 | H3-S2 | 3 thẻ tóm tắt hero | 3 | H3-S1 | [16-ui-health-summary-cards.md](16-ui-health-summary-cards.md) | DONE |
-| H3-S3 | Form “Nhập nhanh chỉ số hôm nay” | 5 | H2-S6 | [17-ui-health-quick-form.md](17-ui-health-quick-form.md) | DONE |
+| H3-S3 | Form “Nhập nhanh chỉ số hôm nay” | 5 | H2-S6 | [17-ui-health-quick-form.md](17-ui-health-quick-form.md) | REMOVED (25.10.2026) |
 | H3-S4 | Khối “Xu hướng 30 ngày gần nhất” | 5 | H2-S6 | [18-ui-health-trends.md](18-ui-health-trends.md) | DONE |
 | H3-S5 | Card "Dòng thời gian hoạt động" | 3 | H2-S5 | [19-ui-health-timeline.md](19-ui-health-timeline.md) | DONE |
 | H3-S6 | Card cầu nối nhật ký + “Lời nhắc dịu dàng” | 1 | H3-S1 | [20-ui-health-quote-bridge.md](20-ui-health-quote-bridge.md) | DONE |

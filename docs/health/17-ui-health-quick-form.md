@@ -1,5 +1,9 @@
 # H3-S3 · Form “Nhập nhanh chỉ số hôm nay”
 
+> **Trạng thái 25.10.2026:** **đã gỡ khỏi màn.** `health_quick_form.dart` bị xoá và cột
+> trái dashboard chỉ còn `HealthTrends`; nút *Thông số* trên header vẫn mở
+> `showHealthBodySheet` (H3-S7). Tài liệu dưới đây giữ làm bản ghi thiết kế.
+
 **Epic:** H3 · **Ước lượng:** 5 pts · **Phụ thuộc:** H2-S6
 **Nguồn thiết kế:** `ui-figma/suckhoe/memoir_c_p_nh_t_th_ng_s_c_nh_n_bmi/code.html`
 dòng 249–316 — tiêu đề “Nhập nhanh chỉ số hôm nay” + “Ngày 17/10/2026” + nút thu gọn,

@@ -41,8 +41,8 @@ nội dung tab và footer `Hủy / Để sau` + nút lưu.
       nhật ký ngày dd/MM”.
 - [ ] Mỗi tab tự quản lý nháp của mình; đổi tab rồi quay lại **giữ** giá trị đang nhập
       trong phiên mở sheet (dùng `IndexedStack` hoặc state ở khung).
-- [ ] `showQuickLogSheet` là **điểm vào duy nhất**: màn Sức khoẻ (H3-S8, form H3-S3) và
-      nút `+ Ghi nhận nhanh` (H3-S1) đều gọi hàm này.
+- [ ] `showQuickLogSheet` là **điểm vào duy nhất**: nút `+ Ghi nhận nhanh` trên header
+      màn Sức khoẻ (H3-S1/H3-S8) gọi hàm này — form H3-S3 đã gỡ khỏi màn ngày 25.10.2026.
 - [ ] `flutter analyze`.
 
 ## Acceptance Criteria

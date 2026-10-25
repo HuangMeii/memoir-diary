@@ -46,7 +46,8 @@ void main() {
           // Answer every day/profile/trend request locally so the dashboard
           // renders without touching the backend.
           healthDayProvider.overrideWith((ref, date) async => overview),
-          healthProfileProvider.overrideWith((ref) async => const HealthProfile()),
+          healthProfileProvider
+              .overrideWith((ref) async => const HealthProfile()),
           healthTrendsProvider.overrideWith(
             (ref, range) async => const <HealthTrendPoint>[],
           ),
@@ -70,6 +71,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text(pageTitle), findsWidgets);
     expect(find.text('Thời gian luyện tập'), findsOneWidget);
+    // The inline "Nhập nhanh chỉ số hôm nay" card is gone; the header button
+    // is now the only way into the body-metrics drawer.
+    expect(find.text('NHẬP NHANH CHỈ SỐ HÔM NAY'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Thông số'), findsOneWidget);
   });
 
   testWidgets('lays the dashboard out on a wide window', (tester) async {
@@ -82,5 +87,7 @@ void main() {
     expect(find.text('Thời gian luyện tập'), findsOneWidget);
     expect(find.text('Nước uống'), findsWidgets);
     expect(find.text('Giấc ngủ'), findsWidgets);
+    expect(find.text('NHẬP NHANH CHỈ SỐ HÔM NAY'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Thông số'), findsOneWidget);
   });
 }

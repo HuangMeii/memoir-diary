@@ -10,7 +10,9 @@ nặng” + pill *4 tuần / 6 tháng* (662–706), quote (707–713), footer *H
 
 ## Mục tiêu
 
-Dựng drawer phải, mở từ nút thông số ở form (H3-S3): sửa cân nặng + chiều cao, xem **BMI
+Dựng drawer phải, mở từ nút *Thông số* trên header màn Sức khoẻ
+(`HealthPageHeader.onOpenBodySheet`, H3-S8 — trước 25.10.2026 là nút trong form H3-S3):
+sửa cân nặng + chiều cao, xem **BMI
 tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng mục tiêu và biến động cân nặng
 4 tuần / 6 tháng, rồi lưu — ghi cân nặng vào **log ngày** và chiều cao/mục tiêu vào **profile**.
 

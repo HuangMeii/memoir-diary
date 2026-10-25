@@ -171,7 +171,7 @@ class HealthDateNavigator extends StatelessWidget {
 }
 
 /// Editorial page header: serif h1, design subtitle, date navigator and the
-/// two action buttons (report + quick log).
+/// three action buttons (report, body metrics, quick log).
 ///
 /// Narrow screens (<768px) stack vertically with the actions underneath; the
 /// filled button spans the column via `SizedBox(width: double.infinity)` —
@@ -184,6 +184,7 @@ class HealthPageHeader extends StatelessWidget {
     required this.onNext,
     required this.onDatePicked,
     required this.onQuickLog,
+    required this.onOpenBodySheet,
   });
 
   final DateTime date;
@@ -193,6 +194,11 @@ class HealthPageHeader extends StatelessWidget {
 
   /// Opens the quick-log sheet (H4-S1).
   final VoidCallback onQuickLog;
+
+  /// Opens the body-metrics drawer — weight, height and BMI (H3-S7). It is the
+  /// only entry point left for those numbers now that the inline quick form is
+  /// gone from the dashboard.
+  final VoidCallback onOpenBodySheet;
 
   @override
   Widget build(BuildContext context) {
@@ -236,6 +242,14 @@ class HealthPageHeader extends StatelessWidget {
         label: const Text('Xuất báo cáo'),
       ),
     );
+    final bodyButton = Tooltip(
+      message: 'Cân nặng · Chiều cao · BMI',
+      child: OutlinedButton.icon(
+        onPressed: onOpenBodySheet,
+        icon: const Icon(Icons.monitor_weight_outlined, size: 18),
+        label: const Text('Thông số'),
+      ),
+    );
     final quickLogButton = FilledButton.icon(
       onPressed: onQuickLog,
       icon: const Icon(Icons.add_circle, size: 18),
@@ -254,7 +268,7 @@ class HealthPageHeader extends StatelessWidget {
                 spacing: MemoirSpace.s3,
                 runSpacing: MemoirSpace.s2,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: [navigator, exportButton],
+                children: [navigator, exportButton, bodyButton],
               ),
               const SizedBox(height: MemoirSpace.s2),
               // Full-width only through the parent constraint — never an
@@ -277,7 +291,12 @@ class HealthPageHeader extends StatelessWidget {
                 spacing: MemoirSpace.s3,
                 runSpacing: MemoirSpace.s2,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: [navigator, exportButton, quickLogButton],
+                children: [
+                  navigator,
+                  exportButton,
+                  bodyButton,
+                  quickLogButton,
+                ],
               ),
             ),
           ],

@@ -7,7 +7,7 @@
 ## Mục tiêu
 
 Thay màn `HealthScreen` tối giản bằng dashboard đầy đủ của thiết kế: chrome chung
-(`AppHeader`), breadcrumb + header, dải ngày, 3 thẻ hero, form nhập nhanh, khối xu hướng,
+(`AppHeader`), breadcrumb + header, dải ngày, 3 thẻ hero, khối xu hướng,
 cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / drawer thông số.
 
 ## Phạm vi
@@ -16,7 +16,7 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
 - **Sửa:** `flutter_app/lib/src/ui/widgets/app_header.dart` — thêm `AppDestination.health`
   (`'Sức khoẻ'`) vào enum + nhánh điều hướng.
 - **Dùng:** `ui/health/health_chrome.dart`, `health_summary_cards.dart`,
-  `health_quick_form.dart`, `health_trends.dart`, `health_timeline.dart`,
+  `health_trends.dart`, `health_timeline.dart`,
   `health_quote_card.dart`, `quick_log_sheet.dart` (H4), `health_body_sheet.dart` (H3-S7).
 - **KHÔNG sửa:** `ui/home/shortcut_cards.dart` (`HealthScreen.new` vẫn đúng),
   `main.dart` (không thêm route), `monthSummaryProvider`.
@@ -35,7 +35,7 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
   2. `HealthContextBanner`;
   3. `HealthSummaryCards(day: overview, profile: profile)`;
   4. Bố cục 2 cột (`LayoutBuilder`: `>= 1000px` ⇒ 65/35, ngược lại xếp dọc):
-     - trái: `HealthQuickForm(...)` rồi `HealthTrends(metric: _metric, range: _range, …)`;
+     - trái: `HealthTrends(metric: _metric, range: _range, …)`;
      - phải: `HealthJournalBridgeCard(...)`, `HealthTimeline(...)`,
        `HealthGentleReminderCard()`.
 - [x] Nguồn dữ liệu: `ref.watch(healthDayProvider(_date))` cho thẻ/form/timeline và
@@ -43,7 +43,7 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
       `ref.watch(healthProfileProvider)` cho xu hướng/đích mục tiêu.
 - [x] Hành vi:
   - `onQuickLog` ⇒ `showQuickLogSheet(...)` với tab mặc định `Thời gian tập` (H4-S1);
-  - `onOpenBodySheet` (từ form) ⇒ `showHealthBodySheet(...)` (H3-S7);
+  - `onOpenBodySheet` (nút *Thông số* trên header) ⇒ `showHealthBodySheet(...)` (H3-S7);
   - sau **mọi** hành vi ghi ⇒ `refreshHealth(ref, day: _date)` (H2-S5) **thay vì**
     đoạn `ref.invalidate(healthLogsProvider)`/`monthSummaryProvider` cũ (dòng 87–91).
 - [x] **Gỡ bỏ** khỏi màn: `_NumField`, `_Stat`, `_LineChart`, `_DayPicker`, `_prefill`,
@@ -54,7 +54,7 @@ cột phải (timeline + quote), và mở được sheet ghi nhận nhanh / draw
 ## Acceptance Criteria
 
 1. *Given* mở màn Sức khoẻ từ thẻ shortcut, *then* thấy header chung, breadcrumb, tiêu đề
-   serif, dải ngày hôm nay, 3 thẻ hero, form, khối xu hướng, timeline và card quote —
+   serif, dải ngày hôm nay, 3 thẻ hero, khối xu hướng, timeline và card quote —
    không còn `AppBar` riêng + `Card('NHẬP NHANH')` của bản cũ.
 2. *Given* bấm `‹` (ngày trước), *then* **mọi** khối (thẻ hero, form, timeline, xu hướng)
    hiển thị dữ liệu của ngày đó.
@@ -78,6 +78,12 @@ Select-String -Path 'lib\src\ui\widgets\app_header.dart' -Pattern 'health'
 ```
 
 ## Rủi ro / ghi chú
+
+- **Đã gỡ khối “Nhập nhanh chỉ số hôm nay” (25.10.2026):** `health_quick_form.dart` bị
+  xoá, cột trái chỉ còn `HealthTrends`; nút *Thông số* trên header
+  (`HealthPageHeader.onOpenBodySheet`) là điểm vào **duy nhất** của drawer BMI (H3-S7).
+  Nước uống / giấc ngủ / ghi chú sức khoẻ **chưa có điểm nhập** cho tới khi hai tab
+  tương ứng trong `quick_log_sheet.dart` hết là `_TabPlaceholder` (H4-S3/S4).
 
 - `monthSummaryProvider` đọc cả health: nếu bỏ `refreshHealth` thì số liệu “Nhịp viết”
   của trang chủ sẽ cũ — đây là lý do helper đó invalidate cả provider này.
