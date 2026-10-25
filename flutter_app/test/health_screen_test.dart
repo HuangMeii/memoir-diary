@@ -162,16 +162,29 @@ void main() {
     expect(
       find.text(
         'Chưa đủ dữ liệu để vẽ biến động trong 5 ngày qua · '
-        'thêm số cân bên dưới',
+        'nhập số cân ở trên',
       ),
       findsOneWidget,
     );
 
+    // The window's first day is shown as dd/MM/yyyy, and the section has no
+    // separate "Thêm" button — the sheet's footer saves the weigh-in.
+    String two(int value) => value.toString().padLeft(2, '0');
+    final entry = DateTime.now().subtract(const Duration(days: 4));
+    expect(
+      find.text(
+        '· Ngày ${two(entry.day)}/${two(entry.month)}/${entry.year}',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Thêm'), findsNothing);
+
     final input = find.byKey(const ValueKey<String>('weight-entry-field'));
     await tester.ensureVisible(input);
     await tester.enterText(input, 'abc');
-    await tester.ensureVisible(find.text('Thêm'));
-    await tester.tap(find.text('Thêm'));
+    final save = find.text('Lưu thay đổi');
+    await tester.ensureVisible(save);
+    await tester.tap(save);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 

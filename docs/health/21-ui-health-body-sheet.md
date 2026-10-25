@@ -56,11 +56,12 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
     `DropdownButton` đơn vị `ngày / tuần / tháng` ⇒ `weightWindowDays` (clamp `1–730`)
     quyết định số ngày nhìn lại, ví dụ `5` + `ngày` ⇒ đọc 5 ngày gần nhất; câu tóm tắt
     đọc “Giảm 1.0 kg · 5 ngày qua · theo từng ngày”;
-  - **người dùng tự nhập số**: `OutlinedButton` chọn `Ngày dd/MM/yyyy` (`showDatePicker`,
-    không cho ngày tương lai) + `TextField` `Cân nặng (kg)` (nhận cả dấu `,`) +
-    `FilledButton.tonalIcon` `Thêm` ⇒ `save(logDate: ngày đã chọn, weightKg: …)` rồi
-    `refreshHealth`, snackbar “Đã thêm 40.5 kg · dd/MM/yyyy”; giá trị ngoài `0 – 500`
-    bị chặn trước khi gọi API;
+  - **xếp gọn (25.10.2026):** chỉ 2 dòng — `Cân nặng (kg)` (key `weight-entry-field`,
+    nhận cả dấu `,`) và `Thời gian [n] [ngày|tuần|tháng]`; cạnh ô thời gian hiện
+    `· Ngày dd/MM/yyyy` = ngày đầu của khoảng đang chọn (`5` + `ngày` ⇒ hôm nay − 4).
+    **Không còn nút `Thêm`**: số cân được lưu cùng nút `Lưu thay đổi` của form
+    (`save(logDate: <ngày đã hiện>, weightKg: …)`), giá trị ngoài `0 – 500` bị chặn
+    trước khi gọi API;
   - hiện 4 mốc mới nhất dạng `Chip` (`25/10 · 40.0 kg`) và câu tóm tắt
     “Giảm 0.6 kg · 6 tháng qua · trung bình mỗi tuần”;
   - ít hơn 2 điểm trong khoảng đang chọn ⇒ hiện “Chưa đủ dữ liệu để vẽ biến động trong
@@ -93,9 +94,10 @@ tự tính** và phân loại IDI & WPRO, xem tiến độ tới cân nặng m�
    mở lại drawer.
 7. *Given* chỉ có 1 bản ghi cân nặng trong 6 tháng, *then* khối biến động hiện “Chưa đủ
    dữ liệu” + mời nhập tay thay vì vẽ 1 cột.
-8. *Given* nhập `41,5` cho ngày `20/10/2026` rồi bấm `Thêm`, *then* log ngày đó có
-   `weightKg: 41.5`, khối biến động và màn Sức khoẻ cập nhật ngay; nhập `abc` ⇒ snackbar
-   “Cân nặng không hợp lệ (0 – 500 kg)” và **không** gọi API.
+8. *Given* nhập `41,5` và `Thời gian: 5 ngày` rồi bấm `Lưu thay đổi`, *then* log của
+   ngày hiện cạnh ô thời gian (`dd/MM/yyyy`, hôm nay − 4 ngày) có `weightKg: 41.5` và
+   khối biến động/màn Sức khoẻ cập nhật ngay; nhập `abc` ⇒ snackbar “Cân nặng không hợp
+   lệ (0 – 500 kg)” và **không** gọi API.
 9. *Given* nhập khoảng `5` và chọn `ngày`, *then* khối biến động chỉ đọc 5 ngày gần nhất
    và tóm tắt “Giảm/Tăng … kg · 5 ngày qua”; bỏ trống ô ⇒ dùng lại mặc định `6`.
 10. *Then* `flutter analyze` sạch; màn 390px cuộn được trong sheet, không tràn.
