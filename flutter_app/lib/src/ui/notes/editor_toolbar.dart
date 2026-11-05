@@ -24,7 +24,7 @@ class _EditorToolbarState extends State<EditorToolbar> {
     final sel = widget.controller.selection;
     final offset = sel.isValid ? sel.start : text.length;
     if (text.isEmpty) return '';
-    final start = text.lastIndexOf('\n', offset.clamp(0, text.length) - 1) + 1;
+    final start = offset <= 0 ? 0 : text.lastIndexOf('\n', offset - 1) + 1;
     final end = text.indexOf('\n', start);
     return end == -1 ? text.substring(start) : text.substring(start, end);
   }

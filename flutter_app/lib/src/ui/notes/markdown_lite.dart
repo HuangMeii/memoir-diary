@@ -54,7 +54,7 @@ MarkdownEdit prefixLine(String text, TextSelection sel, String prefix) {
   if (!sel.isValid || sel.start < 0 || sel.end > text.length) {
     return (text: text, selection: sel);
   }
-  final lineStart = text.lastIndexOf('\n', sel.start - 1) + 1;
+  final lineStart = sel.start == 0 ? 0 : text.lastIndexOf('\n', sel.start - 1) + 1;
   final lineEnd = text.indexOf('\n', sel.start);
   final end = lineEnd < 0 ? text.length : lineEnd;
   final line = text.substring(lineStart, end);
