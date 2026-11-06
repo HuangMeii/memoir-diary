@@ -31,16 +31,20 @@ nội dung tab và footer `Hủy / Để sau` + nút lưu.
       (`DraggableScrollableSheet` 45–92 %), `≥ 700 px` là **panel giữa màn hình** rộng
       ≤ 560 (giống các modal khác của app) nhờ `Dialog` + `ConstrainedBox`; danh sách
       dùng chung một `_form()` cho cả hai nhánh.
-- [x] Khung: tiêu đề **“Ghi nhận sức khoẻ”** + phụ đề “Cập nhật nhật ký thể trạng cá nhân
-      cho ngày hôm nay” + nút `close`; dưới đó là dòng ngày “Ngày dd/MM/yyyy”.
-- [x] Tab strip: 3 tab với trạng thái chọn (nền trắng + chữ đậm, tab khác chữ mờ) —
-      dùng `SegmentedTabs<QuickLogTab>` sẵn có (H0-S1 đã có token nền pill).
+- [x] Khung: badge tròn 36 px (`Icons.self_improvement`) + tiêu đề **“Ghi nhận sức khoẻ”**
+      + phụ đề “Cập nhật nhật ký thể trạng cá nhân cho ngày hôm nay” + nút `close` tròn
+      viền 32 px (tooltip “Đóng”); ngày đang xem **gộp vào phụ đề** (“… cho ngày
+      dd/MM/yyyy” khi không phải hôm nay) — đồng bộ ảnh thiết kế 25.10.2026.
+- [x] Tab strip: 3 tab **gạch chân có icon** 18 px (active: chữ + icon primary, viền dưới
+      2 px; tab khác: `onSurfaceVariant`), cuộn ngang — thay `SegmentedTabs` pill ngày
+      25.10.2026 để khớp design (pill vẫn dùng cho weather/calendar).
 - [ ] Thân: `switch (tab)` ⇒ `QuickWorkoutTab` / `QuickWaterTab` / `QuickSleepTab`, truyền
       xuống `date`, `overview` (từ `healthDayProvider(date)`) và callback `onSaved`.
-- [x] Footer: `TextButton('Hủy / Để sau')` đóng sheet **không** ghi gì, và nút
-      `FilledButton.icon(Icons.save, 'Lưu vào nhật ký')` ⇒ gọi `save()` của tab đang mở;
-      thành công ⇒ `refreshHealth(ref, day: date)`, đóng sheet, snackbar “Đã ghi nhận vào
-      nhật ký ngày dd/MM”.
+- [x] Footer: trái là `Icons.history` + “Lần ghi nhận gần nhất: {Hôm qua|dd/MM}” (ẩn khi
+      chưa có bản ghi ngủ trước ngày đang xem); phải là `OutlinedButton('Huỷ / Để sau')`
+      đóng sheet **không** ghi gì, và `FilledButton.icon(Icons.save, 'Lưu vào nhật ký')`
+      ⇒ gọi `save()` của tab đang mở; thành công ⇒ `refreshHealth(ref, day: date)`, đóng
+      sheet, snackbar “Đã ghi nhận vào nhật ký ngày dd/MM”. Xếp dọc khi bề rộng < 420 px.
 - [ ] Mỗi tab tự quản lý nháp của mình; đổi tab rồi quay lại **giữ** giá trị đang nhập
       trong phiên mở sheet (dùng `IndexedStack` hoặc state ở khung).
 - [ ] `showQuickLogSheet` là **điểm vào duy nhất**: nút `+ Ghi nhận nhanh` trên header

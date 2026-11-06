@@ -421,3 +421,33 @@ String _delta(double? kg, double? previous) {
 String _dayMonth(DateTime value) => '${_two(value.day)}/${_two(value.month)}';
 
 String _two(int value) => value.toString().padLeft(2, '0');
+
+/// The newest log before [date] that already carries a sleep duration.
+///
+/// Feeds the quick-log footer's "Lần ghi nhận gần nhất" line: the design points
+/// at the previous night, so the day being edited never counts.
+HealthLog? lastSleepLogBefore(List<HealthLog> logs, DateTime date) {
+  final target = DateTime(date.year, date.month, date.day);
+  HealthLog? latest;
+  for (final log in logs) {
+    if (log.sleepHours == null) continue;
+    final day = DateTime(log.logDate.year, log.logDate.month, log.logDate.day);
+    if (!day.isBefore(target)) continue;
+    if (latest == null) {
+      latest = log;
+      continue;
+    }
+    final best =
+        DateTime(latest.logDate.year, latest.logDate.month, latest.logDate.day);
+    if (day.isAfter(best)) latest = log;
+  }
+  return latest;
+}
+
+/// `Hôm qua` for the day before [reference], otherwise `dd/MM`.
+String shortDayLabel(DateTime value, DateTime reference) {
+  final day = DateTime(value.year, value.month, value.day);
+  final target = DateTime(reference.year, reference.month, reference.day);
+  if (target.difference(day).inDays == 1) return 'Hôm qua';
+  return '${_two(day.day)}/${_two(day.month)}';
+}
