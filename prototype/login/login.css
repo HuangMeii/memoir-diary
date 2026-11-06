@@ -1,0 +1,543 @@
+/* Memoir — static prototype of the web login screen.
+   Tokens are copied from flutter_app/lib/src/ui/tokens.dart so this page can be
+   ported to Flutter without re-negotiating colours. */
+
+@font-face {
+  font-family: 'Lora';
+  src: url('../../flutter_app/assets/fonts/Lora-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../../flutter_app/assets/fonts/Inter-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  /* Light palette (MemoirColorsLight). */
+  --background-page: #f8f6f0;
+  --surface-card: #fffdf9;
+  --surface-input: #fffdf9;
+  --surface-brand-subtle: #e9ede3;
+  --border-default: #dcddd2;
+  --text-primary: #2b342d;
+  --text-secondary: #70776c;
+  --action-primary: #49634d;
+  --text-on-primary: #ffffff;
+  --feedback-error: #a34e40;
+  --feedback-error-background: #fbeee8;
+  --illustration-backdrop: #e1e7d8;
+  --illustration-paper: #fffdf9;
+  --illustration-page-outline: #c9d0bb;
+  --illustration-writing: #d1d6c7;
+  --illustration-botanical: #7d916e;
+  --illustration-bookmark: #b0b999;
+  --illustration-shadow: #667252;
+
+  /* Motion tokens. */
+  --ease-page: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-sweep: cubic-bezier(0.34, 1.16, 0.44, 1);
+  --duration-page: 620ms;
+  --duration-sweep: 640ms;
+}
+
+html[data-theme='dark'] {
+  /* Dark palette (MemoirColorsDark). */
+  --background-page: #1f2320;
+  --surface-card: #262b28;
+  --surface-input: #262b28;
+  --surface-brand-subtle: #2b342d;
+  --border-default: #3a423a;
+  --text-primary: #f7f4ee;
+  --text-secondary: #aeb7a8;
+  --action-primary: #49634d;
+  --text-on-primary: #f7f4ee;
+  --feedback-error: #d98b6e;
+  --feedback-error-background: #3a2a24;
+  --illustration-backdrop: #2f3631;
+  --illustration-paper: #f7f4ee;
+  --illustration-page-outline: #3a423a;
+  --illustration-writing: #aeb7a8;
+  --illustration-botanical: #7d916e;
+  --illustration-bookmark: #b0b999;
+  --illustration-shadow: #1c211e;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background-page);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand__lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand__mark {
+  flex: none;
+}
+
+.brand__word {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 34px;
+  line-height: 44px;
+  letter-spacing: -1px;
+}
+
+.brand__tagline {
+  margin: 0;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+
+.auth {
+  display: grid;
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.auth__artwork {
+  display: none;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 960px) {
+  .wrap {
+    padding: 32px 48px 64px;
+  }
+
+  .auth {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    align-items: center;
+    gap: 56px;
+    margin-top: 56px;
+  }
+
+  .auth__artwork {
+    display: block;
+  }
+}
+
+/* ---------- Artwork ---------- */
+
+/* The branch sweeps past the viewBox, so the SVG must not clip it. */
+.artwork {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  overflow: visible;
+}
+
+.artwork__caption {
+  margin: 8px 0 0;
+  max-width: 420px;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.art-backdrop {
+  transition: opacity 520ms ease;
+}
+
+/* ---------- Page turn ---------- */
+
+/* Rotates around the spine (x = 170 in the 340 x 300 viewBox). */
+.page-flip {
+  transform-box: view-box;
+  transform-origin: 170px 150px;
+  transform: perspective(1400px) rotateY(0deg);
+  backface-visibility: hidden;
+  transition:
+    transform var(--duration-page) var(--ease-page),
+    opacity 180ms ease 0ms;
+  will-change: transform;
+}
+
+/* The page lands on the left leaf; fading it out hides the mirrored backface
+   in browsers that do not honour `backface-visibility` on SVG groups. */
+body:is(.is-writing, .is-demo) .page-flip {
+  transform: perspective(1400px) rotateY(-172deg);
+  opacity: 0;
+  transition:
+    transform var(--duration-page) var(--ease-page),
+    opacity 170ms ease 430ms;
+}
+
+.page-flip__shade {
+  opacity: 0;
+}
+
+body:is(.is-writing, .is-demo) .page-flip__shade {
+  animation: page-shade var(--duration-page) ease-in-out;
+}
+
+@keyframes page-shade {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.5;
+  }
+  75% {
+    opacity: 0.24;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Branch sweep ---------- */
+
+.branch {
+  transform-box: view-box;
+  transform-origin: 208px 208px;
+  transform: translate(0, 0) rotate(0deg);
+  transition: transform var(--duration-sweep) var(--ease-sweep);
+  will-change: transform;
+}
+
+body:is(.is-writing, .is-demo) .branch {
+  transform: translate(44px, -6px) rotate(8deg);
+}
+
+/* The leaf clusters trail the stem, so the move reads as a brush stroke. */
+.leaf {
+  transition: transform 560ms var(--ease-sweep);
+}
+
+.leaf:nth-child(1) {
+  transition-delay: 60ms;
+}
+
+.leaf:nth-child(2) {
+  transition-delay: 100ms;
+}
+
+.leaf:nth-child(3) {
+  transition-delay: 140ms;
+}
+
+.leaf:nth-child(4) {
+  transition-delay: 180ms;
+}
+
+.leaf:nth-child(5) {
+  transition-delay: 220ms;
+}
+
+.leaf:nth-child(6) {
+  transition-delay: 260ms;
+}
+
+body:is(.is-writing, .is-demo) .leaf {
+  transform: translate(9px, -5px);
+}
+
+body:is(.is-writing, .is-demo) .art-backdrop {
+  opacity: 0.45;
+}
+
+/* ---------- Card and form ---------- */
+
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 20px;
+  padding: 24px;
+  transition:
+    transform 520ms var(--ease-page),
+    box-shadow 520ms ease;
+}
+
+body:is(.is-writing, .is-demo) .card {
+  box-shadow: 0 18px 44px -30px rgba(51, 65, 46, 0.55);
+}
+
+.card__title {
+  margin: 0;
+  font-family: 'Lora', Georgia, serif;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 36px;
+}
+
+.card__lede {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.field__group {
+  position: relative;
+  display: block;
+}
+
+.field__input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 17px;
+  color: var(--text-primary);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.field__group .field__input {
+  padding-right: 44px;
+}
+
+.field__input::placeholder {
+  color: var(--text-secondary);
+}
+
+.field__input:hover {
+  border-color: var(--illustration-page-outline);
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--action-primary);
+  box-shadow: 0 0 0 3px rgba(73, 99, 77, 0.16);
+}
+
+.field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.field__toggle:hover {
+  color: var(--text-primary);
+  background: var(--surface-brand-subtle);
+}
+
+.field__toggle:focus-visible {
+  outline: 2px solid var(--action-primary);
+  outline-offset: 1px;
+}
+
+.field__toggle .icon--eye-off {
+  display: none;
+}
+
+.field__toggle[aria-pressed='true'] .icon--eye {
+  display: none;
+}
+
+.field__toggle[aria-pressed='true'] .icon--eye-off {
+  display: block;
+}
+
+.form__error {
+  margin: 0;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 19px;
+  color: var(--feedback-error);
+  background: var(--feedback-error-background);
+  border-radius: 10px;
+}
+
+.form__error[hidden] {
+  display: none;
+}
+
+.button {
+  width: 100%;
+  height: 48px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 17px;
+  color: var(--text-on-primary);
+  background: var(--action-primary);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    transform 120ms ease;
+}
+
+.button:hover {
+  filter: brightness(1.07);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:focus-visible {
+  outline: 3px solid rgba(73, 99, 77, 0.35);
+  outline-offset: 2px;
+}
+
+.card__switch {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+.card__switch a {
+  color: var(--action-primary);
+  text-decoration: none;
+}
+
+.card__switch a:hover {
+  text-decoration: underline;
+}
+
+.card__switch a:focus-visible {
+  outline: 2px solid var(--action-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.card__foot {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--text-secondary);
+}
+
+.prototype-note {
+  margin: 0;
+  max-width: 400px;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 960px) {
+  /* The card steps aside so the artwork keeps the room it needs. */
+  body:is(.is-writing, .is-demo) .card {
+    transform: translateX(-8px);
+  }
+}
+
+/* ---------- Demo controls ---------- */
+
+.demo-controls {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.demo-controls__button {
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -18px rgba(43, 52, 45, 0.6);
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.demo-controls__button:hover {
+  color: var(--text-primary);
+  border-color: var(--action-primary);
+}
+
+.demo-controls__button:focus-visible {
+  outline: 2px solid var(--action-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+}

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prototype tĩnh cho trang đăng nhập Memoir: sách lật trang, nhánh cây gạt sang bên khi người dùng nhập liệu.">
+  <title>Memoir · Đăng nhập (prototype)</title>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand">
+      <div class="brand__lockup">
+        <svg class="brand__mark" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true" focusable="false">
+          <path d="M0 10C0 4.47715 4.47715 0 10 0H26C31.5228 0 36 4.47715 36 10V26C36 31.5228 31.5228 36 26 36H10C4.47715 36 0 31.5228 0 26V10Z" fill="var(--surface-brand-subtle)"/>
+          <path d="M18 13.4167V26.25M18 13.4167C18 12.4442 17.6136 11.5116 16.926 10.8239C16.2383 10.1363 15.3056 9.75 14.333 9.75H9.74932C9.50619 9.75 9.27301 9.84658 9.10109 10.0185C8.92917 10.1904 8.83258 10.4236 8.83258 10.6667V22.5833C8.83258 22.8264 8.92917 23.0596 9.10109 23.2315C9.27301 23.4034 9.50619 23.5 9.74932 23.5H15.2498C15.9792 23.5 16.6787 23.7897 17.1945 24.3055C17.7102 24.8212 18 25.5207 18 26.25M18 13.4167C18 12.4442 18.3863 11.5116 19.074 10.8239C19.7617 10.1363 20.6944 9.75 21.6669 9.75H26.2506C26.4938 9.75 26.727 9.84658 26.8989 10.0185C27.0708 10.1904 27.1674 10.4236 27.1674 10.6667V22.5833C27.1674 22.8264 27.0708 23.0596 26.8989 23.2315C26.727 23.4034 26.4938 23.5 26.2506 23.5H20.7502C20.0208 23.5 19.3213 23.7897 18.8055 24.3055C18.2897 24.8212 18 25.5207 18 26.25" stroke="var(--action-primary)" stroke-linecap="round"/>
+        </svg>
+        <span class="brand__word">Memoir</span>
+      </div>
+      <p class="brand__tagline">Nhật ký mỗi ngày, nhìn lại chính mình</p>
+    </header>
+
+    <main class="auth">
+      <!-- Artwork: the Figma login illustration split into layers so the page
+           can turn and the botanical branch can sweep aside. -->
+      <section class="auth__artwork" aria-hidden="true">
+        <svg class="artwork" viewBox="0 0 340 300" fill="none" role="presentation" focusable="false">
+          <defs>
+            <clipPath id="page-shape">
+              <path d="M170.176 99.5859C209.956 84.6657 249.058 83.563 287.5 96.2646V243.103C247.678 230.449 208.505 231.568 169.997 246.466C130.19 231.576 91.3518 230.447 53.5 243.092V96.2607C90.6112 83.5648 129.38 84.6652 169.827 99.5869L170.001 99.6514L170.176 99.5859Z"/>
+            </clipPath>
+            <clipPath id="page-right">
+              <rect x="170" y="70" width="180" height="200"/>
+            </clipPath>
+            <linearGradient id="page-shade" x1="170" y1="0" x2="290" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#2B342D" stop-opacity="0"/>
+              <stop offset="0.55" stop-color="#2B342D" stop-opacity="0.14"/>
+              <stop offset="1" stop-color="#2B342D" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+
+          <g class="art-backdrop">
+            <circle cx="168" cy="152" r="139" fill="var(--illustration-backdrop)"/>
+            <ellipse cx="178" cy="254.5" rx="124" ry="12.5" fill="var(--illustration-shadow)"/>
+          </g>
+
+          <g class="book">
+            <path class="book__cover" d="M46 103.811C88.6667 90.0413 130 90.766 170 105.985C212 90.766 253.667 90.0413 295 103.811V253.826C253.667 238.607 212 239.332 170 256C128.667 239.332 87.3333 238.607 46 253.826V103.811Z" fill="var(--action-primary)"/>
+            <path class="book__pages" d="M170.176 99.5859C209.956 84.6657 249.058 83.563 287.5 96.2646V243.103C247.678 230.449 208.505 231.568 169.997 246.466C130.19 231.576 91.3518 230.447 53.5 243.092V96.2607C90.6112 83.5648 129.38 84.6652 169.827 99.5869L170.001 99.6514L170.176 99.5859Z" fill="var(--illustration-paper)" stroke="var(--illustration-page-outline)"/>
+            <path class="book__spine" d="M170 101V234" stroke="var(--border-default)"/>
+            <path class="book__writing" d="M76 129.046C95.3333 126.722 118 128.271 144 133.693M76 151.122C95.3333 148.799 118 150.348 144 155.77M76 173.199C95.3333 170.875 118 172.424 144 177.847M76 195.276C95.3333 192.952 114.667 194.114 134 198.761M76 217.352C95.3333 215.028 118 216.578 144 222" stroke="var(--illustration-writing)" stroke-width="1.2"/>
+          </g>
+
+          <!-- The fresh page the turn reveals. It repaints the right half of the
+               paper, which hides the ruled lines of the page that turns away. -->
+          <g class="page-under" clip-path="url(#page-right)">
+            <g clip-path="url(#page-shape)">
+              <path d="M170.176 99.5859C209.956 84.6657 249.058 83.563 287.5 96.2646V243.103C247.678 230.449 208.505 231.568 169.997 246.466C130.19 231.576 91.3518 230.447 53.5 243.092V96.2607C90.6112 83.5648 129.38 84.6652 169.827 99.5869L170.001 99.6514L170.176 99.5859Z" fill="var(--illustration-paper)" stroke="var(--illustration-page-outline)"/>
+              <g class="page-under__lines" stroke="var(--illustration-page-outline)" stroke-width="1.2" stroke-linecap="round">
+                <path d="M196 146H250"/>
+                <path d="M196 162H242"/>
+                <path d="M196 178H250"/>
+                <path d="M196 194H230"/>
+              </g>
+              <path class="page-under__ink" d="M196 210C206 208 214 209 224 212" stroke="var(--illustration-writing)" stroke-width="1.6" stroke-linecap="round"/>
+            </g>
+          </g>
+
+          <!-- The right page itself: it rotates around the spine at x = 170. -->
+          <g class="page-flip">
+            <g clip-path="url(#page-right)">
+              <g clip-path="url(#page-shape)">
+                <path d="M170.176 99.5859C209.956 84.6657 249.058 83.563 287.5 96.2646V243.103C247.678 230.449 208.505 231.568 169.997 246.466C130.19 231.576 91.3518 230.447 53.5 243.092V96.2607C90.6112 83.5648 129.38 84.6652 169.827 99.5869L170.001 99.6514L170.176 99.5859Z" fill="var(--illustration-paper)" stroke="var(--illustration-page-outline)"/>
+                <path class="page-flip__writing" d="M191 133.693C213.667 128.271 236 126.722 258 129.046M191 155.77C213.667 150.348 236 148.799 258 151.122M191 177.847C213.667 172.424 236 170.875 258 173.199M191 199.923C213.667 194.501 232.667 192.564 248 194.114M191 222C213.667 216.578 236 215.028 258 217.352" stroke="var(--illustration-writing)" stroke-width="1.2"/>
+                <rect class="page-flip__shade" x="170" y="80" width="120" height="180" fill="url(#page-shade)"/>
+              </g>
+            </g>
+          </g>
+
+          <path class="book__bookmark" d="M164 231H177V276L170 269L164 276V231Z" fill="var(--illustration-bookmark)"/>
+
+          <!-- The botanical branch: one stem plus leaf clusters that follow it
+               with a small stagger, so the sweep reads as a brush stroke. -->
+          <g class="branch">
+            <path class="branch__stem" d="M208 208C255.297 156.455 264.757 100.614 276.919 19M241.784 161.824L209.351 130.682M255.297 130.682L308 105.983M267.459 89.875L239.081 64.1023M271.514 63.0284L303.946 41.5511" stroke="var(--action-primary)" stroke-width="2"/>
+            <g class="branch__leaves" fill="var(--illustration-botanical)">
+              <path class="leaf" d="M263.815 28C241.398 36.019 245.668 60.0761 261.68 70.3863C275.557 57.785 279.827 39.4558 263.815 28Z"/>
+              <path class="leaf" d="M280.894 49.766C299.041 30.2912 312.918 33.7279 310.783 49.766C308.648 68.0952 289.434 79.5509 264.882 76.1142C264.882 64.6584 273.422 56.6394 280.894 49.766Z"/>
+              <path class="leaf" d="M230.723 68.0952C210.442 66.9496 211.509 88.7155 226.454 100.171C240.33 109.336 253.14 107.045 254.207 101.317C248.87 81.8421 242.465 72.6775 230.723 68.0952Z"/>
+              <path class="leaf" d="M274.489 105.899C292.636 88.7155 312.918 93.2979 310.783 108.19C308.648 127.665 287.299 135.684 252.073 135.684C253.14 125.374 263.815 113.918 274.489 105.899Z"/>
+              <path class="leaf" d="M212.577 136.83C206.172 150.577 220.049 172.343 240.33 172.343C242.465 150.577 232.858 135.684 212.577 136.83Z"/>
+              <path class="leaf" d="M256.342 152.868C273.422 135.684 291.569 141.412 288.366 158.596C285.164 175.779 264.882 184.944 237.128 182.653C239.263 168.906 247.803 158.596 256.342 152.868Z"/>
+            </g>
+          </g>
+        </svg>
+        <p class="artwork__caption">Mỗi ngày một trang. Mỗi trang một chút mình.</p>
+      </section>
+
+      <section class="auth__form">
+        <div class="card">
+          <h1 class="card__title">Chào bạn trở lại</h1>
+          <p class="card__lede">Đăng nhập để tiếp tục cuốn nhật ký của bạn.</p>
+
+          <form class="form" id="login-form" novalidate>
+            <div class="field">
+              <label class="field__label" for="username">Tên đăng nhập</label>
+              <input class="field__input" id="username" name="username" type="text"
+                     autocomplete="username" placeholder="Tên đăng nhập của bạn">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="password">Mật khẩu</label>
+              <span class="field__group">
+                <input class="field__input" id="password" name="password" type="password"
+                       autocomplete="current-password" placeholder="Nhập mật khẩu">
+                <button class="field__toggle" type="button" aria-label="Hiện mật khẩu" aria-pressed="false">
+                  <svg class="icon icon--eye" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                  <svg class="icon icon--eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M6.3 6.6C4 8 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.5 4.2-1.2M17.9 15c2-1.5 3.6-3 3.6-3S18 5.5 12 5.5c-.7 0-1.4.1-2 .3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </span>
+            </div>
+
+            <p class="form__error" id="form-error" role="alert" hidden>
+              Đây là prototype tĩnh — chưa nối API đăng nhập.
+            </p>
+
+            <button class="button" type="submit">Đăng nhập</button>
+          </form>
+
+          <p class="card__switch"><a href="#register">Chưa có tài khoản? Đăng ký</a></p>
+          <p class="card__foot">Một không gian riêng, dành cho bạn.</p>
+        </div>
+
+        <p class="prototype-note">
+          Prototype tĩnh, chưa nối API. Focus hoặc gõ vào ô nhập để xem sách lật
+          trang và nhánh cây gạt sang bên.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-controls__button" type="button" data-demo-play>Xem lại hiệu ứng</button>
+    <button class="demo-controls__button" type="button" data-demo-theme>Chế độ tối</button>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>
