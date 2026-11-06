@@ -50,11 +50,12 @@ class NoteCard extends StatelessWidget {
                           children: [
                             Expanded(
                                 child: Text(note.displayTitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.headlineSmall
                                         ?.copyWith(
                                             fontFamily: serifFamily,
-                                            fontSize:
-                                                MemoirType.headingEditorial))),
+                                            fontSize: MemoirType.heading1))),
                             if (!trashed) ...[
                               GestureDetector(
                                   onTap: () => onPin?.call(!note.isPinned),
