@@ -42,6 +42,9 @@
   --ease-sweep: cubic-bezier(0.34, 1.16, 0.44, 1);
   --duration-page: 620ms;
   --duration-sweep: 640ms;
+  --duration-soft: 520ms;
+  --duration-leaf: 560ms;
+  --duration-fade: 180ms;
 }
 
 html[data-theme='dark'] {
@@ -86,7 +89,7 @@ body {
 .wrap {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 32px 24px 104px;
 }
 
 .brand {
@@ -126,7 +129,8 @@ body {
 }
 
 .auth__artwork {
-  display: none;
+  max-width: 300px;
+  margin: 0 auto;
 }
 
 .auth__form {
@@ -137,7 +141,7 @@ body {
 
 @media (min-width: 960px) {
   .wrap {
-    padding: 32px 48px 64px;
+    padding: 32px 48px 96px;
   }
 
   .auth {
@@ -148,7 +152,8 @@ body {
   }
 
   .auth__artwork {
-    display: block;
+    max-width: none;
+    margin: 0;
   }
 }
 
@@ -164,16 +169,25 @@ body {
 }
 
 .artwork__caption {
-  margin: 8px 0 0;
-  max-width: 420px;
+  margin: 8px auto 0;
+  max-width: 300px;
+  text-align: center;
   font-family: 'Lora', Georgia, serif;
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-secondary);
 }
 
+@media (min-width: 960px) {
+  .artwork__caption {
+    margin: 8px 0 0;
+    max-width: 420px;
+    text-align: left;
+  }
+}
+
 .art-backdrop {
-  transition: opacity 520ms ease;
+  transition: opacity var(--duration-soft) ease;
 }
 
 /* ---------- Page turn ---------- */
@@ -186,7 +200,7 @@ body {
   backface-visibility: hidden;
   transition:
     transform var(--duration-page) var(--ease-page),
-    opacity 180ms ease 0ms;
+    opacity var(--duration-fade) ease 0ms;
   will-change: transform;
 }
 
@@ -197,7 +211,7 @@ body:is(.is-writing, .is-demo) .page-flip {
   opacity: 0;
   transition:
     transform var(--duration-page) var(--ease-page),
-    opacity 170ms ease 430ms;
+    opacity var(--duration-fade) ease calc(var(--duration-page) - 190ms);
 }
 
 .page-flip__shade {
@@ -239,7 +253,7 @@ body:is(.is-writing, .is-demo) .branch {
 
 /* The leaf clusters trail the stem, so the move reads as a brush stroke. */
 .leaf {
-  transition: transform 560ms var(--ease-sweep);
+  transition: transform var(--duration-leaf) var(--ease-sweep);
 }
 
 .leaf:nth-child(1) {
@@ -282,8 +296,8 @@ body:is(.is-writing, .is-demo) .art-backdrop {
   border-radius: 20px;
   padding: 24px;
   transition:
-    transform 520ms var(--ease-page),
-    box-shadow 520ms ease;
+    transform var(--duration-soft) var(--ease-page),
+    box-shadow var(--duration-soft) ease;
 }
 
 body:is(.is-writing, .is-demo) .card {
@@ -532,12 +546,36 @@ body:is(.is-writing, .is-demo) .card {
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 1ms !important;
-    transition-delay: 0ms !important;
-    animation-duration: 1ms !important;
-    animation-delay: 0ms !important;
+  :root {
+    --duration-page: 1ms;
+    --duration-sweep: 1ms;
+    --duration-soft: 1ms;
+    --duration-leaf: 1ms;
+    --duration-fade: 1ms;
   }
+
+  .leaf {
+    transition-delay: 0ms;
+  }
+}
+
+/* The prototype motion switch can ask for the motion back, or opt out. */
+html[data-motion="force"] {
+  --duration-page: 620ms;
+  --duration-sweep: 640ms;
+  --duration-soft: 520ms;
+  --duration-leaf: 560ms;
+  --duration-fade: 180ms;
+}
+
+html[data-motion="off"] {
+  --duration-page: 1ms;
+  --duration-sweep: 1ms;
+  --duration-soft: 1ms;
+  --duration-leaf: 1ms;
+  --duration-fade: 1ms;
+}
+
+html[data-motion="off"] .leaf {
+  transition-delay: 0ms;
 }

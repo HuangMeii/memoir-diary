@@ -15,6 +15,8 @@
   const toggle = document.querySelector('.field__toggle');
   const themeButton = document.querySelector('[data-demo-theme]');
   const playButton = document.querySelector('[data-demo-play]');
+  const motionButton = document.querySelector('[data-motion-toggle]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // --- Typing state ------------------------------------------------------
   // Focus drives the artwork, and typed text keeps it open, so walking away
@@ -63,13 +65,43 @@
     themeButton.textContent = next === 'dark' ? 'Chế độ sáng' : 'Chế độ tối';
   });
 
+  // --- Motion switch -----------------------------------------------------
+  // A system set to reduce motion collapses every duration to 1 ms, which
+  // reads as nothing happening. This prototype has its own switch, written to
+  // <html data-motion>, so a reviewer can ask for the motion back.
+  let motionOn = true;
+
+  const renderMotion = () => {
+    root.dataset.motion = motionOn ? 'force' : 'off';
+    motionButton.textContent = motionOn ? 'Chuyển động: bật' : 'Chuyển động: tắt';
+    motionButton.setAttribute('aria-pressed', String(motionOn));
+    motionButton.title = reducedMotion.matches ? 'Hệ điều hành đang bật giảm chuyển động — nút này bật hiệu ứng cho prototype.' : '';
+  };
+
+  motionButton.addEventListener('click', () => {
+    motionOn = !motionOn;
+    renderMotion();
+  });
+
   // --- Replay ------------------------------------------------------------
   // `is-demo` mirrors what typing triggers without touching the fields.
-  playButton.addEventListener('click', () => {
+  const playSequence = () => {
     body.classList.remove('is-demo');
-    // Flush the removal so the same class re-adding animates again.
     void body.offsetWidth;
     window.setTimeout(() => body.classList.add('is-demo'), 40);
     window.setTimeout(() => body.classList.remove('is-demo'), 1900);
+  };
+
+  playButton.addEventListener('click', () => {
+    if (!motionOn) {
+      motionOn = true;
+      renderMotion();
+    }
+    playSequence();
   });
+
+  renderMotion();
+
+  // Play once on open, so nobody has to guess that typing starts the effect.
+  if (motionOn) window.setTimeout(playSequence, 700);
 })();
