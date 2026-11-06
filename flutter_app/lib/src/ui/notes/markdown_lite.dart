@@ -108,7 +108,7 @@ MarkdownEdit insertDivider(String text, TextSelection sel) {
 bool lineHasChecklist(String text, int offset) {
   if (text.isEmpty) return false;
   final safe = offset.clamp(0, text.length);
-  final lineStart = text.lastIndexOf('\n', safe - 1) + 1;
+  final lineStart = safe == 0 ? 0 : text.lastIndexOf('\n', safe - 1) + 1;
   return text.substring(lineStart).startsWith('- [ ] ') ||
       text.substring(lineStart).startsWith('- [x] ');
 }
