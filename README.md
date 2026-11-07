@@ -1,4 +1,4 @@
-﻿# 📔 Memoir — Nhật ký số (Digital Diary)
+# 📔 Memoir — Nhật ký số (Digital Diary)
 
 > Ứng dụng nhật ký cá nhân **đa người dùng** (multi-user), gồm **Flutter App + Flutter Web**, backend **Serverpod/Dart**, lưu ảnh trên **Neon Object Storage** và dữ liệu trên **PostgreSQL (Neon serverless)**.
 
@@ -28,6 +28,7 @@ Memoir giúp bạn ghi lại mỗi ngày một cách có hệ thống: cảm xú
 - 📆 **Calendar** *(đặc tả xong, chưa code — xem [docs/10-calendar.md](docs/10-calendar.md))*: xem lịch **ngày / tuần / tháng**, **timeline theo giờ**, tạo/sửa/xoá sự kiện, **lặp lại**, **nhắc nhở**, liên kết với Study Garden và nhật ký, thống kê thời gian đã lên lịch vs thực tế học.
 - 🌦️ **Dự báo thời tiết thật** *(đã dựng — xem [docs/11-weather-forecast.md](docs/11-weather-forecast.md))*: gọi **Open-Meteo** (miễn phí, **không cần API key**) để hiện nhiệt độ và dự báo nhiều ngày, gợi ý chọn thời tiết khi viết nhật ký. Nằm trong **Tiện ích → Thời tiết**.
 - 🧭 **Thời tiết theo hành trình** *(đã dựng — xem [docs/12-route-weather.md](docs/12-route-weather.md))*: chọn điểm đi / nhiều điểm dừng / điểm đến (tìm kiếm hoặc chọn trực tiếp trên bản đồ OSM), chọn phương tiện và giờ khởi hành, rồi xem **thời tiết dự kiến tại từng chặng** (nhiệt độ, xác suất mưa, lượng mưa, gió), cảnh báo đoạn bất lợi, so sánh giờ khởi hành, và **lưu hành trình vào nhật ký**. Không tự xây mô hình dự đoán thời tiết.
+- 🛒 **Đi chợ thông minh** *(đang triển khai — xem [docs/dicho/README.md](docs/dicho/README.md))*: danh sách cần mua có **ngân sách và thanh tiến độ**, thêm nhanh mặt hàng (đơn giá, số lượng, quy cách), chọn **chuỗi siêu thị** để so sánh giá và khối **tổng dự kiến** kèm phí giao. Nằm trong **Tiện ích → Đi chợ**; giá hiện là dữ liệu mẫu vì chưa có API niêm yết. Danh sách **lưu ngay trên thiết bị** (CSV trong bộ nhớ cục bộ — web dùng `localStorage`, mobile/desktop dùng preferences), không cần DB.
 
 ---
 
@@ -142,6 +143,7 @@ Memoir/
 | [docs/10-calendar.md](docs/10-calendar.md) | **Module Calendar** *(chưa triển khai)*: ngày/tuần/tháng, timeline, sự kiện lặp, nhắc nhở, liên kết Study + Journal |
 | [docs/11-weather-forecast.md](docs/11-weather-forecast.md) | **Dự báo thời tiết** *(đã triển khai)*: tích hợp Open-Meteo, cache 2 tầng, ánh xạ mã WMO |
 | [docs/12-route-weather.md](docs/12-route-weather.md) | **Thời tiết theo hành trình** *(đã triển khai)*: quản lý lộ trình (nhiều điểm dừng, chọn trên bản đồ), routing OSRM, tìm địa điểm bằng Nominatim, dự báo dọc tuyến theo điểm mẫu + ETA, quy tắc đoạn bất lợi, lưu hành trình vào nhật ký |
+| [docs/dicho/README.md](docs/dicho/README.md) | **Đi chợ thông minh** *(DC-01…DC-03, DC-11 xong; DC-04…DC-10 còn lại)*: chrome, danh sách cần mua + ngân sách/tiến độ, chọn chuỗi siêu thị, lưu local trên thiết bị; chưa có so sánh giá, bản đồ, gợi ý lộ trình, lưu vào nhật ký |
 
 ---
 
