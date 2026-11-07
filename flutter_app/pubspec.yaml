@@ -45,6 +45,10 @@ dependencies:
     path: ../memoir_server/memoir_server_client
   serverpod_client: ^4.0.4
 
+  # Local persistence for the "Đi chợ" baskets (a CSV document, no database).
+  # Web keeps it in localStorage, mobile/desktop in the native preferences.
+  shared_preferences: ^2.5.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

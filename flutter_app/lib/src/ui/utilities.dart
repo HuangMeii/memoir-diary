@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'screens/dicho_screen.dart';
 import 'screens/route_weather_screen.dart';
 import 'screens/weather_screen.dart';
 
@@ -50,6 +51,12 @@ const List<UtilityItem> utilityItems = [
     label: 'Thời tiết hành trình',
     shortLabel: 'Hành trình',
     builder: RouteWeatherScreen.new,
+  ),
+  UtilityItem(
+    icon: Icons.shopping_basket_outlined,
+    label: 'Đi chợ thông minh',
+    shortLabel: 'Đi chợ',
+    builder: DichoScreen.new,
   ),
 ];
 

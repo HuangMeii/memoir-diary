@@ -1,39 +1,78 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth_provider.dart';
+import '../../data/dicho_shopping.dart';
+import '../../data/dicho_storage.dart';
+import '../../data/providers.dart';
+import '../dicho/dicho_chrome.dart';
+import '../dicho/dicho_shopping_card.dart';
+import '../dicho/dicho_stores_card.dart';
 import '../home/home_scale.dart';
 import '../tokens.dart';
 import '../widgets/app_header.dart';
+import '../widgets/text_prompt_dialog.dart';
 
+/// Width of the "Đi chợ thông minh" web frame.
+///
+/// Nguồn thiết kế: `ui-figma/dicho/memoir_i_ch_th_ng_minh_y_chu_i_si_u_th`
+/// (`max-w-7xl` with 32 px gutters).
 const double kDichoDesignWidth = 1280;
-const double kDichoContentWidth = 1208;
-const double kDichoColumnGap = MemoirSpace.s7;
-const double kDichoTwoColumnMinWidth = 1024;
-const double kDichoMapStackedHeight = 360;
 
+/// Content width inside the frame's gutters.
+const double kDichoContentWidth = 1208;
+
+/// Gap of the design's 12-column grid (`gap-6`).
+const double kDichoColumnGap = MemoirSpace.s6;
+
+/// Breakpoint where the design switches to its 7 / 5 split (`lg`).
+const double kDichoTwoColumnMinWidth = 1024;
+
+/// "Đi chợ thông minh": basket, budget and the chains to compare.
+///
+/// DC-01 chrome + DC-02 basket + DC-03 store picker, all backed by the local
+/// [dichoProvider]. The comparison matrix, shopping routes, save-to-journal
+/// and handheld mode are the remaining tasks in `docs/dicho/README.md`.
 class DichoScreen extends ConsumerStatefulWidget {
   const DichoScreen({super.key});
+
   @override
   ConsumerState<DichoScreen> createState() => _DichoScreenState();
 }
 
 class _DichoScreenState extends ConsumerState<DichoScreen> {
-  int _selectedDeparture = 1;
+  Future<void> _createList() async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => const TextPromptDialog(
+        title: 'Danh sách mới',
+        hintText: 'Tên danh sách, vd: Đi chợ cuối tuần',
+        confirmLabel: 'Tạo',
+      ),
+    );
+    if (name == null || name.trim().isEmpty) return;
+    ref.read(dichoProvider.notifier).createList(name: name);
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     ref.watch(authReadyProvider);
     final displayName = auth.user?['display_name'] as String?;
+    final state = ref.watch(dichoProvider);
+    final notifier = ref.read(dichoProvider.notifier);
 
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final scale = homeScaleFor(constraints.maxWidth);
-          final textScale = homeTextScaleFor(constraints.maxWidth);
+          final scale = homeScaleFor(
+            constraints.maxWidth,
+            designWidth: kDichoDesignWidth,
+          );
+          final textScale = homeTextScaleFor(
+            constraints.maxWidth,
+            designWidth: kDichoDesignWidth,
+          );
           final twoColumn = constraints.maxWidth >= kDichoTwoColumnMinWidth;
           final media = MediaQuery.of(context);
 
@@ -49,155 +88,30 @@ class _DichoScreenState extends ConsumerState<DichoScreen> {
               child: SafeArea(
                 bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AppHeader(
                       date: DateTime.now(),
                       initials: initialsOf(displayName),
                       name: displayName,
-                      onLogout: () =>
-                          ref.read(authProvider.notifier).logout(),
+                      onLogout: () => ref.read(authProvider.notifier).logout(),
                     ),
-                    const SizedBox(height: MemoirSpace.s3 * scale),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16 * scale),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => Navigator.of(context).maybePop(),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.arrow_back, size: 14),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Trang chủ',
-                                  style: _captionStyle(context),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6 * scale),
-                            child: Text(
-                              '/',
-                              style: _captionStyle(context).copyWith(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => Navigator.of(context).maybePop(),
-                            child: Text(
-                              'Tiện ích',
-                              style: _captionStyle(context).copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6 * scale),
-                            child: Text(
-                              '/',
-                              style: _captionStyle(context).copyWith(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            'Đi chợ',
-                            style: _captionStyle(context).copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (twoColumn) ...[
-                            _actionPill(context, 'Hành trình đã lưu',
-                                Icons.history, scale),
-                            SizedBox(width: MemoirSpace.s2 * scale),
-                            _actionPill(context, 'So sánh giờ khởi hành',
-                                Icons.compare_arrows, scale),
-                            SizedBox(width: MemoirSpace.s2 * scale),
-                            _actionPill(context, 'Lưu vào nhật ký',
-                                Icons.bookmark_add, scale, primary: true),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: MemoirSpace.s4 * scale),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16 * scale),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Đi chợ',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontFamily: 'Lora',
-                                  fontSize: MemoirType.heading1,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface,
-                                ),
-                          ),
-                          SizedBox(height: MemoirSpace.s1 * scale),
-                          Text(
-                            'Lộ trình và dự báo thời tiết dọc đường',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                  fontSize: MemoirType.body,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: MemoirSpace.s5 * scale),
                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16 * scale),
-                        child: twoColumn
-                            ? Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 4,
-                                    child: _plannerColumn(context, scale),
-                                  ),
-                                  SizedBox(width: kDichoColumnGap),
-                                  Expanded(
-                                    flex: 8,
-                                    child: _mapColumn(context, scale),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  Expanded(
-                                    child: _plannerColumn(context, scale),
-                                  ),
-                                  SizedBox(height: kDichoColumnGap),
-                                  Expanded(
-                                    child: _mapColumn(context, scale),
-                                  ),
-                                ],
-                              ),
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: MemoirSpace.s4 * scale,
+                          vertical: MemoirSpace.s6 * scale,
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: kDichoContentWidth,
+                            ),
+                            child: _content(context, state, notifier,
+                                twoColumn: twoColumn, scale: scale),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: MemoirSpace.s4 * scale),
-                    _departureComparison(context, scale),
-                    const SizedBox(height: MemoirSpace.s5 * scale),
-                    _footerDisclaimer(context, scale),
                   ],
                 ),
               ),
@@ -208,199 +122,53 @@ class _DichoScreenState extends ConsumerState<DichoScreen> {
     );
   }
 
-  TextStyle _captionStyle(BuildContext context) =>
-      Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: MemoirType.caption,
-          ) ??
-          const TextStyle();
-
-  Widget _actionPill(BuildContext context, String label, IconData icon,
-      double scale, {bool primary = false}) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
-      decoration: BoxDecoration(
-        color: primary
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.45)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(MemoirRadius.pill),
-        border: primary
-            ? Border.all(color: theme.colorScheme.primary)
-            : Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16 * scale, color: theme.colorScheme.primary),
-          SizedBox(width: MemoirSpace.s1 * scale),
-          Text(
-            label,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontSize: MemoirType.caption,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _plannerColumn(BuildContext context, double scale) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: EdgeInsets.all(MemoirSpace.s5 * scale),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Quản lý lộ trình',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(
-                    fontFamily: 'Lora',
-                    fontSize: MemoirType.headingEditorial,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-            ),
-            const SizedBox(height: MemoirSpace.s4 * scale),
-            _placeholderField(context, scale, 'Điểm xuất phát', 'Nhập địa điểm…'),
-            SizedBox(height: MemoirSpace.s3 * scale),
-            _placeholderField(context, scale, 'Điểm đến', 'Nhập địa điểm…'),
-            SizedBox(height: MemoirSpace.s3 * scale),
-            _placeholderField(context, scale, 'Thời gian dừng', '0 phút'),
-            SizedBox(height: MemoirSpace.s4 * scale),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.directions, size: 16),
-                    label: const Text('Tính tuyến'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: Size(0, 36 * scale),
-                      padding: EdgeInsets.symmetric(horizontal: 12 * scale),
-                    ),
-                  ),
-                ),
-                SizedBox(width: MemoirSpace.s2 * scale),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Thêm điểm dừng'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: Size(0, 36 * scale),
-                      padding: EdgeInsets.symmetric(horizontal: 12 * scale),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _mapColumn(BuildContext context, double scale) {
-    return Container(
-      height: kDichoMapStackedHeight * scale,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(MemoirRadius.card),
-        border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.map, size: 48 * scale,
-                color: Theme.of(context).colorScheme.outlineVariant),
-            SizedBox(height: MemoirSpace.s2 * scale),
-            Text(
-              'Bản đồ lộ trình',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: MemoirType.body,
-                  ),
-            ),
-            SizedBox(height: MemoirSpace.s1 * scale),
-            Text(
-              'DC-03 sẽ vẽ bản đồ thật',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    fontSize: MemoirType.caption,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholderField(BuildContext context, double scale,
-      String label, String placeholder) {
+  Widget _content(
+    BuildContext context,
+    DichoState state,
+    DichoNotifier notifier, {
+    required bool twoColumn,
+    required double scale,
+  }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          label,
-          style: Theme.of(context)
-              .textTheme
-              .labelSmall
-              ?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: MemoirType.caption,
-                fontWeight: FontWeight.w600,
+        DichoBreadcrumb(onHome: () => Navigator.of(context).maybePop()),
+        SizedBox(height: MemoirSpace.s3 * scale),
+        DichoPageHeader(
+          lists: state.lists,
+          selectedListId: state.selectedListId,
+          onSelectList: notifier.selectList,
+          onCreateList: _createList,
+        ),
+        SizedBox(height: MemoirSpace.s4 * scale),
+        const DichoNoticeBanner(),
+        SizedBox(height: MemoirSpace.s5 * scale),
+        if (twoColumn)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 7,
+                child: DichoShoppingCard(state: state, notifier: notifier),
               ),
-        ),
-        SizedBox(height: MemoirSpace.s1 * scale),
-        TextField(
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              fontSize: MemoirType.body,
-            ),
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(MemoirRadius.control),
-              borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(MemoirRadius.control),
-              borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(MemoirRadius.control),
-              borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.primary, width: 1.5),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 12 * scale, vertical: 10 * scale),
+              const SizedBox(width: kDichoColumnGap),
+              Expanded(
+                flex: 5,
+                child: DichoStoresCard(state: state, notifier: notifier),
+              ),
+            ],
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DichoShoppingCard(state: state, notifier: notifier),
+              const SizedBox(height: kDichoColumnGap),
+              DichoStoresCard(state: state, notifier: notifier),
+            ],
           ),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: MemoirType.body,
-          ),
-        ),
+        SizedBox(height: MemoirSpace.s8 * scale),
       ],
     );
   }
+}
